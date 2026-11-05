@@ -38,7 +38,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn20"></a>RN20 | O **limite de tráfego** é por **endpoint e por origem**. A origem autenticada é a instituição receptora (`organizationId`), e a não autenticada é o IP. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn21"></a>RN21 | O TPM segue a classe do endpoint: baixa 1.000, média 1.500, média-alta 2.000. A alta depende dos consentimentos ativos entre receptora e transmissora (QCA): até 1 milhão, 2.500; até 2 milhões, 5.000; até 3 milhões, 8.000; até 6 milhões, 10.000; acima disso, soma 2.000 a cada faixa de 2 milhões. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn22"></a>RN22 | O TPM conta por **minuto cheio**: do segundo 00,000 ao 59,999, zerando na virada. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
-| <a id="rn23"></a>RN23 | Passar do TPM responde **429**, que é exclusivo desse limite. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
+| <a id="rn23"></a>RN23 | Passar do TPM responde **429**, que é exclusivo desse limite. O `Retry-After` vem ligado e é configurável por instituição. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn24"></a>RN24 | Não há limite por origem em Token, DCR/DCM, Consentimentos, Recursos e Serviços. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn25"></a>RN25 | O **limite operacional** é opcional para a instituição. Quando ligado, conta por mês, endpoint, objeto mais granular (consentimento, recurso ou produto), cliente e receptora. | Oficial [F04](../00-visao-geral/referencias.md#f04) |
 | <a id="rn26"></a>RN26 | Os mínimos por mês são 8 (baixa), 30 (média), 120 (média-alta), 240 (alta) e 420 para saldos e limites da conta. A instituição pode ampliar. Ficar abaixo é proibido, então só existe como [anomalia](#rn113). | Oficial [F04](../00-visao-geral/referencias.md#f04) |
@@ -86,7 +86,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn54"></a>RN54 | Cada gerador tem semente explícita. A mesma semente com a mesma data e configuração dá o mesmo dado. O sorteio de erro e latência usa semente aleatória por padrão, e uma semente fixa quando o cenário pedir repetição. | Produto |
 | <a id="rn55"></a>RN55 | Um **perfil de dados** define volume de transações por dia, faixa de valores, saldo inicial, tipos de lançamento e produtos. Vêm prontos: cliente comum, sem movimento e alto volume. | Produto |
 | <a id="rn56"></a>RN56 | A **distribuição** diz como a massa se divide entre instituições, produtos e perfis de dados. A soma de cada dimensão precisa dar 100%. | Produto |
-| <a id="rn57"></a>RN57 | CPFs e CNPJs gerados têm dígitos válidos, inclusive CNPJ alfanumérico, Todo CPF gerado começa com um **dígito fixo**, o que permite até 100 milhões de CPFs. Risco aceito: não há garantia de que um CPF gerado não pertença a uma pessoa real. | Produto |
+| <a id="rn57"></a>RN57 | CPFs e CNPJs gerados têm dígitos válidos, inclusive CNPJ alfanumérico, Todo CPF gerado começa com o **dígito 9**, o que permite até 100 milhões de CPFs. Risco aceito: não há garantia de que um CPF gerado não pertença a uma pessoa real. | Produto |
 | <a id="rn58"></a>RN58 | Um lote pode ser apagado inteiro. Apagar um lote remove clientes, consentimentos, recursos e ajustes dele, e fica no histórico. | Produto |
 | <a id="rn59"></a>RN59 | Dados transacionais e de crédito vão até 12 meses para trás, conforme a regra oficial de compartilhamento. Para testar limites, o histórico gerado pode ser maior. | Oficial [F10](../00-visao-geral/referencias.md#f10) + Produto |
 
@@ -96,7 +96,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn60"></a>RN60 | Todo dado gerado carrega a marca do **ambiente** (`dev` ou `hml`) em três lugares, para continuar visível depois de copiado: **cabeçalho** da resposta, **prefixo dos identificadores** e **texto** de campos livres. | Produto |
 | <a id="rn61"></a>RN61 | O **cabeçalho** `x-sim-environment` traz o ambiente, e `x-sim-data-nature` traz `persistido`, `virtual` ou `misto`. A resposta oficial não muda de formato: receptora que ignora esses cabeçalhos não sente diferença. | Produto |
 | <a id="rn62"></a>RN62 | O **prefixo** dos IDs usa os padrões oficiais: `hml-p-…` para persistido, `hml-v-…` para virtual, e `urn:sim-hml:…` em consentimentos. | Produto |
-| <a id="rn63"></a>RN63 | O **texto** marcado usa campos livres dentro do tamanho oficial. Ex.: `transactionName` = `[SIM-HML] PIX recebido`, nome do cliente = `[SIM-HML] Mariana Alves`. | Produto |
+| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` (`[SIM-HML] PIX recebido`) e nome do cliente (`[SIM-HML] Mariana Alves`). | Produto |
 | <a id="rn64"></a>RN64 | A marca é aplicada na criação do dado e nunca muda. Dado gerado em `dev` continua `dev` mesmo se for copiado para outro ambiente. | Produto |
 | <a id="rn65"></a>RN65 | Uma resposta com dado persistido e dado virtual se declara `misto`. Cada item mostra sua natureza no prefixo do ID. | Produto |
 | <a id="rn66"></a>RN66 | Os valores e a forma da marca nunca dependem de configuração da instituição: nenhum perfil desliga a marcação. | Produto |
@@ -107,8 +107,8 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn70"></a>RN70 | O foco são os ambientes `dev` e `hml`. O uso em produção não é bloqueado nem decidido agora; se houver, será preciso decidir como fica a marcação ([PA05](#pa05)). | Produto |
 | <a id="rn71"></a>RN71 | APIs de administração ficam em endereço separado das APIs Open Finance e exigem usuário. Toda alteração grava usuário, data, antes e depois. | Produto |
 | <a id="rn72"></a>RN72 | Em `dev` e `hml`, cada tela mostra o ambiente em destaque. | Produto |
-| <a id="rn73"></a>RN73 | O relógio do simulador pode ser **acelerado ou fixado** para testes, por ambiente. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
-| <a id="rn74"></a>RN74 | Cada chamada recebida gera um **registro de chamada**: instituição, endpoint, status, tempo, regra aplicada e `x-fapi-interaction-id`. Dado pessoal fica mascarado. | Produto |
+| <a id="rn73"></a>RN73 | O relógio pode ser **acelerado ou fixado** para testes, sempre por instituição, nunca global. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
+| <a id="rn74"></a>RN74 | Cada chamada recebida gera um **registro de chamada**: instituição, endpoint, status, tempo, regra aplicada e `x-fapi-interaction-id`. Dado pessoal fica mascarado, e o registro expira em 7 dias. | Produto |
 
 ## Consentimento
 | ID | Regra | Origem |
@@ -128,7 +128,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 |---|---|---|
 | <a id="rn90"></a>RN90 | A jornada tem seis etapas: consentimento, direcionamento, autenticação, confirmação, redirecionamento e efetivação. Autenticação e confirmação acontecem na instituição; as outras, na receptora. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
 | <a id="rn91"></a>RN91 | O simulador oferece as telas da **instituição**. Para quem não tem receptora pronta, oferece também uma **receptora de demonstração**, que faz as etapas 1, 2 e 6. | Produto |
-| <a id="rn92"></a>RN92 | A autenticação usa um login simulado do cliente sintético ([PA18](#pa18)) e não pode ter etapa extra que desestimule o compartilhamento, salvo por anomalia configurada. | Oficial [F10](../00-visao-geral/referencias.md#f10) + Produto |
+| <a id="rn92"></a>RN92 | A autenticação usa login simulado, com usuário e senha de teste mostrados na tela ([PA18](#pa18)), e não pode ter etapa extra que desestimule o compartilhamento, salvo por anomalia configurada. | Oficial [F10](../00-visao-geral/referencias.md#f10) + Produto |
 | <a id="rn93"></a>RN93 | Depois do login, a instituição confere a titularidade. Divergência interrompe a jornada, sem mostrar resumo nem dados, e explica o motivo. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
 | <a id="rn94"></a>RN94 | A confirmação mostra quem recebe os dados, o prazo (ou "Indeterminado") e só as categorias pedidas. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
 | <a id="rn95"></a>RN95 | Só contas e cartões têm seleção de origem. Todas as opções vêm marcadas, e pelo menos uma precisa ficar. Crédito, investimento, câmbio e dados cadastrais compartilham tudo. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
@@ -172,25 +172,25 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | ID | Pergunta |
 |---|---|
 | <a id="pa01"></a>PA01 | ~~Qual banco guarda o estado?~~ **Respondida:** MongoDB para o estado, porque a empresa já usa, e Redis para os contadores, por desempenho. Ver [ADR-003](../05-adr/ADR-003-mongodb-e-redis.md). |
-| <a id="pa02"></a>PA02 | **Quando o modo FAPI completo entra?** Ele custa caro (mTLS, DCR, PAR, JARM) e é o que deixa o coletor usar o caminho de produção. Proposta: modo simples primeiro, FAPI na spec 009. |
+| <a id="pa02"></a>PA02 | ~~Quando o modo FAPI completo entra?~~ **Respondida:** FAPI completo entra por último, na spec 011. Até lá, modo simples. |
 | <a id="pa03"></a>PA03 | ~~Usamos nomes de bancos reais?~~ **Respondida:** sim, com o prefixo do ambiente. Bancos de perfil continuam com nome fictício. Ver [RN09](#rn09). |
 | <a id="pa04"></a>PA04 | ~~Como evitar CPF de pessoa real?~~ **Respondida:** CPF com um dígito inicial fixo, até 100 milhões. O risco foi aceito. Ver [RN57](#rn57). |
 | <a id="pa05"></a>PA05 | ~~E o ambiente de produção?~~ **Respondida:** o uso em produção não é bloqueado nem decidido agora. Ver [RN70](#rn70). |
-| <a id="pa06"></a>PA06 | **Qual o escopo depois dos dados?** Pagamentos, Pix automático, portabilidade e dados abertos ficam fora da primeira versão. Entram depois? |
-| <a id="pa07"></a>PA07 | **O simulador envia reportes à PCM?** Para testar pareamento, ele deveria reportar como SERVER a uma central simulada. Entra agora ou depois? A central é a do laboratório do Leonidas? |
-| <a id="pa08"></a>PA08 | **Qual o código de bloqueio temporário?** As orientações de Contas usam `STATUS_RESOURCE_TEMPORARY_UNAVAILABLE`, e as de Dados Cadastrais usam `STATUS_RESOURCE_TEMPORARILY_UNAVAILABLE`. Proposta: seguir a orientação de cada API, com confirmação da equipe. |
-| <a id="pa09"></a>PA09 | **Qual o padrão de `/transactions-current` sem datas?** A spec diz "dia atual", e a POC devolve 7 dias. Proposta: seguir a spec. |
-| <a id="pa10"></a>PA10 | **Quantas receptoras?** A POC só conhece a XP. Proposta: limites e QCA por receptora, para testar mais de um cliente no mesmo ambiente. |
-| <a id="pa11"></a>PA11 | **Mandamos `Retry-After` no 429?** A POC manda, mas não encontrei essa exigência nas fontes lidas. Proposta: configurável por instituição, ligado no padrão. |
-| <a id="pa12"></a>PA12 | **Precisamos de um Diretório simulado?** A receptora real descobre a instituição pelo Diretório. Sem ele, o endereço fica em configuração. |
-| <a id="pa13"></a>PA13 | **Várias versões da mesma API ao mesmo tempo?** O ecossistema tem convivência de `Current` e `Deprecated`. O catálogo atual tem só `Current`. O simulador precisa servir duas versões juntas? |
-| <a id="pa14"></a>PA14 | **Qual a tecnologia do back-office?** Proposta: React com TypeScript, igual ao laboratório do Leonidas, em vez do HTML único da POC. |
-| <a id="pa15"></a>PA15 | **Quem aprova?** Quem revisa regras oficiais e regras de produto antes de virar spec? |
-| <a id="pa16"></a>PA16 | **Onde roda em homologação?** Kubernetes, ECS ou Docker? Quantas instâncias? |
-| <a id="pa17"></a>PA17 | **Por quanto tempo guardamos a massa?** Sem limite, ou limpeza automática por lote? E os registros de chamada? |
-| <a id="pa18"></a>PA18 | **Como é o login simulado?** Proposta: usuário e senha de teste exibidos na tela, com opção de simular "segundo fator". |
-| <a id="pa19"></a>PA19 | **O relógio acelerado vale em homologação?** A POC comprime o mês em 5 minutos. Isso ajuda o teste de cota, mas pode confundir sistemas integrados. Proposta: só por instituição de teste, nunca global. |
-| <a id="pa21"></a>PA21 | **O que fazer com `page-size` acima de 1.000?** A spec limita a 1.000, e a orientação só fala do pedido dentro desse máximo. A POC reduz para 1.000. Proposta: reduzir e mostrar no `self`, por ser o comportamento menos brusco. |
+| <a id="pa06"></a>PA06 | ~~Qual o escopo depois dos dados?~~ **Respondida:** a primeira versão cobre só dados e consentimento. Os demais ficam para depois. |
+| <a id="pa07"></a>PA07 | ~~O simulador envia reportes à PCM?~~ **Respondida:** não na primeira versão. |
+| <a id="pa08"></a>PA08 | ~~Qual o código de bloqueio temporário?~~ **Respondida:** seguir a orientação de cada API. |
+| <a id="pa09"></a>PA09 | ~~Qual o padrão de `/transactions-current` sem datas?~~ **Respondida:** dia atual, como diz a spec. |
+| <a id="pa10"></a>PA10 | ~~Quantas receptoras?~~ **Respondida:** várias receptoras, com limites e QCA separados por receptora. |
+| <a id="pa11"></a>PA11 | ~~Mandamos `Retry-After` no 429?~~ **Respondida:** sim, configurável por instituição e ligado no padrão. |
+| <a id="pa12"></a>PA12 | ~~Precisamos de um Diretório simulado?~~ **Respondida:** não. O endereço da instituição fica em configuração. |
+| <a id="pa13"></a>PA13 | ~~Várias versões da mesma API ao mesmo tempo?~~ **Respondida:** não. Uma versão por API. |
+| <a id="pa14"></a>PA14 | ~~Qual a tecnologia do back-office?~~ **Respondida:** React com TypeScript. |
+| <a id="pa15"></a>PA15 | ~~Quem aprova?~~ **Respondida:** Marcelo, por enquanto. |
+| <a id="pa16"></a>PA16 | ~~Onde roda em homologação?~~ **Respondida:** Docker agora. A plataforma de homologação é decidida na implantação. |
+| <a id="pa17"></a>PA17 | ~~Por quanto tempo guardamos a massa?~~ **Respondida:** massa sem limpeza automática; registros de chamada por 7 dias. |
+| <a id="pa18"></a>PA18 | ~~Como é o login simulado?~~ **Respondida:** usuário e senha de teste mostrados na tela. |
+| <a id="pa19"></a>PA19 | ~~O relógio acelerado vale em homologação?~~ **Respondida:** sim, só por instituição, nunca global. |
+| <a id="pa21"></a>PA21 | ~~O que fazer com `page-size` acima de 1.000?~~ **Respondida:** reduzir para 1.000 e mostrar no `self`. |
 | <a id="pa22"></a>PA22 | ~~Quais bancos de nome real nascem prontos, e com qual comportamento?~~ **Respondida:** os 11 nomes da POC, com o perfil `estavel` e variáveis próprias, sem perfil novo. Ver [RN09](#rn09). |
-| <a id="pa23"></a>PA23 | **Qual dígito inicial do CPF e quais campos levam a marca?** Falta escolher o dígito de [RN57](#rn57) e os campos de texto de [RN63](#rn63) que podem levar `[SIM-HML]` sem atrapalhar os testes. |
+| <a id="pa23"></a>PA23 | ~~Qual dígito inicial do CPF e quais campos levam a marca?~~ **Respondida:** dígito 9. A marca vai em `transactionName` e no nome do cliente. |
 | <a id="pa20"></a>PA20 | ~~Como um timeout real se parece?~~ **Respondida (provisória):** assumimos 504 até alguém confirmar nas instituições. Não há telemetria real, então os perfis são estimativas. Ver [RN12](#rn12). |

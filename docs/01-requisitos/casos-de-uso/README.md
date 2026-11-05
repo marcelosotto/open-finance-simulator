@@ -108,7 +108,6 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Vê os valores oficiais já preenchidos. 2. Informa o QCA de cada receptora. 3. Liga ou desliga o limite operacional. 4. Ajusta TPS, `page-size` máximo e validade da chave. 5. Salva.
 - **Fluxo alternativo — valor abaixo do oficial:** o sistema avisa e, confirmado, registra uma anomalia ([RN113](../regras-de-negocio.md#rn113)).
 - **Regras:** [RN20](../regras-de-negocio.md#rn20) a [RN32](../regras-de-negocio.md#rn32).
-- **Em aberto:** [PA10](../regras-de-negocio.md#pa10), [PA11](../regras-de-negocio.md#pa11).
 
 ### <a id="uc04"></a>UC04 — Programar regra de cenário
 - **Status:** Rascunho
@@ -127,7 +126,6 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Atualiza o commit fixado de `open-finance-specs`. 2. O sistema confere os hashes. 3. Mostra operações novas, alteradas e removidas. 4. Publica a nova versão.
 - **Exceções:** hash divergente → recusado.
 - **Regras:** [PR06](../../00-visao-geral/premissas.md#pr06), [ADR-002](../../05-adr/ADR-002-specs-fixadas-por-commit.md).
-- **Em aberto:** [PA13](../regras-de-negocio.md#pa13).
 
 ### <a id="uc28"></a>UC28 — Controlar o relógio
 - **Status:** Rascunho
@@ -135,7 +133,6 @@ Todos começam como **Rascunho**.
 - **Objetivo:** testar o que depende de tempo sem esperar: 60 minutos do consentimento, virada do mês.
 - **Fluxo principal:** 1. Escolhe a instituição. 2. Fixa uma data ou define um fator de aceleração. 3. As respostas passam a usar a hora simulada, e o cabeçalho `x-sim-clock` a mostra.
 - **Regras:** [RN73](../regras-de-negocio.md#rn73).
-- **Em aberto:** [PA19](../regras-de-negocio.md#pa19).
 
 ## Massa de dados
 
@@ -154,7 +151,6 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Escolhe a instituição, o tipo (PF ou PJ) e o perfil de dados. 2. O sistema gera documento válido, nome e produtos. 3. Mostra os dados de login para a jornada.
 - **Fluxo alternativo — já autorizado:** marca "criar consentimento autorizado" para pular a jornada.
 - **Regras:** [RN51](../regras-de-negocio.md#rn51), [RN54](../regras-de-negocio.md#rn54), [RN57](../regras-de-negocio.md#rn57), [RN60](../regras-de-negocio.md#rn60).
-- **Em aberto:** [PA23](../regras-de-negocio.md#pa23).
 
 ### <a id="uc07"></a>UC07 — Gerar lote
 - **Status:** Rascunho
@@ -179,7 +175,6 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Escolhe um lote, uma instituição ou tudo. 2. Vê o que será apagado. 3. Confirma.
 - **Exceções:** instituições e perfis prontos não são apagados.
 - **Regras:** [RN58](../regras-de-negocio.md#rn58), [RN71](../regras-de-negocio.md#rn71).
-- **Em aberto:** [PA17](../regras-de-negocio.md#pa17).
 
 ## Consentimento e recursos
 
@@ -191,7 +186,6 @@ Todos começam como **Rascunho**.
 - **Fluxo alternativo — modo simples:** usa um token emitido por API própria do simulador, ligado a receptora e consentimento.
 - **Exceções:** certificado, cliente, escopo ou redirect inválidos → recusado.
 - **Regras:** [RN120](../regras-de-negocio.md#rn120) a [RN123](../regras-de-negocio.md#rn123).
-- **Em aberto:** [PA02](../regras-de-negocio.md#pa02), [PA12](../regras-de-negocio.md#pa12).
 
 ### <a id="uc09"></a>UC09 — Criar consentimento
 - **Status:** Rascunho
@@ -210,7 +204,6 @@ Todos começam como **Rascunho**.
 - **Fluxos de exceção:** titular diferente → interrompe ([RN93](../regras-de-negocio.md#rn93)); cliente cancela → `REJECTED` ([RN96](../regras-de-negocio.md#rn96)); falha no login ou fora do ar → consentimento segue pendente e pode ser retomado em até 60 minutos ([RN81](../regras-de-negocio.md#rn81)).
 - **Pós-condição:** `AUTHORISED`, com recursos selecionados.
 - **Regras:** [RN90](../regras-de-negocio.md#rn90) a [RN97](../regras-de-negocio.md#rn97), [RN99](../regras-de-negocio.md#rn99).
-- **Em aberto:** [PA18](../regras-de-negocio.md#pa18).
 
 ### <a id="uc11"></a>UC11 — Fazer a jornada com múltiplas alçadas (PJ)
 - **Status:** Rascunho
@@ -303,11 +296,9 @@ Todos começam como **Rascunho**.
 - **Ator:** Sistema
 - **Fluxo principal:** 1. Na criação, grava ambiente e natureza. 2. Aplica o prefixo nos IDs e a marca nos campos livres. 3. Em cada resposta, envia os cabeçalhos.
 - **Regras:** [RN60](../regras-de-negocio.md#rn60) a [RN66](../regras-de-negocio.md#rn66), [RN70](../regras-de-negocio.md#rn70).
-- **Em aberto:** [PA23](../regras-de-negocio.md#pa23).
 
 ### <a id="uc26"></a>UC26 — Investigar chamadas
 - **Status:** Rascunho
 - **Ator:** QA ou Desenvolvedor
 - **Fluxo principal:** 1. Busca por `x-fapi-interaction-id`, instituição, cliente ou período. 2. Vê status, tempo, regra aplicada, defeito e anomalia.
 - **Regras:** [RN18](../regras-de-negocio.md#rn18), [RN74](../regras-de-negocio.md#rn74), [RN112](../regras-de-negocio.md#rn112).
-- **Em aberto:** reportes à PCM ([PA07](../regras-de-negocio.md#pa07)).

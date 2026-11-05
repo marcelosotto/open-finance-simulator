@@ -19,7 +19,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `lotes` | Parâmetros, semente, progresso e situação | Apagar leva tudo junto |
 | `cenarios` | Regras, defeitos e anomalias | Índice por alcance |
 | `historico` | Quem mudou o quê, com antes e depois | Toda escrita de administração |
-| `registros_chamada` | Chamada, status, tempo, regra aplicada | Expira por TTL ([PA17](../01-requisitos/regras-de-negocio.md#pa17)) |
+| `registros_chamada` | Chamada, status, tempo, regra aplicada | Expira em 7 dias ([PA17](../01-requisitos/regras-de-negocio.md#pa17)) |
 | `sessoes_jornada` | Etapa, cliente e consentimento | Expira em 60 minutos |
 
 ## Redis
