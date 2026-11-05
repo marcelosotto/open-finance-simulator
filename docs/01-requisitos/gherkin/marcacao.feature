@@ -3,7 +3,7 @@
 # Regras (RNxx): ../regras-de-negocio.md
 Funcionalidade: Marcar os dados com ambiente e natureza
   Como equipe
-  Quero reconhecer um dado sintético em qualquer lugar
+  Quero reconhecer um dado simulado em qualquer lugar
   Para nunca confundi-lo com dado real
 
   # RN61

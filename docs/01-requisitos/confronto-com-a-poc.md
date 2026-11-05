@@ -115,9 +115,9 @@ A [tabela de endpoints](tabela-de-endpoints.md) traz todos os valores oficiais.
 | Marcação | Só o prefixo `v` em IDs virtuais | Ambiente e natureza em três lugares | ⚠️ | [RN60](regras-de-negocio.md#rn60) |
 | Sorteio | `Random.Shared`, não repete | Semente fixa quando o cenário pedir | ⚠️ | [RN54](regras-de-negocio.md#rn54) |
 
-## Semente, sintético e virtual
+## Semente e nomenclatura
 
-**Nomenclatura.** "Sintético" é o termo geral: todo dado criado artificialmente, sem origem em cliente real. "Virtual" é um tipo de sintético. Por isso, a proposta usa **sintético** para tudo, **persistido** para o que você chamou de físico, e **virtual** para o que é calculado na hora ([RN50](regras-de-negocio.md#rn50)).
+**Nomenclatura.** Tudo no projeto é **simulado**: instituição, cliente e dado. Um dado simulado tem uma de duas naturezas: **persistido**, gravado no banco (o "físico"), ou **virtual**, calculado na hora ([RN50](regras-de-negocio.md#rn50)).
 
 **A semente é válida e deve ficar.** Ela resolve duas coisas difíceis: transações não ocupam banco, e o mesmo dado volta sempre, mesmo em milhões de clientes. O índice carregado no ID do mundo virtual também é uma boa ideia.
 

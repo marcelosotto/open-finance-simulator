@@ -9,7 +9,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Instituições simuladas
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn01"></a>RN01 | Uma **instituição simulada** representa uma transmissora. Tem identificador, nome, `organisationId` sintético, marca, público atendido (PF, PJ ou ambos), produtos oferecidos e um comportamento. | Produto |
+| <a id="rn01"></a>RN01 | Uma **instituição simulada** representa uma transmissora. Tem identificador, nome, `organisationId` simulado, marca, público atendido (PF, PJ ou ambos), produtos oferecidos e um comportamento. | Produto |
 | <a id="rn02"></a>RN02 | O ambiente já nasce com os bancos de perfil **Banco Estável, Banco Lento, Banco Instável, Banco Timeout e Banco Restritivo** e com 11 bancos de nome real, listados nas [personas](../00-visao-geral/personas.md#bancos-com-nome-real). Todos podem ser editados, e novos podem ser criados. | Produto |
 | <a id="rn03"></a>RN03 | Criar uma instituição exige só **nome** e **perfil de comportamento**. Sem perfil informado, vale `estavel`. Os demais campos têm padrão ([campos obrigatórios](campos-obrigatorios.md)). | Produto |
 | <a id="rn04"></a>RN04 | Um **perfil de comportamento** é um modelo: copiar um perfil para uma instituição permite ajustar os valores depois, sem mudar o modelo nem as outras instituições. | Produto |
@@ -79,7 +79,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Massa de dados e semente
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn50"></a>RN50 | Todo dado do simulador é **sintético**. Ele tem uma de duas naturezas: **persistido**, gravado no banco, ou **virtual**, calculado na hora a partir de uma semente. | Produto |
+| <a id="rn50"></a>RN50 | Todo dado do simulador é **simulado**. Ele tem uma de duas naturezas: **persistido**, gravado no banco, ou **virtual**, calculado na hora a partir de uma semente. | Produto |
 | <a id="rn51"></a>RN51 | Cliente, consentimento, recurso, instituição e configuração são **persistidos** quando criados por tela, API ou lote. Transações nunca são gravadas uma a uma: saem de uma semente, com **ajustes** gravados por cima. | Produto |
 | <a id="rn52"></a>RN52 | O **mundo virtual** existe para carga: milhões de clientes, consentimentos e recursos calculados pelo índice, sem gravar nada, com o mesmo gerador da massa persistida. | Produto |
 | <a id="rn53"></a>RN53 | Um dado virtual pode receber um **ajuste** persistido (ex.: revogar um consentimento virtual). O ajuste vence o cálculo. | Produto |

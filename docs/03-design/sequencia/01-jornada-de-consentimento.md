@@ -4,7 +4,7 @@ Etapas do [Guia de Experiência](../../00-visao-geral/referencias.md#f10). O mod
 
 ```mermaid
 sequenceDiagram
-  actor C as Cliente sintético
+  actor C as Cliente simulado
   participant R as Receptora
   participant A as Autorização do banco
   participant J as Jornada do banco

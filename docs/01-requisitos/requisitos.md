@@ -10,10 +10,10 @@ Documentos relacionados: [Regras de negócio](regras-de-negocio.md) · [Casos de
 | <a id="rf03"></a>RF03 | Operador configura latência, erros, limites e paginação de cada instituição | [UC02](casos-de-uso/README.md#uc02), [UC03](casos-de-uso/README.md#uc03) |
 | <a id="rf04"></a>RF04 | QA programa regras de cenário por instituição, endpoint, cliente ou recurso | [UC04](casos-de-uso/README.md#uc04) |
 | <a id="rf05"></a>RF05 | Operador define perfis de dados e a distribuição da massa | [UC05](casos-de-uso/README.md#uc05) |
-| <a id="rf06"></a>RF06 | Usuário cria um cliente sintético ou um lote, com consentimentos e recursos | [UC06](casos-de-uso/README.md#uc06), [UC07](casos-de-uso/README.md#uc07) |
+| <a id="rf06"></a>RF06 | Usuário cria um cliente simulado ou um lote, com consentimentos e recursos | [UC06](casos-de-uso/README.md#uc06), [UC07](casos-de-uso/README.md#uc07) |
 | <a id="rf07"></a>RF07 | Teste de carga usa o mundo virtual, sem gravar dados | [UC08](casos-de-uso/README.md#uc08) |
 | <a id="rf08"></a>RF08 | Receptora cria, consulta, revoga e renova consentimentos pelas APIs oficiais | [UC09](casos-de-uso/README.md#uc09), [UC12](casos-de-uso/README.md#uc12), [UC13](casos-de-uso/README.md#uc13) |
-| <a id="rf09"></a>RF09 | Cliente sintético faz a jornada de consentimento PF e PJ | [UC10](casos-de-uso/README.md#uc10), [UC11](casos-de-uso/README.md#uc11) |
+| <a id="rf09"></a>RF09 | Cliente simulado faz a jornada de consentimento PF e PJ | [UC10](casos-de-uso/README.md#uc10), [UC11](casos-de-uso/README.md#uc11) |
 | <a id="rf10"></a>RF10 | Receptora consulta recursos, com estados, preparação (202) e seleção | [UC14](casos-de-uso/README.md#uc14) |
 | <a id="rf11"></a>RF11 | Operador muda o estado de recursos e adiciona produtos | [UC15](casos-de-uso/README.md#uc15) |
 | <a id="rf12"></a>RF12 | Receptora consulta dados cadastrais e transacionais pelas specs oficiais | [UC16](casos-de-uso/README.md#uc16) |

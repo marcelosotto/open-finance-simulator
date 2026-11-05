@@ -44,7 +44,7 @@ Funcionalidade: Gerar massa de dados
 
   # RN57
   Cenário: Documento válido
-    Quando Ana cria um cliente sintético
+    Quando Ana cria um cliente simulado
     Então o CPF deve ter dígitos válidos
     E o CPF deve começar com o dígito fixo do simulador
 
@@ -60,7 +60,7 @@ Funcionalidade: Gerar massa de dados
     Dado um cliente criado por lote e um item do mundo virtual
     Então o primeiro deve ser "persistido"
     E o segundo deve ser "virtual"
-    E os dois devem ser sintéticos
+    E os dois devem ser simulados
 
   # RN55
   Esquema do Cenário: Perfis de dados prontos

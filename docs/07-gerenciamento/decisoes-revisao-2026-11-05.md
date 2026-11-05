@@ -26,6 +26,10 @@ Revisão conduzida com Marcelo. Estas decisões já foram aplicadas na documenta
 | PA02, PA06 a PA19, PA21 e PA23 | Aceitas as respostas sugeridas, registradas em `regras-de-negocio.md`. |
 | PA22 | Nascem prontos os 11 bancos de nome real da POC, com o perfil `estavel` e variáveis próprias, sem perfil novo. |
 
+## Nomenclatura
+
+O projeto usa só **simulado** para o que é fictício: instituição, cliente e dado. A natureza do dado é **persistido** ou **virtual**. O termo "sintético" não é usado.
+
 ## Próximo passo
 
 Revisão dos casos de uso, começando pelo UC01.

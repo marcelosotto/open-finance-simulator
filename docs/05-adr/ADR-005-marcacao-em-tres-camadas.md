@@ -4,7 +4,7 @@
 **Data:** 2026-11-05
 
 ## Contexto
-Queremos saber sempre que um dado é sintético, de qual ambiente e se é virtual. Só um cabeçalho se perde quando o dado é gravado por outro sistema. Um campo novo no JSON desviaria da spec oficial.
+Queremos saber sempre que um dado é simulado, de qual ambiente e se é virtual. Só um cabeçalho se perde quando o dado é gravado por outro sistema. Um campo novo no JSON desviaria da spec oficial.
 
 ## Decisão
 Marcar em três lugares: **cabeçalho** da resposta, **prefixo dos identificadores** e **texto** de campos livres ([RN60](../01-requisitos/regras-de-negocio.md#rn60)).

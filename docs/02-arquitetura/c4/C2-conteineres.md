@@ -6,7 +6,7 @@ Níveis: [C1 — Contexto](C1-contexto.md) · [C3 — Componentes](C3-componente
 flowchart TB
   rec["<b>Receptora</b>"]
   user(["<b>Operador, QA e desenvolvedor</b>"])
-  cli(["<b>Cliente sintético</b>"])
+  cli(["<b>Cliente simulado</b>"])
 
   subgraph sim["Simulador Open Finance"]
     api["<b>API Open Finance</b><br/><small>.NET 10 · N instâncias<br/>Rotas das specs, limites e cenários</small>"]

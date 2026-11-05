@@ -2,7 +2,7 @@
 # Casos de uso: UC10, UC11 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
 Funcionalidade: Jornada de consentimento
-  Como cliente sintético
+  Como cliente simulado
   Quero autorizar o compartilhamento no meu banco
   Para testar o fluxo igual ao real
 

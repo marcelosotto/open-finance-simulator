@@ -10,7 +10,7 @@ Sem nenhuma configuração, uma instituição simulada segue as regras oficiais:
 ## <a id="pr02"></a>PR02 — Desviar da regra é sempre uma escolha explícita
 O simulador precisa se comportar mal, porque as instituições reais às vezes se comportam mal. Mas todo desvio da regra oficial é uma **anomalia configurada**: tem nome, é ligada de propósito e aparece no histórico. Um desvio nunca acontece por padrão ou por acaso.
 
-## <a id="pr03"></a>PR03 — Tudo é sintético e se reconhece como sintético
+## <a id="pr03"></a>PR03 — Tudo é simulado e se reconhece como simulado
 Nenhum dado real de cliente entra no simulador. Todo dado gerado carrega a marca do ambiente e da natureza, de um jeito que continua visível depois de ser copiado para outro sistema ([RN60](../01-requisitos/regras-de-negocio.md#rn60)).
 
 ## <a id="pr04"></a>PR04 — O simulador produz o problema; não julga o resultado

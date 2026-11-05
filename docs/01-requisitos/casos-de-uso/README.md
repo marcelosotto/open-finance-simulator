@@ -10,7 +10,7 @@ Relacionados: [regras de negócio](../regras-de-negocio.md) · [requisitos](../r
 | **Desenvolvedor** | Integra a receptora contra o simulador (Ana). |
 | **Analista** | Valida regras e demonstra a jornada (Carla). |
 | **Receptora** | Sistema que chama as APIs. Ex.: o coletor. |
-| **Cliente sintético** | Pessoa fictícia que faz a jornada de consentimento. |
+| **Cliente simulado** | Pessoa fictícia que faz a jornada de consentimento. |
 | **Sistema** | Processos automáticos: expiração, geração e limites. |
 
 ## Diagrama
@@ -20,7 +20,7 @@ flowchart LR
   O([Operador])
   Q([QA])
   R([Receptora])
-  C([Cliente sintético])
+  C([Cliente simulado])
   S([Sistema])
 
   subgraph Config["Configuração"]
@@ -33,7 +33,7 @@ flowchart LR
   end
   subgraph Massa["Massa de dados"]
     UC05[UC05 Definir perfis e distribuição]
-    UC06[UC06 Criar cliente sintético]
+    UC06[UC06 Criar cliente simulado]
     UC07[UC07 Gerar lote]
     UC08[UC08 Usar o mundo virtual]
     UC27[UC27 Limpar massa]
@@ -144,7 +144,7 @@ Todos começam como **Rascunho**.
 - **Exceções:** soma diferente de 100% → recusado ([RN56](../regras-de-negocio.md#rn56)); perfil em uso → não pode ser apagado.
 - **Regras:** [RN55](../regras-de-negocio.md#rn55), [RN56](../regras-de-negocio.md#rn56).
 
-### <a id="uc06"></a>UC06 — Criar cliente sintético
+### <a id="uc06"></a>UC06 — Criar cliente simulado
 - **Status:** Rascunho
 - **Ator:** QA ou Desenvolvedor
 - **Objetivo:** ter um cliente específico para um teste.
@@ -197,7 +197,7 @@ Todos começam como **Rascunho**.
 
 ### <a id="uc10"></a>UC10 — Fazer a jornada de consentimento (PF)
 - **Status:** Rascunho
-- **Ator:** Cliente sintético
+- **Ator:** Cliente simulado
 - **Pré-condição:** consentimento em `AWAITING_AUTHORISATION` ([UC09](#uc09)).
 - **Fluxo principal:** 1. **Consentimento:** na receptora, o cliente escolhe banco, dados e prazo. 2. **Direcionamento:** tela de transição. 3. **Autenticação:** login no banco simulado e conferência de titularidade. 4. **Confirmação:** vê destinatário, prazo e dados, escolhe contas e cartões e confirma. 5. **Redirecionamento:** tela de transição de volta. 6. **Efetivação:** a receptora mostra o resultado.
 - **Fluxo alternativo — sem receptora própria:** a receptora de demonstração faz as etapas 1, 2 e 6 ([RN91](../regras-de-negocio.md#rn91)).
@@ -207,7 +207,7 @@ Todos começam como **Rascunho**.
 
 ### <a id="uc11"></a>UC11 — Fazer a jornada com múltiplas alçadas (PJ)
 - **Status:** Rascunho
-- **Ator:** Cliente sintético (representante da empresa)
+- **Ator:** Cliente simulado (representante da empresa)
 - **Fluxo principal:** 1. Helena faz a jornada da Indústria Aurora. 2. O consentimento fica `AUTHORISED`, e os recursos, `PENDING_AUTHORISATION`. 3. Paula aprova na tela da instituição. 4. Os recursos vão para `AVAILABLE`.
 - **Fluxo alternativo — recusa:** um aprovador recusa, e os recursos vão para `UNAVAILABLE`.
 - **Fluxo alternativo — prazo:** sem aprovação no prazo, os recursos não ficam disponíveis.
@@ -216,7 +216,7 @@ Todos começam como **Rascunho**.
 
 ### <a id="uc12"></a>UC12 — Consultar e revogar consentimento
 - **Status:** Rascunho
-- **Ator:** Receptora ou Cliente sintético
+- **Ator:** Receptora ou Cliente simulado
 - **Fluxo principal:** 1. A receptora consulta `GET /consents/{consentId}`. 2. Revoga por `DELETE`, ou o cliente revoga na tela de gestão do banco. 3. Vai para `REJECTED`, com quem rejeitou.
 - **Pós-condição:** as APIs passam a responder 401 ([RN88](../regras-de-negocio.md#rn88)).
 - **Regras:** [RN82](../regras-de-negocio.md#rn82), [RN86](../regras-de-negocio.md#rn86), [RN88](../regras-de-negocio.md#rn88).

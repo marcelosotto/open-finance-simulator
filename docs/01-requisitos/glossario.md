@@ -10,11 +10,11 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **Receptora** | Instituição que consome os dados. Ex.: o coletor da XP. |
 | **Perfil de comportamento** | Modelo de como uma instituição responde: latência, erros, limites e anomalias. Ex.: `lento`. |
 | **Perfil de dados** | Modelo de como os dados de um cliente se parecem: volume, valores e produtos. Ex.: `alto-volume`. |
-| **Dado sintético** | Qualquer dado criado artificialmente. Todo dado do simulador é sintético. |
-| **Dado persistido** | Dado sintético gravado no banco. É o "dado físico". |
-| **Dado virtual** | Dado sintético calculado na hora a partir de uma semente, sem gravar. |
+| **Dado simulado** | Qualquer dado criado pelo simulador, sem origem em cliente real. Sua natureza é persistido ou virtual. |
+| **Dado persistido** | Dado simulado gravado no banco. |
+| **Dado virtual** | Dado simulado calculado na hora a partir de uma semente, sem gravar. |
 | **Mundo virtual** | Conjunto de clientes, consentimentos e recursos virtuais, usado em teste de carga. |
-| **Massa** | Conjunto de dados sintéticos criado para um teste. |
+| **Massa** | Conjunto de dados simulados criado para um teste. |
 | **Lote** | Massa criada de uma vez, que pode ser apagada de uma vez. |
 | **Semente** | Valor que faz o gerador produzir sempre o mesmo resultado. |
 | **Ajuste** | Alteração persistida sobre um dado calculado. Ex.: mudar uma transação ou revogar um consentimento virtual. |

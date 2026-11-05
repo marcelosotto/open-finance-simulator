@@ -50,7 +50,7 @@ Os consentimentos são valores fictícios, como ponto de partida, e não dados r
 | Sicoob | `HML-Sicoob` | 700.000 |
 | Sicredi | `HML-Sicredi` | 600.000 |
 
-## Clientes sintéticos
+## Clientes simulados
 
 ### Mariana Alves — pessoa física
 Cliente do Banco Estável, com uma conta, um cartão e um empréstimo. Usada na jornada PF.
