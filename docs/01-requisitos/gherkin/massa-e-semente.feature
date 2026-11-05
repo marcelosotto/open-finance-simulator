@@ -26,10 +26,10 @@ Funcionalidade: Gerar massa de dados
     E o saldo deve refletir o ajuste
 
   # RN52
-  Cenário: Mundo virtual não grava nada
+  Cenário: Mundo virtual não grava os itens
     Quando Bruno pede 1.000 itens do mundo virtual
     Então os IDs devem funcionar nas APIs
-    E nada deve ser gravado no banco
+    E só o total e a semente devem estar gravados
 
   # RN53
   Cenário: Revogar um consentimento virtual
@@ -37,10 +37,46 @@ Funcionalidade: Gerar massa de dados
     Quando Bruno o revoga
     Então as chamadas com ele devem responder 401
 
+  # RN53
+  Cenário: Trocar a semente apaga os ajustes
+    Dado um mundo virtual com um consentimento revogado
+    Quando Bruno troca a semente e confirma
+    Então os ajustes daquele mundo devem sumir
+
+  # RN53, RN58
+  Cenário: Limpar os ajustes do mundo virtual
+    Dado um mundo virtual com 50 consentimentos revogados
+    Quando Diego limpa os ajustes
+    Então os consentimentos devem voltar ao estado calculado
+
+  # RN49
+  Cenário: Mesmo cliente em vários bancos
+    Dado que Mariana tem conta no "Banco Estável" e no "Banco Lento"
+    Quando ela consente nos dois bancos
+    Então cada consentimento deve mostrar só os dados do seu banco
+
+  # RN49
+  Cenário: Dois consentimentos no mesmo banco
+    Dado que Mariana tem um consentimento autorizado no "Banco Estável"
+    Quando ela autoriza outro consentimento no mesmo banco
+    Então os dois devem funcionar
+
+  # RN54
+  Cenário: Dois lotes com a mesma semente
+    Dado um lote com semente 42
+    Quando Diego gera outro lote com semente 42
+    Então os documentos e IDs devem ser diferentes
+    E o restante dos dados deve ser igual
+
   # RN56
-  Cenário: Distribuição precisa somar 100%
+  Cenário: Bancos precisam somar 100%
     Quando Diego define 60% e 30% entre os bancos
     Então a distribuição deve ser recusada
+
+  # RN56
+  Cenário: Produtos não precisam somar 100%
+    Quando Diego define 90% com conta, 50% com cartão e 20% com empréstimo
+    Então a distribuição deve ser aceita
 
   # RN57
   Cenário: Documento válido

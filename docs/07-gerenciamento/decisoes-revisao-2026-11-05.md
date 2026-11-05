@@ -32,7 +32,11 @@ O projeto usa só **simulado** para o que é fictício: instituição, cliente e
 
 ## Próximo passo
 
-Revisão dos casos de uso. UC01, UC02, UC03, UC04, UC24 e UC28 aprovados.
+Revisão dos casos de uso. Blocos de configuração e de massa de dados aprovados: UC01 a UC08, UC24, UC27 e UC28.
+
+## Cliente e consentimento
+
+O cliente não pertence a um banco. Ele pode ter produtos em vários bancos e mais de um consentimento no mesmo banco ([RN49](../01-requisitos/regras-de-negocio.md#rn49)).
 
 ## Limites
 

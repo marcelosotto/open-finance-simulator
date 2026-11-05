@@ -10,11 +10,12 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `instituicoes` | Nome, `organisationId`, público, produtos, comportamento e limites | Nasce com os 5 bancos de perfil e os 11 de nome real |
 | `perfis_comportamento` | Modelos de comportamento | Prontos não são apagados |
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
-| `distribuicoes` | Divisão da massa entre bancos, produtos e perfis | Somas em 100% |
+| `distribuicoes` | Divisão da massa entre bancos, perfis e produtos | Bancos e perfis somam 100%; produtos têm porcentagem própria |
 | `receptoras` | `organisationId` e QCA sobrescrito por instituição | [PA10](../01-requisitos/regras-de-negocio.md#pa10) |
-| `clientes` | Documento, nome, tipo, credenciais de teste, marca e natureza | Índice por instituição e documento |
+| `clientes` | Documento, nome, tipo, credenciais de teste, marca e natureza | Índice por documento; o cliente não pertence a um banco |
 | `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações | Mudança de estado atômica; índice para expirar |
-| `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e cliente |
+| `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e por cliente e banco |
+| `mundos_virtuais` | Total e semente por banco | Reproduz o mesmo mundo |
 | `ajustes` | Mudanças sobre transação ou dado virtual | Chave: alvo; vence o cálculo |
 | `lotes` | Parâmetros, semente, progresso e situação | Apagar leva tudo junto |
 | `cenarios` | Regras, defeitos e anomalias | Índice por alcance |
@@ -33,6 +34,6 @@ O documento do cliente entra na chave como hash.
 
 ## O que não é gravado
 - Transações: saem de `recurso + dia + semente`.
-- Mundo virtual: sai do índice. Só ajustes são gravados.
+- Itens do mundo virtual: saem do índice. Só total, semente e ajustes são gravados.
 - Chave de paginação: é assinada e carrega o que precisa.
 - ClickHouse: sai do simulador. Quem precisar analisar chamadas usa os registros ou OpenTelemetry.
