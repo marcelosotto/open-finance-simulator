@@ -1,6 +1,6 @@
 # ADR-002: Specs oficiais fixadas por commit
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-11-05
 
 ## Contexto
