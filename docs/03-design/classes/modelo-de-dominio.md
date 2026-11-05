@@ -98,9 +98,11 @@ classDiagram
 ## Máquinas de estados
 
 ### Consentimento
+No processo oficial, o consentimento passa antes por `AWAITING_AUTHORISATION`. Aqui ele nasce autorizado ([RN80](../../01-requisitos/regras-de-negocio.md#rn80)).
+
 ```mermaid
 stateDiagram-v2
-  [*] --> AUTHORISED : painel, lote ou mundo virtual
+  [*] --> AUTHORISED : API, painel, lote ou mundo virtual
   AUTHORISED --> REJECTED : vence, revogação ou fraude
   REJECTED --> [*]
 ```

@@ -16,7 +16,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn05"></a>RN05 | Mudar a configuração de uma instituição vale para as próximas chamadas, sem reiniciar, e fica no histórico com usuário, antes e depois. | Produto |
 | <a id="rn06"></a>RN06 | Uma instituição com clientes não é apagada, só **inativada**. Inativa, ela responde como fora do ar. | Produto |
 | <a id="rn07"></a>RN07 | A instituição chamada é identificada pelo **endereço** usado, como numa instituição real, e não por um cabeçalho próprio do simulador ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
-| <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido não aparece para consentir. | Produto |
+| <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido segue a regra oficial: permissões por seleção individual são removidas do consentimento, e as de seleção agrupada são mantidas ([RN83](#rn83)). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
 | <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento. Bancos de perfil têm nome fictício. Bancos de nome real usam o perfil `estavel`, e o que os diferencia são variáveis, como os consentimentos ativos. | Produto |
 
 ## Comportamento
@@ -115,11 +115,11 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Consentimento
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn80"></a>RN80 | Todo consentimento nasce em `AUTHORISED`, criado pelo painel, por lote ou pelo mundo virtual. Por enquanto, não há API para criar consentimento ([adiados](#adiados)). | Produto |
+| <a id="rn80"></a>RN80 | Todo consentimento nasce em `AUTHORISED`, criado por `POST /consents`, pelo painel, por lote ou pelo mundo virtual. **Diferença do processo oficial:** em um banco real, o consentimento nasce em `AWAITING_AUTHORISATION`, e só vai para `AUTHORISED` depois que o cliente autoriza. Aqui, sem jornada, essa etapa é pulada. Na API, o consentimento compartilha todos os produtos do cliente naquele banco que as permissões cobrem. | Produto |
 | <a id="rn82"></a>RN82 | De `AUTHORISED`, vai para `REJECTED` ao vencer, por revogação na receptora ou no painel, ou por suspeita de fraude. `REJECTED` é final, e registra quem rejeitou (`USER`, `ASPSP`, `TPP`). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn83"></a>RN83 | As permissões seguem os grupos oficiais, e o painel e o lote só aceitam combinações válidas. | Oficial [F06](../00-visao-geral/referencias.md#f06) + Produto |
-| <a id="rn84"></a>RN84 | Cliente PF recebe só permissões PF, e cliente PJ, só permissões PJ. | Oficial [F06](../00-visao-geral/referencias.md#f06) + Produto |
-| <a id="rn85"></a>RN85 | Sem validade informada, o prazo é indeterminado. | Oficial [F12](../00-visao-geral/referencias.md#f12) |
+| <a id="rn83"></a>RN83 | Permissões vêm em grupos oficiais. Combinação fora do grupo responde 422 `COMBINACAO_PERMISSOES_INCORRETA`. Produto de seleção individual não oferecido sai do pedido; de seleção agrupada, fica. Sem permissão funcional restante: 422 `SEM_PERMISSOES_FUNCIONAIS_RESTANTES`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
+| <a id="rn84"></a>RN84 | Permissões PJ sem dados PJ: 422 `INFORMACOES_PJ_NAO_INFORMADAS`. Dados PJ com permissões PF: 422 `PERMISSOES_PJ_INCORRETAS`. PF e PJ juntas: 422 `PERMISSAO_PF_PJ_EM_CONJUNTO`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
+| <a id="rn85"></a>RN85 | Sem `expirationDateTime`, o prazo é indeterminado. | Oficial [F12](../00-visao-geral/referencias.md#f12) |
 | <a id="rn86"></a>RN86 | `DELETE /consents/{consentId}` revoga o consentimento. O painel também revoga. | Oficial [F06](../00-visao-geral/referencias.md#f06) + Produto |
 | <a id="rn87"></a>RN87 | A **renovação** só vale para `AUTHORISED`, muda só validade e finalidade, e não tem redirecionamento. `REJECTED`: 422 `ESTADO_CONSENTIMENTO_INVALIDO`. Múltiplas alçadas: 422 `DEPENDE_MULTIPLA_ALCADA`. Data inválida: 422 `DATA_EXPIRACAO_INVALIDA`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
 | <a id="rn88"></a>RN88 | Consentimento inexistente, não autorizado, revogado ou expirado responde **401** em Recursos e nas APIs de produto, porque o token associado deixa de valer. | Oficial [F08](../00-visao-geral/referencias.md#f08) |
@@ -164,7 +164,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## <a id="adiados"></a>Adiados
 Fora desta versão. Voltam como novos casos de uso, quando fizerem falta.
 
-- **Criar consentimento por API:** `POST /consents`, com a intenção de 60 minutos e os erros 422 oficiais de permissões ([F06](../00-visao-geral/referencias.md#f06)).
+- **Intenção pendente:** consentimento em `AWAITING_AUTHORISATION`, com expiração em 60 minutos ([F06](../00-visao-geral/referencias.md#f06)).
 - **Jornada com redirecionamento:** login no banco, titularidade, confirmação e volta à receptora ([F10](../00-visao-geral/referencias.md#f10) e [F11](../00-visao-geral/referencias.md#f11)).
 - **Consentimento recusado ou não autorizado:** simular esses casos em testes.
 - **Modo FAPI:** depende da jornada com redirecionamento.

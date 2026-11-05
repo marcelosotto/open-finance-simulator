@@ -39,6 +39,7 @@ flowchart LR
   end
   subgraph Cons["Consentimento e recursos"]
     UC25[UC25 Autenticar a receptora]
+    UC09[UC09 Criar por API]
     UC10[UC10 Criar consentimento no painel]
     UC11[UC11 Múltiplas alçadas]
     UC12[UC12 Consultar e revogar]
@@ -61,7 +62,7 @@ flowchart LR
   O --> UC01 & UC02 & UC03 & UC05 & UC07 & UC15 & UC27
   D --> UC24
   Q --> UC04 & UC06 & UC08 & UC10 & UC11 & UC22 & UC26 & UC28
-  R --> UC25 & UC12 & UC13 & UC14 & UC16 & UC17
+  R --> UC25 & UC09 & UC12 & UC13 & UC14 & UC16 & UC17
   S --> UC18 & UC19 & UC20 & UC21 & UC23
 ```
 
@@ -192,8 +193,12 @@ Todos começam como **Rascunho**.
 - **Regras:** [RN120](../regras-de-negocio.md#rn120), [RN122](../regras-de-negocio.md#rn122), [RN123](../regras-de-negocio.md#rn123).
 
 ### <a id="uc09"></a>UC09 — Criar consentimento por API
-- **Status:** Adiado
-- **Observação:** por enquanto, consentimentos nascem pelo painel, por lote ou pelo mundo virtual ([adiados](../regras-de-negocio.md#adiados)).
+- **Status:** Em revisão
+- **Ator:** Receptora
+- **Fluxo principal:** 1. Chama `POST /consents` com usuário, permissões e validade. 2. O sistema valida grupos e tipo de pessoa. 3. Cria em `AUTHORISED`, com os produtos do cliente naquele banco, e responde 201.
+- **Diferença do processo oficial:** em um banco real, a resposta traz `AWAITING_AUTHORISATION`, e o cliente autoriza depois. Aqui a receptora segue direto para o token ([RN80](../regras-de-negocio.md#rn80)).
+- **Exceções:** erros 422 de [RN83](../regras-de-negocio.md#rn83) e [RN84](../regras-de-negocio.md#rn84).
+- **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN80](../regras-de-negocio.md#rn80), [RN82](../regras-de-negocio.md#rn82) a [RN85](../regras-de-negocio.md#rn85).
 
 ### <a id="uc10"></a>UC10 — Criar consentimento no painel
 - **Status:** Aprovado
@@ -201,7 +206,7 @@ Todos começam como **Rascunho**.
 - **Objetivo:** criar um consentimento por um menu, sem login no banco.
 - **Pré-condição:** cliente simulado com produto na instituição ([UC06](#uc06)).
 - **Fluxo principal:** 1. Escolhe o cliente. 2. Escolhe a instituição e a receptora. 3. Escolhe as permissões, as contas e os cartões, e o prazo. 4. Confirma, e o consentimento nasce `AUTHORISED`.
-- **Exceções:** combinação de permissões inválida ou nenhuma origem selecionada → recusado.
+- **Exceções:** combinação de permissões inválida ou nenhuma origem selecionada → a tela não deixa confirmar.
 - **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN49](../regras-de-negocio.md#rn49), [RN80](../regras-de-negocio.md#rn80), [RN83](../regras-de-negocio.md#rn83) a [RN85](../regras-de-negocio.md#rn85), [RN95](../regras-de-negocio.md#rn95).
 
 ### <a id="uc11"></a>UC11 — Múltiplas alçadas (PJ)

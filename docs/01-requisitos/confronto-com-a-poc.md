@@ -1,6 +1,6 @@
 # Confronto da POC com as regras oficiais
 
-> A jornada com redirecionamento e a criação de consentimento por API foram [adiadas](regras-de-negocio.md#adiados) depois desta análise.
+> A jornada com redirecionamento e a intenção pendente foram [adiadas](regras-de-negocio.md#adiados) depois desta análise.
 
 Compara o `src/OpenFinance.FakeProxy` do repositório OpenToken (commit `d3fe839`) com as [fontes oficiais](../00-visao-geral/referencias.md). A comparação foi feita pela leitura do código, sem executar a POC. A interpretação das regras ainda precisa de revisão humana.
 

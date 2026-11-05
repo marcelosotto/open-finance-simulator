@@ -36,7 +36,7 @@ Revisão dos casos de uso. Blocos de configuração, massa de dados e consentime
 
 ## Consentimento sem jornada
 
-Cliente simulado é só massa de dados, sem login nem telas. Consentimentos nascem `AUTHORISED`, pelo painel, por lote ou pelo mundo virtual. Criação por API, jornada com redirecionamento, consentimento recusado e modo FAPI ficaram [adiados](../01-requisitos/regras-de-negocio.md#adiados).
+Cliente simulado é só massa de dados, sem login nem telas. Consentimentos nascem `AUTHORISED`, pela API, pelo painel, por lote ou pelo mundo virtual. Intenção pendente, jornada com redirecionamento, consentimento recusado e modo FAPI ficaram [adiados](../01-requisitos/regras-de-negocio.md#adiados).
 
 ## Cliente e consentimento
 

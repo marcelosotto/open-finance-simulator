@@ -41,12 +41,6 @@ Funcionalidade: Criar consentimento no painel
     Quando Bruno abre as permissões
     Então só devem aparecer permissões PF
 
-  # RN08
-  Cenário: Produto não oferecido não aparece
-    Dado um banco que não oferece contas
-    Quando Bruno abre as permissões nesse banco
-    Então contas não devem aparecer
-
   # RN98
   Cenário: Duas aprovações pendentes
     Dado um consentimento da Indústria Aurora com duas aprovações pendentes
