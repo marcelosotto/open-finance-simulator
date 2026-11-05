@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tabela-de-endpoints.schema.json",
+  "title": "config/tabela-de-endpoints.json",
+  "description": "Classe de frequência e limites de cada endpoint, copiados de docs/01-requisitos/tabela-de-endpoints.md. Ver research.md R05.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fonte", "timeoutSegundos", "tps", "endpoints"],
+  "properties": {
+    "fonte": {
+      "type": "string",
+      "description": "Captura da tabela oficial usada",
+      "examples": ["F02, captura de 30/10/2026"]
+    },
+    "timeoutSegundos": { "const": 15 },
+    "tps": { "const": 300 },
+    "endpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contrato", "secao", "metodo", "caminho", "frequencia", "slaMs", "tpm", "limiteMensal"],
+        "properties": {
+          "contrato": { "type": "string", "examples": ["accounts-2.5.1"] },
+          "secao": { "type": "string", "examples": ["Contas"] },
+          "metodo": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+          "caminho": { "type": "string", "examples": ["/accounts/{accountId}/balances"] },
+          "frequencia": { "enum": ["alta", "media-alta", "media", "baixa"] },
+          "slaMs": { "enum": [1500, 2000, 4000] },
+          "tpm": {
+            "oneOf": [
+              { "type": "integer", "minimum": 1 },
+              { "const": "faixa-qca" },
+              { "type": "null", "description": "Sem limite de tráfego (consentimento e recursos)" }
+            ]
+          },
+          "limiteMensal": {
+            "oneOf": [
+              { "type": "integer", "minimum": 1 },
+              { "type": "null", "description": "Sem limite operacional" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

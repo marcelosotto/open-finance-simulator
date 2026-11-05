@@ -17,7 +17,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn06"></a>RN06 | Uma instituição com clientes não é apagada, só **inativada**. Inativa, ela responde como fora do ar. | Produto |
 | <a id="rn07"></a>RN07 | A instituição chamada é identificada pelo **endereço** usado, como numa instituição real, e não por um cabeçalho próprio do simulador ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
 | <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido segue a regra oficial: permissões por seleção individual são removidas do consentimento, e as de seleção agrupada são mantidas ([RN83](#rn83)). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento. Bancos de perfil têm nome fictício. Bancos de nome real usam o perfil `estavel`, e o que os diferencia são variáveis, como os consentimentos ativos. | Produto |
+| <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` com a marca `hml` e `DEV-Itaú` com `dev`. Com a marca vazia, o nome fica sem prefixo: `Itaú`. Bancos de perfil têm nome fictício. Bancos de nome real usam o perfil `estavel`, e o que os diferencia são variáveis, como os consentimentos ativos. | Produto |
 
 ## Comportamento
 | ID | Regra | Origem |
@@ -95,20 +95,20 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Marcação dos dados
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn60"></a>RN60 | Todo dado gerado carrega a marca do **ambiente** (`dev` ou `hml`) em três lugares, para continuar visível depois de copiado: **cabeçalho** da resposta, **prefixo dos identificadores** e **texto** de campos livres. | Produto |
-| <a id="rn61"></a>RN61 | O **cabeçalho** `x-sim-environment` traz o ambiente, e `x-sim-data-nature` traz `persistido`, `virtual` ou `misto`. A resposta oficial não muda de formato: receptora que ignora esses cabeçalhos não sente diferença. | Produto |
-| <a id="rn62"></a>RN62 | O **prefixo** dos IDs usa os padrões oficiais: `hml-p-…` para persistido e `hml-v-…` para virtual. Em consentimentos, a natureza também aparece: `urn:hml:p-…` e `urn:hml:v-…`. Em desenvolvimento, `hml` vira `dev`. | Produto |
-| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` (`[HML] PIX recebido`) e nome do cliente (`[HML] Mariana Alves`). Em desenvolvimento, a marca é `[DEV]`. | Produto |
-| <a id="rn64"></a>RN64 | A marca é aplicada na criação do dado e nunca muda. Dado gerado em `dev` continua `dev` mesmo se for copiado para outro ambiente. | Produto |
+| <a id="rn60"></a>RN60 | Todo dado gerado carrega a marca do **ambiente**, para saber de qual ambiente saiu a informação. A marca é um valor livre da configuração da implantação (`dev`, `hml`, `stage` ou outro), sem lista fechada nem regra: o sistema só concatena o valor. Em produção a configuração fica vazia e nada é concatenado ([RN70](#rn70)). A marca aparece em três lugares, para continuar visível depois de copiado: **cabeçalho** da resposta, **prefixo dos identificadores** e **texto** de campos livres. | Produto |
+| <a id="rn61"></a>RN61 | O **cabeçalho** `x-sim-environment` traz a marca do ambiente e não é enviado quando a marca está vazia. O `x-sim-data-nature` traz `persistido`, `virtual` ou `misto`. A resposta oficial não muda de formato: receptora que ignora esses cabeçalhos não sente diferença. | Produto |
+| <a id="rn62"></a>RN62 | O **prefixo** dos IDs usa os padrões oficiais: `{marca}-p-…` para persistido e `{marca}-v-…` para virtual. Em consentimentos, a natureza também aparece: `urn:{marca}:p-…` e `urn:{marca}:v-…`. Exemplo com `hml`: `hml-p-1a2b3c` e `urn:hml:p-1a2b3c`. Com a marca vazia, só a natureza fica: `p-1a2b3c` e `urn:p:1a2b3c`. Para o ID seguir o padrão oficial, a marca deve usar só letras, números e hífen; o sistema não confere. | Produto |
+| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` e nome do cliente, com a marca em maiúsculas entre colchetes na frente. Com `hml`: `[HML] PIX recebido` e `[HML] Mariana Alves`; com `dev`: `[DEV] …`. Com a marca vazia, o texto sai sem marca. | Produto |
+| <a id="rn64"></a>RN64 | A marca é aplicada na criação do dado e nunca muda. Dado gerado com a marca `dev` continua `dev` mesmo se for copiado para outro ambiente. | Produto |
 | <a id="rn65"></a>RN65 | Uma resposta com dado persistido e dado virtual se declara `misto`. Cada item mostra sua natureza no prefixo do ID. | Produto |
-| <a id="rn66"></a>RN66 | Os valores e a forma da marca nunca dependem de configuração da instituição: nenhum perfil desliga a marcação. | Produto |
+| <a id="rn66"></a>RN66 | Os valores e a forma da marca nunca dependem de configuração da instituição: nenhum perfil desliga a marcação. O valor da marca vem só da configuração do ambiente. | Produto |
 
 ## Ambientes e administração
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn70"></a>RN70 | O foco são os ambientes `dev` e `hml`. O uso em produção não é bloqueado nem decidido agora; se houver, será preciso decidir como fica a marcação ([PA05](#pa05)). | Produto |
+| <a id="rn70"></a>RN70 | O foco são os ambientes de desenvolvimento e homologação. O uso em produção não é bloqueado; se houver, a marca do ambiente fica vazia e nada é concatenado ([RN60](#rn60), [PA05](#pa05)). | Produto |
 | <a id="rn71"></a>RN71 | APIs de administração ficam em endereço separado das APIs Open Finance e exigem usuário. Toda alteração grava usuário, data, antes e depois. | Produto |
-| <a id="rn72"></a>RN72 | Em `dev` e `hml`, cada tela mostra o ambiente em destaque. | Produto |
+| <a id="rn72"></a>RN72 | Com a marca do ambiente preenchida, cada tela mostra a marca em destaque. Com a marca vazia, nada é mostrado. | Produto |
 | <a id="rn73"></a>RN73 | O relógio pode ser **acelerado ou fixado** para testes, sempre por instituição, nunca global. Ele vale para as datas das respostas, as expirações, a cota mensal e o horário das regras de cenário. TPM e capacidade seguem a hora real, porque medem tráfego real. O operador pode voltar ao relógio real a qualquer momento. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
 
 ## Consentimento
@@ -175,7 +175,7 @@ Fora desta versão. Voltam como novos casos de uso, quando fizerem falta.
 | <a id="pa02"></a>PA02 | ~~Quando o modo FAPI completo entra?~~ **Respondida:** adiado, porque depende da jornada com redirecionamento. Até lá, modo simples ([adiados](#adiados)). |
 | <a id="pa03"></a>PA03 | ~~Usamos nomes de bancos reais?~~ **Respondida:** sim, com o prefixo do ambiente. Bancos de perfil continuam com nome fictício. Ver [RN09](#rn09). |
 | <a id="pa04"></a>PA04 | ~~Como evitar CPF de pessoa real?~~ **Respondida:** CPF com um dígito inicial fixo, até 100 milhões. O risco foi aceito. Ver [RN57](#rn57). |
-| <a id="pa05"></a>PA05 | ~~E o ambiente de produção?~~ **Respondida:** o uso em produção não é bloqueado nem decidido agora. Ver [RN70](#rn70). |
+| <a id="pa05"></a>PA05 | ~~E o ambiente de produção?~~ **Respondida:** o uso em produção não é bloqueado. Em produção a marca do ambiente fica vazia ([RN60](#rn60), [RN70](#rn70)). |
 | <a id="pa06"></a>PA06 | ~~Qual o escopo depois dos dados?~~ **Respondida:** a primeira versão cobre só dados e consentimento. Os demais ficam para depois. |
 | <a id="pa07"></a>PA07 | ~~O simulador envia reportes à PCM?~~ **Respondida:** não na primeira versão. |
 | <a id="pa08"></a>PA08 | ~~Qual o código de bloqueio temporário?~~ **Respondida:** seguir a orientação de cada API. |

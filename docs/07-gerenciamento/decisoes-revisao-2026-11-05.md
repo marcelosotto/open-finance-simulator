@@ -38,6 +38,10 @@ Revisão dos casos de uso. Blocos de configuração, massa de dados e consentime
 
 Existe um mundo virtual por ambiente, e um pedido se divide entre os bancos pela distribuição. O coletor pede o token normalmente, sem token na lista.
 
+## Marca do ambiente
+
+A marca do ambiente é um valor livre da configuração da implantação (`dev`, `hml`, `stage` ou outro). O sistema só concatena o valor, sem lista fechada nem regra, para saber de qual ambiente saiu a informação. Em produção a configuração fica vazia e nada é concatenado; a natureza (persistido ou virtual) continua aparecendo. Constituição emendada para a versão 2.0.0 ([RN60](../01-requisitos/regras-de-negocio.md#rn60), [RN70](../01-requisitos/regras-de-negocio.md#rn70)).
+
 ## Registro de chamadas
 
 O simulador só responde. Quem registra e investiga as chamadas é a aplicação que consome, e por isso o UC26 foi removido.

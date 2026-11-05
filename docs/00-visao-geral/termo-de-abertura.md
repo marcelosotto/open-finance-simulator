@@ -35,7 +35,7 @@ Oferecer um ambiente que se comporte **o mais perto possível do que as outras i
 - **Validar qualidade de dados.** O simulador **produz** dado ruim; quem valida é outro sistema ([PR04](premissas.md#pr04)).
 - Iniciação de pagamentos e Pix, portabilidade e Open Insurance ([PA06](../01-requisitos/regras-de-negocio.md#pa06)).
 - Dados abertos ([PA06](../01-requisitos/regras-de-negocio.md#pa06)).
-- Decidir o uso em produção: não é o foco, mas também não é bloqueado ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).
+- Operar em produção: não é o foco, mas também não é bloqueado. Se houver, a marca do ambiente fica vazia ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).
 - Certificação: o simulador não prova conformidade com o Open Finance.
 
 ## Premissas e restrições

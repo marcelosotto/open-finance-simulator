@@ -22,6 +22,7 @@ Funcionalidade: Cadastrar instituições simuladas
       | ambiente | nome     |
       | hml      | HML-Itaú |
       | dev      | DEV-Itaú |
+      |          | Itaú     |
 
   # RN03
   Cenário: Criar um banco só com o nome

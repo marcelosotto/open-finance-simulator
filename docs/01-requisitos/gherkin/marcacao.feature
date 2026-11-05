@@ -8,20 +8,21 @@ Funcionalidade: Marcar os dados com ambiente e natureza
 
   # RN61
   Esquema do Cenário: Cabeçalhos da resposta
-    Dado um ambiente "<ambiente>"
+    Dado a marca de ambiente "<marca>"
     E um recurso "<natureza>"
     Quando Ana consulta o recurso
-    Então o cabeçalho "x-sim-environment" deve ser "<ambiente>"
+    Então o cabeçalho "x-sim-environment" deve ser "<marca>"
     E o cabeçalho "x-sim-data-nature" deve ser "<natureza>"
 
     Exemplos:
-      | ambiente | natureza   |
-      | dev      | persistido |
-      | hml      | virtual    |
+      | marca | natureza   |
+      | dev   | persistido |
+      | hml   | virtual    |
+      | stage | virtual    |
 
   # RN62
   Esquema do Cenário: Prefixo dos identificadores
-    Dado um ambiente "hml"
+    Dado a marca de ambiente "hml"
     Quando é criado um recurso "<natureza>"
     Então o ID deve começar com "<prefixo>"
     E o ID deve seguir o padrão oficial
@@ -33,7 +34,7 @@ Funcionalidade: Marcar os dados com ambiente e natureza
 
   # RN62
   Esquema do Cenário: Prefixo dos consentimentos
-    Dado um ambiente "hml"
+    Dado a marca de ambiente "hml"
     Quando é criado um consentimento "<natureza>"
     Então o consentId deve começar com "<prefixo>"
     E o consentId deve seguir o padrão oficial
@@ -45,7 +46,7 @@ Funcionalidade: Marcar os dados com ambiente e natureza
 
   # RN63
   Cenário: Marca nos campos livres
-    Dado um ambiente "hml"
+    Dado a marca de ambiente "hml"
     Quando Ana consulta uma transação
     Então transactionName deve começar com "[HML]"
     E o campo deve respeitar o tamanho oficial
@@ -57,8 +58,8 @@ Funcionalidade: Marcar os dados com ambiente e natureza
 
   # RN64
   Cenário: A marca nunca muda
-    Dado um cliente criado em "dev"
-    Quando a massa é copiada para "hml"
+    Dado um cliente criado com a marca "dev"
+    Quando a massa é copiada para um ambiente com a marca "hml"
     Então o cliente deve continuar marcado como "dev"
 
   # RN65
@@ -74,13 +75,29 @@ Funcionalidade: Marcar os dados com ambiente e natureza
 
   # RN60
   Cenário: A marca aparece nos três lugares
-    Dado um ambiente "hml"
+    Dado a marca de ambiente "hml"
     Quando Ana consulta uma transação
     Então a marca deve aparecer no cabeçalho, no identificador e no texto
+
+  # RN60, RN62, RN63, RN70
+  Cenário: Marca vazia em produção
+    Dado a marca de ambiente vazia
+    Quando Ana consulta uma transação persistida
+    Então o cabeçalho "x-sim-environment" não deve ser enviado
+    E o cabeçalho "x-sim-data-nature" deve ser "persistido"
+    E o ID deve começar com "p-"
+    E transactionName não deve ter marca de ambiente
+
+  # RN62, RN70
+  Cenário: Consentimento com a marca vazia
+    Dado a marca de ambiente vazia
+    Quando é criado um consentimento "virtual"
+    Então o consentId deve começar com "urn:v:"
+    E o consentId deve seguir o padrão oficial
 
   @tela
   # RN72
   Cenário: Ambiente visível nas telas
-    Dado um ambiente "hml"
+    Dado a marca de ambiente "hml"
     Quando Diego abre o back-office
-    Então o ambiente deve aparecer em destaque
+    Então a marca "hml" deve aparecer em destaque
