@@ -16,7 +16,6 @@ Funcionalidade: Injetar defeitos e anomalias
     Dado o defeito "<defeito>" com taxa de 100%
     Quando Ana consulta transações
     Então a resposta deve trazer "<efeito>"
-    E o registro de chamada deve mostrar "<defeito>"
 
     Exemplos:
       | defeito                   | efeito                         |

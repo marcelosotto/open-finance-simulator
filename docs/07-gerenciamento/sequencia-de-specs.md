@@ -15,7 +15,7 @@ Relacionados: [casos de uso](../01-requisitos/casos-de-uso/README.md) · [cenár
 | 007 | `comportamento-e-cenarios` | [UC04](../01-requisitos/casos-de-uso/README.md#uc04), [UC21](../01-requisitos/casos-de-uso/README.md#uc21), [UC28](../01-requisitos/casos-de-uso/README.md#uc28) | comportamento | 006 | — | `/speckit-specify Comportamento e cenários: UC04, UC21 e UC28, com perfis, timeout, indisponibilidade e relógio. Usar docs/ e comportamento.feature. Nome curto: comportamento-e-cenarios` |
 | 008 | `consentimento-no-painel` | [UC10](../01-requisitos/casos-de-uso/README.md#uc10), [UC11](../01-requisitos/casos-de-uso/README.md#uc11) | consentimento-no-painel | 004 | — | `/speckit-specify Consentimento no painel: UC10 e UC11, com menu de criação e múltiplas alçadas. Usar docs/ e consentimento-no-painel.feature. Nome curto: consentimento-no-painel` |
 | 009 | `defeitos-e-anomalias` | [UC22](../01-requisitos/casos-de-uso/README.md#uc22) | defeitos-e-anomalias | 007 | — | `/speckit-specify Defeitos e anomalias: UC22. Usar docs/ e defeitos-e-anomalias.feature. Nome curto: defeitos-e-anomalias` |
-| 010 | `back-office` | [UC26](../01-requisitos/casos-de-uso/README.md#uc26) e telas de configuração | — | 009 | — | `/speckit-specify Back-office: telas de bancos, massa, cenários e UC26. Usar docs/ e interface.md. Nome curto: back-office` |
+| 010 | `back-office` | Telas de configuração | — | 009 | — | `/speckit-specify Back-office: telas de bancos, massa e cenários. Usar docs/ e interface.md. Nome curto: back-office` |
 
 O modo FAPI ficou fora da sequência, junto com os demais [adiados](../01-requisitos/regras-de-negocio.md#adiados).
 

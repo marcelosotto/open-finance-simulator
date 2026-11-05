@@ -14,7 +14,6 @@ flowchart TB
     worker["<b>Worker</b><br/><small>Lotes e expirações</small>"]
     mongo[("<b>MongoDB</b><br/><small>Bancos, clientes, consentimentos,<br/>recursos, ajustes, cenários, histórico</small>")]
     redis[("<b>Redis</b><br/><small>TPM, TPS e limite operacional</small>")]
-    reg[("<b>Registros de chamada</b><br/><small>MongoDB com expiração</small>")]
   end
   specs["<b>open-finance-specs</b>"]
 
@@ -22,9 +21,7 @@ flowchart TB
   user --> bo --> admin
   api --> mongo
   api --> redis
-  api --> reg
   admin --> mongo
-  admin --> reg
   worker --> mongo
   specs -.->|"Empacotadas na imagem"| api
 ```

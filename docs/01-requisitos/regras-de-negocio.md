@@ -27,10 +27,10 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn12"></a>RN12 | O **timeout oficial** de cada endpoint é 15 segundos. No perfil `timeout`, a chamada afetada fica pendente até o limite e termina em **504** ([PA20](#pa20)). | Oficial [F02](../00-visao-geral/referencias.md#f02) + Produto |
 | <a id="rn13"></a>RN13 | Erros são sorteados pela **taxa de erro** e pelos **pesos por status** da instituição. Ao salvar, só é recusado o status que nenhuma spec declara. Na chamada, só entram os que a spec daquele endpoint declara. **429, 423 e 529** não entram no sorteio: só aparecem quando o limite estoura ou por uma regra de cenário. | Produto |
 | <a id="rn14"></a>RN14 | Uma **regra de cenário** muda o comportamento dentro de um alcance: instituição, endpoint, cliente ou recurso, com período opcional. O alcance pode combinar cliente, recurso e endpoint. Exemplo: "Banco Estável fora do ar das 10h às 10h30" ou "este cliente sempre dá 500 em saldos". | Produto |
-| <a id="rn15"></a>RN15 | Com várias regras valendo, a mais específica ganha: recurso, cliente, endpoint e instituição, nessa ordem. Se empatar, ganha a que tem mais filtros e, depois, a mais recente. O histórico mostra qual regra agiu em cada chamada. | Produto |
+| <a id="rn15"></a>RN15 | Com várias regras valendo, a mais específica ganha: recurso, cliente, endpoint e instituição, nessa ordem. Se empatar, ganha a que tem mais filtros e, depois, a mais recente. | Produto |
 | <a id="rn16"></a>RN16 | Uma **janela de indisponibilidade** faz a instituição responder 503, 504 ou cortar a conexão, conforme configurado, para todas as chamadas do alcance. | Produto |
 | <a id="rn17"></a>RN17 | Falhas de transporte também são simuladas: conexão cortada, corpo truncado e JSON inválido. | Produto |
-| <a id="rn18"></a>RN18 | O simulador informa por que uma resposta saiu como saiu nos registros de chamada, nunca na resposta da API ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
+| <a id="rn18"></a>RN18 | O simulador nunca diz na resposta da API por que ela saiu assim ([PR07](../00-visao-geral/premissas.md#pr07)). Ele só responde: quem registra e investiga as chamadas é a aplicação que consome. | Produto |
 | <a id="rn19"></a>RN19 | Um **pacote de cenário** é um grupo de regras com nome, ligado e desligado de uma vez. Dentro dele, cada regra segue [RN15](#rn15). | Produto |
 
 ## Limites
@@ -97,8 +97,8 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 |---|---|---|
 | <a id="rn60"></a>RN60 | Todo dado gerado carrega a marca do **ambiente** (`dev` ou `hml`) em três lugares, para continuar visível depois de copiado: **cabeçalho** da resposta, **prefixo dos identificadores** e **texto** de campos livres. | Produto |
 | <a id="rn61"></a>RN61 | O **cabeçalho** `x-sim-environment` traz o ambiente, e `x-sim-data-nature` traz `persistido`, `virtual` ou `misto`. A resposta oficial não muda de formato: receptora que ignora esses cabeçalhos não sente diferença. | Produto |
-| <a id="rn62"></a>RN62 | O **prefixo** dos IDs usa os padrões oficiais: `hml-p-…` para persistido e `hml-v-…` para virtual. Em consentimentos, a natureza também aparece: `urn:hml:p-…` e `urn:hml:v-…`. | Produto |
-| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` (`[HML] PIX recebido`) e nome do cliente (`[HML] Mariana Alves`). | Produto |
+| <a id="rn62"></a>RN62 | O **prefixo** dos IDs usa os padrões oficiais: `hml-p-…` para persistido e `hml-v-…` para virtual. Em consentimentos, a natureza também aparece: `urn:hml:p-…` e `urn:hml:v-…`. Em desenvolvimento, `hml` vira `dev`. | Produto |
+| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` (`[HML] PIX recebido`) e nome do cliente (`[HML] Mariana Alves`). Em desenvolvimento, a marca é `[DEV]`. | Produto |
 | <a id="rn64"></a>RN64 | A marca é aplicada na criação do dado e nunca muda. Dado gerado em `dev` continua `dev` mesmo se for copiado para outro ambiente. | Produto |
 | <a id="rn65"></a>RN65 | Uma resposta com dado persistido e dado virtual se declara `misto`. Cada item mostra sua natureza no prefixo do ID. | Produto |
 | <a id="rn66"></a>RN66 | Os valores e a forma da marca nunca dependem de configuração da instituição: nenhum perfil desliga a marcação. | Produto |
@@ -110,12 +110,11 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn71"></a>RN71 | APIs de administração ficam em endereço separado das APIs Open Finance e exigem usuário. Toda alteração grava usuário, data, antes e depois. | Produto |
 | <a id="rn72"></a>RN72 | Em `dev` e `hml`, cada tela mostra o ambiente em destaque. | Produto |
 | <a id="rn73"></a>RN73 | O relógio pode ser **acelerado ou fixado** para testes, sempre por instituição, nunca global. Ele vale para as datas das respostas, as expirações, a cota mensal e o horário das regras de cenário. TPM e capacidade seguem a hora real, porque medem tráfego real. O operador pode voltar ao relógio real a qualquer momento. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
-| <a id="rn74"></a>RN74 | Cada chamada recebida gera um **registro de chamada**: instituição, endpoint, status, tempo, regra aplicada e `x-fapi-interaction-id`. Dado pessoal fica mascarado, e o registro expira em 7 dias. | Produto |
 
 ## Consentimento
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn80"></a>RN80 | Todo consentimento nasce em `AUTHORISED`, criado por `POST /consents`, pelo painel, por lote ou pelo mundo virtual. **Diferença do processo oficial:** em um banco real, o consentimento nasce em `AWAITING_AUTHORISATION`, e só vai para `AUTHORISED` depois que o cliente autoriza. Aqui, sem jornada, essa etapa é pulada. Na API, o consentimento compartilha todos os produtos do cliente naquele banco que as permissões cobrem. | Produto |
+| <a id="rn80"></a>RN80 | Todo consentimento nasce em `AUTHORISED`, criado por `POST /consents`, pelo painel, por lote ou pelo mundo virtual. **Diferença do processo oficial:** em um banco real, o consentimento nasce em `AWAITING_AUTHORISATION`, e só vai para `AUTHORISED` depois que o cliente autoriza. Aqui, sem jornada, essa etapa é pulada. Na API, o consentimento compartilha todos os produtos do cliente naquele banco que as permissões cobrem. Documento que não é de um cliente simulado responde 422 `ERRO_NAO_MAPEADO`. | Produto |
 | <a id="rn82"></a>RN82 | De `AUTHORISED`, vai para `REJECTED` ao vencer, por revogação na receptora ou no painel, ou por suspeita de fraude. `REJECTED` é final, e registra quem rejeitou (`USER`, `ASPSP`, `TPP`). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
 | <a id="rn83"></a>RN83 | Permissões vêm em grupos oficiais. Combinação fora do grupo responde 422 `COMBINACAO_PERMISSOES_INCORRETA`. Produto de seleção individual não oferecido sai do pedido; de seleção agrupada, fica. Sem permissão funcional restante: 422 `SEM_PERMISSOES_FUNCIONAIS_RESTANTES`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
 | <a id="rn84"></a>RN84 | Permissões PJ sem dados PJ: 422 `INFORMACOES_PJ_NAO_INFORMADAS`. Dados PJ com permissões PF: 422 `PERMISSOES_PJ_INCORRETAS`. PF e PJ juntas: 422 `PERMISSAO_PF_PJ_EM_CONJUNTO`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
@@ -148,7 +147,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 |---|---|---|
 | <a id="rn110"></a>RN110 | Um **defeito de dado** altera o conteúdo da resposta de propósito: campo obrigatório faltando, formato inválido, enum fora da lista, valor incoerente, data fora da janela, `transactionId` repetido, `totalRecords` errado. | Produto |
 | <a id="rn111"></a>RN111 | O defeito tem taxa e alcance como uma [regra de cenário](#rn14). Sem configuração, nenhum defeito acontece. | Produto |
-| <a id="rn112"></a>RN112 | O simulador não diz na resposta da API que há defeito. O registro de chamada diz qual foi aplicado, para quem testa conferir. | Produto |
+| <a id="rn112"></a>RN112 | O simulador não diz na resposta da API que há defeito. | Produto |
 | <a id="rn113"></a>RN113 | Uma **anomalia de protocolo** faz a instituição desobedecer uma regra oficial: `pagination-key` inválida com 422, 401 trocado por 403, `x-fapi-interaction-id` diferente. Cada anomalia tem nome, vem desligada e fica registrada ([PR02](../00-visao-geral/premissas.md#pr02)). | Produto |
 | <a id="rn114"></a>RN114 | Nenhum perfil nasce com anomalias ligadas. Quando há alguma ligada, isso aparece na tela da instituição. | Produto |
 | <a id="rn115"></a>RN115 | Um cenário pode simular dado mudando durante a paginação: registros novos ou removidos entre as páginas. | Produto |
@@ -188,7 +187,7 @@ Fora desta versão. Voltam como novos casos de uso, quando fizerem falta.
 | <a id="pa14"></a>PA14 | ~~Qual a tecnologia do back-office?~~ **Respondida:** React com TypeScript. |
 | <a id="pa15"></a>PA15 | ~~Quem aprova?~~ **Respondida:** Marcelo, por enquanto. |
 | <a id="pa16"></a>PA16 | ~~Onde roda em homologação?~~ **Respondida:** Docker agora. A plataforma de homologação é decidida na implantação. |
-| <a id="pa17"></a>PA17 | ~~Por quanto tempo guardamos a massa?~~ **Respondida:** massa sem limpeza automática; registros de chamada por 7 dias. |
+| <a id="pa17"></a>PA17 | ~~Por quanto tempo guardamos a massa?~~ **Respondida:** massa sem limpeza automática. O simulador não guarda registro das chamadas. |
 | <a id="pa18"></a>PA18 | ~~Como é o login simulado?~~ **Respondida:** não há login de cliente. A pessoa usa o painel, já autenticada ([RN49](#rn49)). |
 | <a id="pa19"></a>PA19 | ~~O relógio acelerado vale em homologação?~~ **Respondida:** sim, só por instituição, nunca global. |
 | <a id="pa21"></a>PA21 | ~~O que fazer com `page-size` acima de 1.000?~~ **Respondida:** reduzir para 1.000 e mostrar no `self`. |

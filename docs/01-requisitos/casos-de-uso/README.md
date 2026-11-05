@@ -56,12 +56,11 @@ flowchart LR
     UC21[UC21 Timeout e indisponibilidade]
     UC22[UC22 Defeitos e anomalias]
     UC23[UC23 Marcar os dados]
-    UC26[UC26 Investigar chamadas]
   end
 
   O --> UC01 & UC02 & UC03 & UC05 & UC07 & UC15 & UC27
   D --> UC24
-  Q --> UC04 & UC06 & UC08 & UC10 & UC11 & UC22 & UC26 & UC28
+  Q --> UC04 & UC06 & UC08 & UC10 & UC11 & UC22 & UC28
   R --> UC25 & UC09 & UC12 & UC13 & UC14 & UC16 & UC17
   S --> UC18 & UC19 & UC20 & UC21 & UC23
 ```
@@ -73,6 +72,7 @@ flowchart LR
 | **Em revisão** | Sendo validado; pode ter pontos em aberto. |
 | **Aprovado** | Revisado ponto a ponto, sem perguntas em aberto. Pronto para virar spec. |
 | **Adiado** | Fora desta versão. |
+| **Removido** | Decidido que não faz parte do simulador. |
 
 Todos começam como **Rascunho**.
 
@@ -116,7 +116,7 @@ Todos começam como **Rascunho**.
 - **Objetivo:** provocar uma situação específica, de forma repetível.
 - **Fluxo principal:** 1. Escolhe o alcance: instituição, endpoint, cliente, recurso ou uma combinação deles. 2. Escolhe o efeito: latência, status, timeout, indisponibilidade, defeito ou mudança de estado. 3. Define frequência, período e semente. 4. Salva.
 - **Fluxo alternativo — pacote de cenário:** salva várias regras com um nome e liga tudo de uma vez ([RN19](../regras-de-negocio.md#rn19)).
-- **Pós-condição:** a regra mais específica vence, e o registro de chamada mostra qual agiu ([RN15](../regras-de-negocio.md#rn15)).
+- **Pós-condição:** a regra mais específica vence ([RN15](../regras-de-negocio.md#rn15)).
 - **Regras:** [RN13](../regras-de-negocio.md#rn13) a [RN19](../regras-de-negocio.md#rn19), [RN54](../regras-de-negocio.md#rn54).
 - **Exemplo:** Bruno faz "Mariana sempre recebe 504 em saldos" e roda o mesmo teste todo dia.
 
@@ -193,11 +193,11 @@ Todos começam como **Rascunho**.
 - **Regras:** [RN120](../regras-de-negocio.md#rn120), [RN122](../regras-de-negocio.md#rn122), [RN123](../regras-de-negocio.md#rn123).
 
 ### <a id="uc09"></a>UC09 — Criar consentimento por API
-- **Status:** Em revisão
+- **Status:** Aprovado
 - **Ator:** Receptora
 - **Fluxo principal:** 1. Chama `POST /consents` com usuário, permissões e validade. 2. O sistema valida grupos e tipo de pessoa. 3. Cria em `AUTHORISED`, com os produtos do cliente naquele banco, e responde 201.
 - **Diferença do processo oficial:** em um banco real, a resposta traz `AWAITING_AUTHORISATION`, e o cliente autoriza depois. Aqui a receptora segue direto para o token ([RN80](../regras-de-negocio.md#rn80)).
-- **Exceções:** erros 422 de [RN83](../regras-de-negocio.md#rn83) e [RN84](../regras-de-negocio.md#rn84).
+- **Exceções:** erros 422 de [RN83](../regras-de-negocio.md#rn83) e [RN84](../regras-de-negocio.md#rn84); documento que não é de cliente simulado → 422 `ERRO_NAO_MAPEADO` ([RN80](../regras-de-negocio.md#rn80)).
 - **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN80](../regras-de-negocio.md#rn80), [RN82](../regras-de-negocio.md#rn82) a [RN85](../regras-de-negocio.md#rn85).
 
 ### <a id="uc10"></a>UC10 — Criar consentimento no painel
@@ -250,58 +250,56 @@ Todos começam como **Rascunho**.
 ## Dados e limites
 
 ### <a id="uc16"></a>UC16 — Consultar dados
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Receptora
 - **Fluxo principal:** 1. Chama um endpoint de dados. 2. O sistema valida cabeçalhos, token e permissão. 3. Aplica capacidade, tráfego, parâmetros, limite e cenário. 4. Responde com dado coerente e marcado.
 - **Exceções:** ver a tabela de [comportamento por estado](../regras-de-negocio.md#consentimento) e [RN104](../regras-de-negocio.md#rn104).
 - **Regras:** [RN38](../regras-de-negocio.md#rn38) a [RN47](../regras-de-negocio.md#rn47).
 
 ### <a id="uc17"></a>UC17 — Paginar
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Receptora
 - **Fluxo principal:** 1. Pede a primeira página. 2. Recebe `links.next` com a chave. 3. Segue até a última página.
 - **Fluxo alternativo — chave inválida ou expirada:** recebe nova chave, com sucesso, e a chamada conta na cota ([RN36](../regras-de-negocio.md#rn36)).
 - **Regras:** [RN31](../regras-de-negocio.md#rn31) a [RN37](../regras-de-negocio.md#rn37).
 
 ### <a id="uc18"></a>UC18 — Aplicar limite de tráfego
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Sistema
 - **Fluxo principal:** 1. Conta a chamada no minuto cheio, por endpoint e receptora. 2. Passou do TPM: responde 429.
 - **Regras:** [RN20](../regras-de-negocio.md#rn20) a [RN24](../regras-de-negocio.md#rn24), [RN30](../regras-de-negocio.md#rn30).
 
 ### <a id="uc19"></a>UC19 — Aplicar limite operacional
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Sistema
 - **Fluxo principal:** 1. Confere a cota do mês, por endpoint, objeto, cliente e receptora. 2. Passou: responde 423. 3. Depois de uma resposta 2XX que não seja de página seguinte, conta a chamada.
 - **Regras:** [RN25](../regras-de-negocio.md#rn25) a [RN28](../regras-de-negocio.md#rn28).
 
 ### <a id="uc20"></a>UC20 — Aplicar capacidade
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Sistema
 - **Fluxo principal:** 1. Conta as requisições por segundo da instituição. 2. Passou da capacidade configurada: responde 529.
 - **Regras:** [RN29](../regras-de-negocio.md#rn29), [RN30](../regras-de-negocio.md#rn30).
 
 ### <a id="uc21"></a>UC21 — Simular timeout e indisponibilidade
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Sistema
 - **Fluxo principal:** 1. O perfil ou uma regra de cenário afeta a chamada. 2. O sistema segura a resposta pelo tempo configurado. 3. No perfil `timeout`, termina em 504. Regras de cenário podem simular 503, conexão cortada ou corpo truncado.
 - **Regras:** [RN12](../regras-de-negocio.md#rn12), [RN16](../regras-de-negocio.md#rn16), [RN17](../regras-de-negocio.md#rn17).
 
 ### <a id="uc22"></a>UC22 — Injetar defeitos e anomalias
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** QA
 - **Objetivo:** ver como a receptora reage a dado ruim e a desvio de protocolo. O simulador não valida o resultado ([PR04](../../00-visao-geral/premissas.md#pr04)).
-- **Fluxo principal:** 1. Escolhe no catálogo um defeito ou anomalia. 2. Define alcance e taxa. 3. Confere nos registros de chamada onde foi aplicado.
+- **Fluxo principal:** 1. Escolhe no catálogo um defeito ou anomalia. 2. Define alcance e taxa. 3. Confere o resultado na aplicação que consome.
 - **Regras:** [RN110](../regras-de-negocio.md#rn110) a [RN115](../regras-de-negocio.md#rn115).
 
 ### <a id="uc23"></a>UC23 — Marcar os dados
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Sistema
 - **Fluxo principal:** 1. Na criação, grava ambiente e natureza. 2. Aplica o prefixo nos IDs e a marca nos campos livres. 3. Em cada resposta, envia os cabeçalhos.
 - **Regras:** [RN60](../regras-de-negocio.md#rn60) a [RN66](../regras-de-negocio.md#rn66), [RN70](../regras-de-negocio.md#rn70).
 
 ### <a id="uc26"></a>UC26 — Investigar chamadas
-- **Status:** Rascunho
-- **Ator:** QA ou Desenvolvedor
-- **Fluxo principal:** 1. Busca por `x-fapi-interaction-id`, instituição, cliente ou período. 2. Vê status, tempo, regra aplicada, defeito e anomalia.
-- **Regras:** [RN18](../regras-de-negocio.md#rn18), [RN74](../regras-de-negocio.md#rn74), [RN112](../regras-de-negocio.md#rn112).
+- **Status:** Removido
+- **Observação:** o simulador só responde. Quem registra e investiga as chamadas é a aplicação que consome ([RN18](../regras-de-negocio.md#rn18)).

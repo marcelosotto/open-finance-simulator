@@ -24,7 +24,6 @@ Documentos relacionados: [Regras de negócio](regras-de-negocio.md) · [Casos de
 | <a id="rf17"></a>RF17 | Todo dado gerado traz a marca de ambiente e natureza | [UC23](casos-de-uso/README.md#uc23) |
 | <a id="rf18"></a>RF18 | Desenvolvedor atualiza a versão das specs oficiais | [UC24](casos-de-uso/README.md#uc24) |
 | <a id="rf19"></a>RF19 | Receptora se autentica no modo simples | [UC25](casos-de-uso/README.md#uc25) |
-| <a id="rf20"></a>RF20 | Usuário investiga as chamadas recebidas | [UC26](casos-de-uso/README.md#uc26) |
 | <a id="rf21"></a>RF21 | Operador limpa massa e apaga lotes | [UC27](casos-de-uso/README.md#uc27) |
 | <a id="rf22"></a>RF22 | QA fixa ou acelera o relógio de uma instituição | [UC28](casos-de-uso/README.md#uc28) |
 

@@ -35,7 +35,6 @@ Funcionalidade: Simular o comportamento real das instituições
     E uma regra "Mariana responde 200"
     Quando Mariana é consultada
     Então a resposta deve ter status 200
-    E o registro de chamada deve mostrar a regra de cliente
 
   # RN15
   Cenário: Com o mesmo alcance, vence a regra com mais filtros
@@ -88,7 +87,7 @@ Funcionalidade: Simular o comportamento real das instituições
     Dado uma regra que força erro 500
     Quando Ana consulta contas
     Então o corpo da resposta deve seguir a spec
-    E a regra aplicada deve aparecer só no registro de chamada
+    E a resposta não deve dizer qual regra agiu
 
   # RN73
   Cenário: Relógio fixo em uma instituição
@@ -115,10 +114,3 @@ Funcionalidade: Simular o comportamento real das instituições
     Quando Ana consulta o saldo
     Então a resposta deve levar cerca de 3 segundos
     E os endpoints de classe baixa não devem mudar
-
-  # RN74, RN112
-  Cenário: Registro de chamada
-    Dado um defeito aplicado em uma chamada
-    Quando Bruno busca pelo x-fapi-interaction-id
-    Então deve ver instituição, endpoint, status, tempo e defeito
-    E os dados pessoais devem estar mascarados

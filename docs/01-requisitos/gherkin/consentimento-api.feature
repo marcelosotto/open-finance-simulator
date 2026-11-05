@@ -14,6 +14,11 @@ Funcionalidade: API de Consentimentos
     E o consentimento deve estar em "AUTHORISED"
     E só a conta deve ser compartilhada
 
+  # RN80
+  Cenário: CPF que não é de cliente simulado
+    Quando Ana cria um consentimento com um CPF que não existe no simulador
+    Então a resposta deve ter status 422 com "ERRO_NAO_MAPEADO"
+
   # RN82
   Cenário: REJECTED é final
     Dado um consentimento em "REJECTED"

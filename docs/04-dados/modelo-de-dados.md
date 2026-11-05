@@ -20,7 +20,6 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `lotes` | Parâmetros, semente, progresso e situação | Apagar leva tudo junto |
 | `cenarios` | Regras, defeitos e anomalias | Índice por alcance |
 | `historico` | Quem mudou o quê, com antes e depois | Toda escrita de administração |
-| `registros_chamada` | Chamada, status, tempo, regra aplicada | Expira em 7 dias ([PA17](../01-requisitos/regras-de-negocio.md#pa17)) |
 
 ## Redis
 | Chave | Conteúdo | Expira |
@@ -35,4 +34,4 @@ O documento do cliente entra na chave como hash.
 - Transações: saem de `recurso + dia + semente`.
 - Itens do mundo virtual: saem do índice. Só total, semente e ajustes são gravados.
 - Chave de paginação: é assinada e carrega o que precisa.
-- ClickHouse: sai do simulador. Quem precisar analisar chamadas usa os registros ou OpenTelemetry.
+- Chamadas recebidas: o simulador só responde. Quem precisar analisar chamadas usa os logs da aplicação que consome.

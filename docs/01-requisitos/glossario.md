@@ -25,7 +25,6 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **Pacote de cenário** | Grupo de regras de cenário com nome, ligado de uma vez. |
 | **Defeito de dado** | Alteração proposital do conteúdo da resposta. |
 | **Anomalia de protocolo** | Desvio proposital de uma regra oficial. |
-| **Registro de chamada** | Anotação de cada chamada recebida, com a regra aplicada. |
 | **TPM** | Transações por minuto: limite de tráfego por endpoint e origem. Resposta 429. |
 | **TPS** | Transações por segundo: capacidade da instituição. Resposta 529. |
 | **Limite operacional** | Teto mensal por endpoint, objeto, cliente e receptora. Resposta 423. |

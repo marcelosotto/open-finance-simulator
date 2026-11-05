@@ -10,4 +10,4 @@ A ordem dos limites e erros muda o resultado da chamada, e anomalias e defeitos 
 Cada verificação é uma etapa com contrato único e ordem fixa ([RN39](../01-requisitos/regras-de-negocio.md#rn39)). Anomalias trocam o comportamento de uma etapa, sem criar caminho paralelo. A cota é contada depois da resposta, só em 2XX.
 
 ## Consequências
-Cada etapa é testada sozinha, e o registro de chamada mostra o que cada uma decidiu. Etapas no caminho quente precisam ser leves ([RNF03](../01-requisitos/requisitos.md#rnf03)).
+Cada etapa é testada sozinha. Etapas no caminho quente precisam ser leves ([RNF03](../01-requisitos/requisitos.md#rnf03)).

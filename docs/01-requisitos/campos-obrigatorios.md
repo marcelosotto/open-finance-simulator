@@ -4,7 +4,7 @@ Nos cadastros do simulador, tudo tem valor padrão. Um campo só é obrigatório
 
 | Cadastro | Campo | Por que é obrigatório |
 |---|---|---|
-| Instituição | Nome | Identifica o banco nas telas e nos registros de chamada. |
+| Instituição | Nome | Identifica o banco nas telas. |
 | Perfil de comportamento | Nome | Identifica o modelo na escolha. |
 | Perfil de dados | Nome | Identifica o modelo na escolha. |
 | Regra de cenário | Alcance e efeito | Sem isso, a regra não faz nada. |

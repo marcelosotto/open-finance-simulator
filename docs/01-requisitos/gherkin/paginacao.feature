@@ -83,7 +83,6 @@ Funcionalidade: Paginar como o Open Finance
     E uma chave expirada
     Quando Ana pede a página seguinte
     Então a resposta deve ter status 422
-    E o registro de chamada deve mostrar a anomalia
 
   # RN37
   Cenário: Lista estável durante a paginação
