@@ -1,6 +1,6 @@
 # Decisões da revisão de 05/11/2026
 
-Revisão conduzida com Marcelo. Estas decisões ainda precisam ser aplicadas em `premissas.md`, `regras-de-negocio.md` e na ADR-003.
+Revisão conduzida com Marcelo. Estas decisões já foram aplicadas na documentação. PA22 e PA23 surgiram delas e seguem em aberto.
 
 ## Premissas
 

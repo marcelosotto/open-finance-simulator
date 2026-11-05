@@ -10,6 +10,18 @@ Funcionalidade: Cadastrar instituições simuladas
   Cenário: O ambiente nasce com os bancos prontos
     Dado um ambiente recém-criado
     Então devem existir os bancos "Banco Estável", "Banco Lento", "Banco Instável", "Banco Timeout" e "Banco Restritivo"
+    E devem existir os bancos de nome real do ambiente
+
+  # RN09
+  Esquema do Cenário: Nome real com prefixo do ambiente
+    Dado um ambiente "<ambiente>"
+    Quando Diego cria um banco inspirado no "Itaú"
+    Então o nome do banco deve ser "<nome>"
+
+    Exemplos:
+      | ambiente | nome     |
+      | hml      | HML-Itaú |
+      | dev      | DEV-Itaú |
 
   # RN03
   Cenário: Criar um banco só com o nome

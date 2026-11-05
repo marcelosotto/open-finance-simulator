@@ -10,13 +10,14 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | ID | Regra | Origem |
 |---|---|---|
 | <a id="rn01"></a>RN01 | Uma **instituição simulada** representa uma transmissora. Tem identificador, nome, `organisationId` sintético, marca, público atendido (PF, PJ ou ambos), produtos oferecidos e um comportamento. | Produto |
-| <a id="rn02"></a>RN02 | O ambiente já nasce com cinco instituições: **Banco Estável, Banco Lento, Banco Instável, Banco Timeout e Banco Restritivo**. Elas podem ser editadas, e novas podem ser criadas. | Produto |
+| <a id="rn02"></a>RN02 | O ambiente já nasce com os bancos de perfil **Banco Estável, Banco Lento, Banco Instável, Banco Timeout e Banco Restritivo** e com bancos de nome real, como **HML-Itaú** e **HML-Nubank** ([PA22](#pa22)). Todos podem ser editados, e novos podem ser criados. | Produto |
 | <a id="rn03"></a>RN03 | Criar uma instituição exige só **nome** e **perfil de comportamento**. Sem perfil informado, vale `estavel`. Os demais campos têm padrão ([campos obrigatórios](campos-obrigatorios.md)). | Produto |
 | <a id="rn04"></a>RN04 | Um **perfil de comportamento** é um modelo: copiar um perfil para uma instituição permite ajustar os valores depois, sem mudar o modelo nem as outras instituições. | Produto |
 | <a id="rn05"></a>RN05 | Mudar a configuração de uma instituição vale para as próximas chamadas, sem reiniciar, e fica no histórico com usuário, antes e depois. | Produto |
 | <a id="rn06"></a>RN06 | Uma instituição com clientes não é apagada, só **inativada**. Inativa, ela responde como fora do ar. | Produto |
 | <a id="rn07"></a>RN07 | A instituição chamada é identificada pelo **endereço** usado, como numa instituição real, e não por um cabeçalho próprio do simulador ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
 | <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido segue a regra oficial: permissões por seleção individual são removidas do consentimento, e as de seleção agrupada são mantidas ([RN83](#rn83)). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
+| <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento. Bancos de perfil têm nome fictício. | Produto |
 
 ## Comportamento
 | ID | Regra | Origem |
@@ -85,7 +86,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn54"></a>RN54 | Cada gerador tem semente explícita. A mesma semente com a mesma data e configuração dá o mesmo dado. O sorteio de erro e latência usa semente aleatória por padrão, e uma semente fixa quando o cenário pedir repetição. | Produto |
 | <a id="rn55"></a>RN55 | Um **perfil de dados** define volume de transações por dia, faixa de valores, saldo inicial, tipos de lançamento e produtos. Vêm prontos: cliente comum, sem movimento e alto volume. | Produto |
 | <a id="rn56"></a>RN56 | A **distribuição** diz como a massa se divide entre instituições, produtos e perfis de dados. A soma de cada dimensão precisa dar 100%. | Produto |
-| <a id="rn57"></a>RN57 | CPFs e CNPJs gerados têm dígitos válidos, inclusive CNPJ alfanumérico, e pertencem a uma faixa reservada que não colide com uma lista de documentos proibidos ([PA04](#pa04)). | Produto |
+| <a id="rn57"></a>RN57 | CPFs e CNPJs gerados têm dígitos válidos, inclusive CNPJ alfanumérico, Todo CPF gerado começa com um **dígito fixo**, o que permite até 100 milhões de CPFs. Risco aceito: não há garantia de que um CPF gerado não pertença a uma pessoa real. | Produto |
 | <a id="rn58"></a>RN58 | Um lote pode ser apagado inteiro. Apagar um lote remove clientes, consentimentos, recursos e ajustes dele, e fica no histórico. | Produto |
 | <a id="rn59"></a>RN59 | Dados transacionais e de crédito vão até 12 meses para trás, conforme a regra oficial de compartilhamento. Para testar limites, o histórico gerado pode ser maior. | Oficial [F10](../00-visao-geral/referencias.md#f10) + Produto |
 
@@ -103,7 +104,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Ambientes e administração
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn70"></a>RN70 | O simulador **recusa subir** com ambiente de produção configurado. Os ambientes válidos são `dev` e `hml` ([PA05](#pa05)). | Produto |
+| <a id="rn70"></a>RN70 | O foco são os ambientes `dev` e `hml`. O uso em produção não é bloqueado nem decidido agora; se houver, será preciso decidir como fica a marcação ([PA05](#pa05)). | Produto |
 | <a id="rn71"></a>RN71 | APIs de administração ficam em endereço separado das APIs Open Finance e exigem usuário. Toda alteração grava usuário, data, antes e depois. | Produto |
 | <a id="rn72"></a>RN72 | Em `dev` e `hml`, cada tela mostra o ambiente em destaque. | Produto |
 | <a id="rn73"></a>RN73 | O relógio do simulador pode ser **acelerado ou fixado** para testes, por ambiente. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
@@ -170,11 +171,11 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Perguntas em aberto
 | ID | Pergunta |
 |---|---|
-| <a id="pa01"></a>PA01 | **Qual banco guarda o estado?** Proposta: MongoDB, porque a XP já usa e os documentos têm a forma das APIs. PostgreSQL é a alternativa. Ver [ADR-003](../05-adr/ADR-003-mongodb-e-redis.md). |
+| <a id="pa01"></a>PA01 | ~~Qual banco guarda o estado?~~ **Respondida:** MongoDB para o estado, porque a empresa já usa, e Redis para os contadores, por desempenho. Ver [ADR-003](../05-adr/ADR-003-mongodb-e-redis.md). |
 | <a id="pa02"></a>PA02 | **Quando o modo FAPI completo entra?** Ele custa caro (mTLS, DCR, PAR, JARM) e é o que deixa o coletor usar o caminho de produção. Proposta: modo simples primeiro, FAPI na spec 009. |
-| <a id="pa03"></a>PA03 | **Usamos nomes de bancos reais?** A POC usa Itaú, Nubank e outros. Proposta: nomes fictícios nos bancos prontos, para não confundir dado sintético com dado de uma instituição real. |
-| <a id="pa04"></a>PA04 | **Como evitar CPF de pessoa real?** Um CPF válido gerado ao acaso pode existir. Quais faixas ou listas usar? E quais campos de texto podem levar a marca `[SIM-HML]` sem atrapalhar os testes? |
-| <a id="pa05"></a>PA05 | **E o ambiente de produção?** Você comentou que em produção não haveria marca. Proposta: o simulador nem sobe em produção, e por isso não existe dado sem marca. Faz sentido, ou há algum uso em produção? |
+| <a id="pa03"></a>PA03 | ~~Usamos nomes de bancos reais?~~ **Respondida:** sim, com o prefixo do ambiente. Bancos de perfil continuam com nome fictício. Ver [RN09](#rn09). |
+| <a id="pa04"></a>PA04 | ~~Como evitar CPF de pessoa real?~~ **Respondida:** CPF com um dígito inicial fixo, até 100 milhões. O risco foi aceito. Ver [RN57](#rn57). |
+| <a id="pa05"></a>PA05 | ~~E o ambiente de produção?~~ **Respondida:** o uso em produção não é bloqueado nem decidido agora. Ver [RN70](#rn70). |
 | <a id="pa06"></a>PA06 | **Qual o escopo depois dos dados?** Pagamentos, Pix automático, portabilidade e dados abertos ficam fora da primeira versão. Entram depois? |
 | <a id="pa07"></a>PA07 | **O simulador envia reportes à PCM?** Para testar pareamento, ele deveria reportar como SERVER a uma central simulada. Entra agora ou depois? A central é a do laboratório do Leonidas? |
 | <a id="pa08"></a>PA08 | **Qual o código de bloqueio temporário?** As orientações de Contas usam `STATUS_RESOURCE_TEMPORARY_UNAVAILABLE`, e as de Dados Cadastrais usam `STATUS_RESOURCE_TEMPORARILY_UNAVAILABLE`. Proposta: seguir a orientação de cada API, com confirmação da equipe. |
@@ -190,4 +191,6 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="pa18"></a>PA18 | **Como é o login simulado?** Proposta: usuário e senha de teste exibidos na tela, com opção de simular "segundo fator". |
 | <a id="pa19"></a>PA19 | **O relógio acelerado vale em homologação?** A POC comprime o mês em 5 minutos. Isso ajuda o teste de cota, mas pode confundir sistemas integrados. Proposta: só por instituição de teste, nunca global. |
 | <a id="pa21"></a>PA21 | **O que fazer com `page-size` acima de 1.000?** A spec limita a 1.000, e a orientação só fala do pedido dentro desse máximo. A POC reduz para 1.000. Proposta: reduzir e mostrar no `self`, por ser o comportamento menos brusco. |
+| <a id="pa22"></a>PA22 | **Quais bancos de nome real nascem prontos, e com qual comportamento?** Itaú e Nubank foram citados pelo volume. Bradesco e outros entram? Qual o perfil de cada um? |
+| <a id="pa23"></a>PA23 | **Qual dígito inicial do CPF e quais campos levam a marca?** Falta escolher o dígito de [RN57](#rn57) e os campos de texto de [RN63](#rn63) que podem levar `[SIM-HML]` sem atrapalhar os testes. |
 | <a id="pa20"></a>PA20 | **Como um timeout real se parece?** Quais formas vemos nas instituições: 504, conexão cortada, nenhuma resposta? A resposta muda o perfil `timeout`. Dados reais de telemetria ajudariam a calibrar todos os perfis. |

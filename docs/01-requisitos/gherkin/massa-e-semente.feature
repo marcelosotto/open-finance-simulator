@@ -46,6 +46,7 @@ Funcionalidade: Gerar massa de dados
   Cenário: Documento válido
     Quando Ana cria um cliente sintético
     Então o CPF deve ter dígitos válidos
+    E o CPF deve começar com o dígito fixo do simulador
 
   # RN58
   Cenário: Apagar um lote

@@ -8,7 +8,8 @@ Quando duas fontes divergem, vale esta ordem. Uma divergência que afete comport
 3. Specs OpenAPI oficiais fixadas em `open-finance-specs`
 4. Orientações e tabelas do portal do Open Finance
 5. Decisões deste projeto (premissas, regras de produto e ADRs)
-6. O comportamento da POC, que é só referência
+
+A POC é só estudo e não entra nessa ordem.
 
 ## Fontes usadas
 

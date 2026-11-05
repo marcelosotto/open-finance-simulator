@@ -84,13 +84,14 @@ Todos começam como **Rascunho**.
 - **Objetivo:** criar um banco com endereço próprio, pronto para responder.
 - **Campos obrigatórios:** nome ([registro](../campos-obrigatorios.md)).
 - **Fluxo principal:** 1. Informa o nome e escolhe um perfil de comportamento. 2. Opcionalmente ajusta público, produtos e marca. 3. O sistema gera `organisationId` e endereço e publica a instituição.
-- **Fluxo alternativo — usar banco pronto:** os cinco bancos já existem ao subir o ambiente ([RN02](../regras-de-negocio.md#rn02)).
+- **Fluxo alternativo — banco com nome real:** informa o banco real, e o sistema aplica o prefixo do ambiente, como `HML-Itaú` ([RN09](../regras-de-negocio.md#rn09)).
+- **Fluxo alternativo — usar banco pronto:** os bancos de perfil e os de nome real já existem ao subir o ambiente ([RN02](../regras-de-negocio.md#rn02)).
 - **Fluxo alternativo — inativar:** instituição com clientes é inativada e responde como fora do ar ([RN06](../regras-de-negocio.md#rn06)).
 - **Exceções:** nome repetido → recusado.
 - **Pós-condição:** vale na próxima chamada, com histórico ([RN05](../regras-de-negocio.md#rn05)).
-- **Regras:** [RN01](../regras-de-negocio.md#rn01) a [RN08](../regras-de-negocio.md#rn08).
+- **Regras:** [RN01](../regras-de-negocio.md#rn01) a [RN09](../regras-de-negocio.md#rn09).
 - **Exemplo:** Diego cria o "Banco Azul" com o perfil `lento` e, no dia seguinte, reduz a lentidão só nesse banco.
-- **Em aberto:** [PA03](../regras-de-negocio.md#pa03).
+- **Em aberto:** [PA22](../regras-de-negocio.md#pa22).
 
 ### <a id="uc02"></a>UC02 — Configurar comportamento
 - **Status:** Rascunho
@@ -154,7 +155,7 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Escolhe a instituição, o tipo (PF ou PJ) e o perfil de dados. 2. O sistema gera documento válido, nome e produtos. 3. Mostra os dados de login para a jornada.
 - **Fluxo alternativo — já autorizado:** marca "criar consentimento autorizado" para pular a jornada.
 - **Regras:** [RN51](../regras-de-negocio.md#rn51), [RN54](../regras-de-negocio.md#rn54), [RN57](../regras-de-negocio.md#rn57), [RN60](../regras-de-negocio.md#rn60).
-- **Em aberto:** [PA04](../regras-de-negocio.md#pa04).
+- **Em aberto:** [PA23](../regras-de-negocio.md#pa23).
 
 ### <a id="uc07"></a>UC07 — Gerar lote
 - **Status:** Rascunho
@@ -304,7 +305,7 @@ Todos começam como **Rascunho**.
 - **Ator:** Sistema
 - **Fluxo principal:** 1. Na criação, grava ambiente e natureza. 2. Aplica o prefixo nos IDs e a marca nos campos livres. 3. Em cada resposta, envia os cabeçalhos.
 - **Regras:** [RN60](../regras-de-negocio.md#rn60) a [RN66](../regras-de-negocio.md#rn66), [RN70](../regras-de-negocio.md#rn70).
-- **Em aberto:** [PA04](../regras-de-negocio.md#pa04), [PA05](../regras-de-negocio.md#pa05).
+- **Em aberto:** [PA23](../regras-de-negocio.md#pa23).
 
 ### <a id="uc26"></a>UC26 — Investigar chamadas
 - **Status:** Rascunho

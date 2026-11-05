@@ -20,7 +20,8 @@ Cadastra bancos, gera lotes de massa, limpa o ambiente e acompanha o que foi con
 
 ## Instituições simuladas
 
-As instituições prontas têm nomes fictícios ([PA03](../01-requisitos/regras-de-negocio.md#pa03)).
+### Bancos de perfil
+Têm nome fictício, que já diz o comportamento.
 
 | Banco | Perfil | Como se comporta |
 |---|---|---|
@@ -29,6 +30,9 @@ As instituições prontas têm nomes fictícios ([PA03](../01-requisitos/regras-
 | Banco Instável | `instavel` | Muitos erros 5xx e janelas curtas de indisponibilidade |
 | Banco Timeout | `timeout` | Parte das chamadas não termina dentro de 15 segundos |
 | Banco Restritivo | `restritivo` | Aplica limites apertados e chave de paginação curta |
+
+### Bancos com nome real
+Reproduzem o volume e o comportamento dos bancos reais que mais pedem atenção. O nome leva o prefixo do ambiente: `HML-Itaú` e `HML-Nubank` em homologação, `DEV-Itaú` e `DEV-Nubank` em desenvolvimento ([RN09](../01-requisitos/regras-de-negocio.md#rn09)).
 
 ## Clientes sintéticos
 

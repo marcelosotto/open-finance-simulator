@@ -60,12 +60,6 @@ Funcionalidade: Marcar os dados com ambiente e natureza
     Quando Diego tenta desligar a marcação de um banco
     Então a opção não deve existir
 
-  # RN70
-  Cenário: Não sobe em produção
-    Dado a configuração de ambiente "producao"
-    Quando o simulador inicia
-    Então a inicialização deve ser recusada
-
   # RN60
   Cenário: A marca aparece nos três lugares
     Dado um ambiente "hml"

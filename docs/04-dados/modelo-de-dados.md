@@ -2,12 +2,12 @@
 
 Relacionados: [modelo de domínio](../03-design/classes/modelo-de-dominio.md) · [ADR-003](../05-adr/ADR-003-mongodb-e-redis.md) · [ADR-004](../05-adr/ADR-004-semente-e-ajustes.md)
 
-Proposta, dependente de [PA01](../01-requisitos/regras-de-negocio.md#pa01).
+MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisitos/regras-de-negocio.md#pa01)). As coleções e chaves abaixo ainda são proposta.
 
 ## MongoDB
 | Coleção | Conteúdo | Observação |
 |---|---|---|
-| `instituicoes` | Nome, `organisationId`, público, produtos, comportamento e limites | Nasce com os cinco bancos |
+| `instituicoes` | Nome, `organisationId`, público, produtos, comportamento e limites | Nasce com os bancos de perfil e os de nome real |
 | `perfis_comportamento` | Modelos de comportamento | Prontos não são apagados |
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
 | `distribuicoes` | Divisão da massa entre bancos, produtos e perfis | Somas em 100% |

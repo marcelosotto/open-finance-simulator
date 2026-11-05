@@ -16,4 +16,4 @@ Exemplos em `hml`:
 - `transactionName`: `[SIM-HML] PIX recebido`
 
 ## Consequências
-A marca sobrevive à cópia para outro sistema e o contrato continua válido. Texto marcado pode aparecer em telas de homologação, o que é desejado. Falta decidir quais campos entram ([PA04](../01-requisitos/regras-de-negocio.md#pa04)).
+A marca sobrevive à cópia para outro sistema e o contrato continua válido. Texto marcado pode aparecer em telas de homologação, o que é desejado. Falta decidir quais campos entram ([PA23](../01-requisitos/regras-de-negocio.md#pa23)).

@@ -2,8 +2,10 @@
 
 Premissas valem para **toda** a documentação e para todo o desenvolvimento. Qualquer exceção precisa estar escrita e justificada.
 
+**Situação:** aprovadas na revisão de 05/11/2026, com Marcelo ([decisões](../07-gerenciamento/decisoes-revisao-2026-11-05.md)).
+
 ## <a id="pr01"></a>PR01 — O padrão é fazer igual ao Open Finance
-Sem nenhuma configuração, uma instituição simulada segue as regras oficiais: limites, códigos HTTP, estados, paginação e formatos. Se a regra oficial existe, ela vale, mesmo que a POC tenha feito diferente. A [ordem das fontes](referencias.md#ordem-das-fontes) resolve conflitos.
+Sem nenhuma configuração, uma instituição simulada segue as regras oficiais: limites, códigos HTTP, estados, paginação e formatos. Se a regra oficial existe, ela vale. A [ordem das fontes](referencias.md#ordem-das-fontes) resolve conflitos.
 
 ## <a id="pr02"></a>PR02 — Desviar da regra é sempre uma escolha explícita
 O simulador precisa se comportar mal, porque as instituições reais às vezes se comportam mal. Mas todo desvio da regra oficial é uma **anomalia configurada**: tem nome, é ligada de propósito e aparece no histórico. Um desvio nunca acontece por padrão ou por acaso.
@@ -23,5 +25,5 @@ Rotas, contratos e exemplos saem das specs do repositório `open-finance-specs`,
 ## <a id="pr07"></a>PR07 — O cliente sob teste não muda de código para falar com o simulador
 Para a receptora, o simulador é uma instituição. Ela usa os mesmos caminhos, cabeçalhos e fluxos que usaria em produção, trocando só o endereço e as credenciais. Atalhos de teste existem, mas ficam em APIs de administração separadas.
 
-## <a id="pr08"></a>PR08 — Ambiente de teste, nunca de produção
-O simulador existe para desenvolvimento e homologação. Ele não recebe dado real, e o ambiente de produção não deve conseguir usá-lo por engano ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).
+## <a id="pr08"></a>PR08 — Foco em desenvolvimento e homologação
+O simulador existe para desenvolvimento e homologação, e não recebe dado real. O uso em produção não é bloqueado nem decidido agora. Se um dia houver, será preciso decidir como fica a marcação dos dados ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).
