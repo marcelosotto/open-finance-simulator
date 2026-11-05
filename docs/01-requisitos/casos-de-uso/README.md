@@ -79,7 +79,7 @@ Todos começam como **Rascunho**.
 ## Configuração
 
 ### <a id="uc01"></a>UC01 — Cadastrar instituição simulada
-- **Status:** Em revisão
+- **Status:** Aprovado
 - **Ator:** Operador
 - **Objetivo:** criar um banco com endereço próprio, pronto para responder.
 - **Campos obrigatórios:** nome ([registro](../campos-obrigatorios.md)).
