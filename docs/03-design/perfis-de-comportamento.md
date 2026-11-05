@@ -1,6 +1,6 @@
 # Perfis de comportamento
 
-**Proposta para discussão.** Os valores são pontos de partida, e não medições de instituições reais. Telemetria real deveria calibrar esta tabela ([PA20](../01-requisitos/regras-de-negocio.md#pa20)).
+**Estimativas.** Não há telemetria real, então os valores são pontos de partida, e não medições de instituições ([PA20](../01-requisitos/regras-de-negocio.md#pa20)).
 
 | Parâmetro | `estavel` | `lento` | `instavel` | `timeout` | `restritivo` |
 |---|---|---|---|---|---|

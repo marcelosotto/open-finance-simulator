@@ -93,13 +93,13 @@ Todos começam como **Rascunho**.
 - **Exemplo:** Diego cria o "Banco Azul" com o perfil `lento` e, no dia seguinte, reduz a lentidão só nesse banco.
 
 ### <a id="uc02"></a>UC02 — Configurar comportamento
-- **Status:** Rascunho
+- **Status:** Em revisão
 - **Ator:** Operador
 - **Objetivo:** dizer como a instituição responde.
-- **Fluxo principal:** 1. Abre a instituição. 2. Ajusta latência por classe ou endpoint, taxa de erro e pesos por status. 3. A tela compara com o SLA oficial ([UI04](../interface.md#ui04)). 4. Salva.
+- **Fluxo principal:** 1. Abre a instituição. 2. Ajusta latência por classe de frequência, taxa de erro e pesos por status. 3. A tela compara com o SLA oficial ([UI04](../interface.md#ui04)). 4. Salva.
 - **Exceções:** taxa fora de 0 a 100% → recusado; status que a spec não declara → recusado ([RN13](../regras-de-negocio.md#rn13)).
 - **Regras:** [RN04](../regras-de-negocio.md#rn04), [RN05](../regras-de-negocio.md#rn05), [RN10](../regras-de-negocio.md#rn10) a [RN13](../regras-de-negocio.md#rn13).
-- **Em aberto:** calibrar os perfis com telemetria real ([PA20](../regras-de-negocio.md#pa20)).
+- **Observação:** sem telemetria real, os valores dos perfis são estimativas ([PA20](../regras-de-negocio.md#pa20)).
 
 ### <a id="uc03"></a>UC03 — Configurar limites e paginação
 - **Status:** Rascunho
@@ -288,9 +288,8 @@ Todos começam como **Rascunho**.
 ### <a id="uc21"></a>UC21 — Simular timeout e indisponibilidade
 - **Status:** Rascunho
 - **Ator:** Sistema
-- **Fluxo principal:** 1. O perfil ou uma regra de cenário afeta a chamada. 2. O sistema segura a resposta pelo tempo configurado. 3. Termina em 504, 503, conexão cortada ou corpo truncado.
+- **Fluxo principal:** 1. O perfil ou uma regra de cenário afeta a chamada. 2. O sistema segura a resposta pelo tempo configurado. 3. No perfil `timeout`, termina em 504. Regras de cenário podem simular 503, conexão cortada ou corpo truncado.
 - **Regras:** [RN12](../regras-de-negocio.md#rn12), [RN16](../regras-de-negocio.md#rn16), [RN17](../regras-de-negocio.md#rn17).
-- **Em aberto:** [PA20](../regras-de-negocio.md#pa20).
 
 ### <a id="uc22"></a>UC22 — Injetar defeitos e anomalias
 - **Status:** Rascunho

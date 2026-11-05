@@ -2,7 +2,7 @@
 
 | ID | Risco | Efeito | Resposta |
 |---|---|---|---|
-| R01 | Perfis sem base em dados reais | Testes passam, e a produção surpreende | Calibrar com telemetria ([PA20](../01-requisitos/regras-de-negocio.md#pa20)) |
+| R01 | Perfis sem base em dados reais | Testes passam, e a produção surpreende | Perfis são estimativas; recalibrar se houver telemetria ([PA20](../01-requisitos/regras-de-negocio.md#pa20)) |
 | R02 | Regras oficiais mudam | O simulador envelhece, como a POC | Specs fixadas, tabela revisada, teste da tabela |
 | R03 | Interpretação errada de uma regra | Time aprende um comportamento falso | Revisão humana antes de aprovar cada UC |
 | R04 | Dado sintético confundido com real | Decisão errada em homologação | Marcação em três camadas |

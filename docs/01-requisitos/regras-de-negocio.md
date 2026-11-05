@@ -22,9 +22,9 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Comportamento
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn10"></a>RN10 | O comportamento de latência é definido por **endpoint ou classe de frequência**: tempo típico, variação e cauda lenta. O perfil diz se o p95 fica dentro ou fora do SLA oficial ([tabela](tabela-de-endpoints.md)). | Produto |
+| <a id="rn10"></a>RN10 | O comportamento de latência é definido por **classe de frequência**: tempo típico, variação e cauda lenta. Não há configuração por endpoint. O perfil diz se o p95 fica dentro ou fora do SLA oficial ([tabela](tabela-de-endpoints.md)). | Produto |
 | <a id="rn11"></a>RN11 | O SLA oficial é p95 diário de 1.500 ms (alta e média-alta), 2.000 ms (média) e 4.000 ms (baixa). O simulador usa esses valores como referência dos perfis; não mede nem cobra SLA. | Oficial [F01](../00-visao-geral/referencias.md#f01) |
-| <a id="rn12"></a>RN12 | O **timeout oficial** de cada endpoint é 15 segundos. No perfil `timeout`, a chamada afetada fica pendente até o limite e termina do jeito configurado: **504**, conexão cortada ou sem resposta ([PA20](#pa20)). | Oficial [F02](../00-visao-geral/referencias.md#f02) + Produto |
+| <a id="rn12"></a>RN12 | O **timeout oficial** de cada endpoint é 15 segundos. No perfil `timeout`, a chamada afetada fica pendente até o limite e termina em **504** ([PA20](#pa20)). | Oficial [F02](../00-visao-geral/referencias.md#f02) + Produto |
 | <a id="rn13"></a>RN13 | Erros são sorteados pela **taxa de erro** e pelos **pesos por status** da instituição. Só entram status que a spec do endpoint declara. | Produto |
 | <a id="rn14"></a>RN14 | Uma **regra de cenário** muda o comportamento dentro de um alcance: instituição, endpoint, cliente ou recurso, com período opcional. Exemplo: "Banco Estável fora do ar das 10h às 10h30" ou "este cliente sempre dá 500 em saldos". | Produto |
 | <a id="rn15"></a>RN15 | Com várias regras valendo, a mais específica ganha: recurso, cliente, endpoint e instituição, nessa ordem. O histórico mostra qual regra agiu em cada chamada. | Produto |
@@ -193,4 +193,4 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="pa21"></a>PA21 | **O que fazer com `page-size` acima de 1.000?** A spec limita a 1.000, e a orientação só fala do pedido dentro desse máximo. A POC reduz para 1.000. Proposta: reduzir e mostrar no `self`, por ser o comportamento menos brusco. |
 | <a id="pa22"></a>PA22 | ~~Quais bancos de nome real nascem prontos, e com qual comportamento?~~ **Respondida:** os 11 nomes da POC, com o perfil `estavel` e variáveis próprias, sem perfil novo. Ver [RN09](#rn09). |
 | <a id="pa23"></a>PA23 | **Qual dígito inicial do CPF e quais campos levam a marca?** Falta escolher o dígito de [RN57](#rn57) e os campos de texto de [RN63](#rn63) que podem levar `[SIM-HML]` sem atrapalhar os testes. |
-| <a id="pa20"></a>PA20 | **Como um timeout real se parece?** Quais formas vemos nas instituições: 504, conexão cortada, nenhuma resposta? A resposta muda o perfil `timeout`. Dados reais de telemetria ajudariam a calibrar todos os perfis. |
+| <a id="pa20"></a>PA20 | ~~Como um timeout real se parece?~~ **Respondida (provisória):** assumimos 504 até alguém confirmar nas instituições. Não há telemetria real, então os perfis são estimativas. Ver [RN12](#rn12). |

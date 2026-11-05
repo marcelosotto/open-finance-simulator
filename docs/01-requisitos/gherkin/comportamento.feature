@@ -18,16 +18,10 @@ Funcionalidade: Simular o comportamento real das instituições
     E todas as chamadas devem terminar
 
   # RN12
-  Esquema do Cenário: Banco timeout termina do jeito configurado
-    Dado que o "Banco Timeout" está configurado para terminar em "<fim>"
-    Quando uma chamada é afetada pelo timeout
+  Cenário: Banco timeout termina em 504
+    Quando uma chamada ao "Banco Timeout" é afetada pelo timeout
     Então a resposta só deve terminar depois de 15 segundos
-    E o resultado deve ser "<resultado>"
-
-    Exemplos:
-      | fim               | resultado         |
-      | status 504        | status 504        |
-      | conexão cortada   | conexão cortada   |
+    E a resposta deve ter status 504
 
   # RN14, RN54
   Cenário: Falha repetível para um cliente
@@ -78,11 +72,11 @@ Funcionalidade: Simular o comportamento real das instituições
     E o cabeçalho "x-sim-clock" deve mostrar a data simulada
 
   # RN10
-  Cenário: Latência por endpoint
-    Dado que o endpoint de extrato do "Banco Azul" tem tempo típico de 3 segundos
-    Quando Ana consulta o extrato
+  Cenário: Latência por classe de frequência
+    Dado que a classe alta do "Banco Azul" tem tempo típico de 3 segundos
+    Quando Ana consulta o saldo
     Então a resposta deve levar cerca de 3 segundos
-    E o endpoint de saldos não deve mudar
+    E os endpoints de classe baixa não devem mudar
 
   # RN74, RN112
   Cenário: Registro de chamada
