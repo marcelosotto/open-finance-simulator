@@ -32,7 +32,23 @@ Têm nome fictício, que já diz o comportamento.
 | Banco Restritivo | `restritivo` | Aplica limites apertados e chave de paginação curta |
 
 ### Bancos com nome real
-Reproduzem o volume e o comportamento dos bancos reais que mais pedem atenção. O nome leva o prefixo do ambiente: `HML-Itaú` e `HML-Nubank` em homologação, `DEV-Itaú` e `DEV-Nubank` em desenvolvimento ([RN09](../01-requisitos/regras-de-negocio.md#rn09)).
+Usam o perfil `estavel`, sem perfil próprio. O que muda entre eles são as variáveis, como os consentimentos ativos, que definem o TPM da alta frequência. O nome leva o prefixo do ambiente: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento ([RN09](../01-requisitos/regras-de-negocio.md#rn09)).
+
+Os consentimentos são os valores fictícios da POC, como ponto de partida, e não dados reais dos bancos.
+
+| Banco | Nome em homologação | Consentimentos ativos |
+|---|---|---|
+| Itaú | `HML-Itaú` | 7.000.000 |
+| Nubank | `HML-Nubank` | 6.500.000 |
+| Bradesco | `HML-Bradesco` | 5.000.000 |
+| Banco do Brasil | `HML-Banco do Brasil` | 4.500.000 |
+| Caixa | `HML-Caixa` | 4.000.000 |
+| Santander | `HML-Santander` | 3.000.000 |
+| Inter | `HML-Inter` | 2.000.000 |
+| C6 Bank | `HML-C6 Bank` | 1.500.000 |
+| BTG Pactual | `HML-BTG Pactual` | 800.000 |
+| Sicoob | `HML-Sicoob` | 700.000 |
+| Sicredi | `HML-Sicredi` | 600.000 |
 
 ## Clientes sintéticos
 

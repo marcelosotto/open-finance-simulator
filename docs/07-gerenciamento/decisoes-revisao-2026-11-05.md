@@ -1,6 +1,6 @@
 # Decisões da revisão de 05/11/2026
 
-Revisão conduzida com Marcelo. Estas decisões já foram aplicadas na documentação. PA22 e PA23 surgiram delas e seguem em aberto.
+Revisão conduzida com Marcelo. Estas decisões já foram aplicadas na documentação. PA23 surgiu delas e segue em aberto.
 
 ## Premissas
 
@@ -23,6 +23,7 @@ Revisão conduzida com Marcelo. Estas decisões já foram aplicadas na documenta
 | PA03 | Bancos inspirados em bancos reais usam o nome real com prefixo do ambiente: `HML-Itaú`, `HML-Nubank`; em desenvolvimento, `DEV-Itaú`. Os bancos de perfil (Banco Lento, Banco Timeout etc.) continuam com nome fictício. |
 | PA04 | CPF com um dígito inicial fixo, permitindo até 100 milhões de CPFs. Risco aceito: não há garantia de que um CPF gerado não pertença a uma pessoa real. |
 | PA05 | Não bloquear a subida em produção por enquanto (ver PR08). |
+| PA22 | Nascem prontos os 11 bancos de nome real da POC, com o perfil `estavel` e variáveis próprias, sem perfil novo. |
 
 ## Próximo passo
 

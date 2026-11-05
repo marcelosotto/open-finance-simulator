@@ -79,7 +79,7 @@ Todos começam como **Rascunho**.
 ## Configuração
 
 ### <a id="uc01"></a>UC01 — Cadastrar instituição simulada
-- **Status:** Rascunho
+- **Status:** Em revisão
 - **Ator:** Operador
 - **Objetivo:** criar um banco com endereço próprio, pronto para responder.
 - **Campos obrigatórios:** nome ([registro](../campos-obrigatorios.md)).
@@ -91,7 +91,6 @@ Todos começam como **Rascunho**.
 - **Pós-condição:** vale na próxima chamada, com histórico ([RN05](../regras-de-negocio.md#rn05)).
 - **Regras:** [RN01](../regras-de-negocio.md#rn01) a [RN09](../regras-de-negocio.md#rn09).
 - **Exemplo:** Diego cria o "Banco Azul" com o perfil `lento` e, no dia seguinte, reduz a lentidão só nesse banco.
-- **Em aberto:** [PA22](../regras-de-negocio.md#pa22).
 
 ### <a id="uc02"></a>UC02 — Configurar comportamento
 - **Status:** Rascunho

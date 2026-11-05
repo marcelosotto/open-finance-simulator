@@ -7,7 +7,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 ## MongoDB
 | Coleção | Conteúdo | Observação |
 |---|---|---|
-| `instituicoes` | Nome, `organisationId`, público, produtos, comportamento e limites | Nasce com os bancos de perfil e os de nome real |
+| `instituicoes` | Nome, `organisationId`, público, produtos, comportamento e limites | Nasce com os 5 bancos de perfil e os 11 de nome real |
 | `perfis_comportamento` | Modelos de comportamento | Prontos não são apagados |
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
 | `distribuicoes` | Divisão da massa entre bancos, produtos e perfis | Somas em 100% |

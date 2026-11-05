@@ -10,14 +10,14 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | ID | Regra | Origem |
 |---|---|---|
 | <a id="rn01"></a>RN01 | Uma **instituição simulada** representa uma transmissora. Tem identificador, nome, `organisationId` sintético, marca, público atendido (PF, PJ ou ambos), produtos oferecidos e um comportamento. | Produto |
-| <a id="rn02"></a>RN02 | O ambiente já nasce com os bancos de perfil **Banco Estável, Banco Lento, Banco Instável, Banco Timeout e Banco Restritivo** e com bancos de nome real, como **HML-Itaú** e **HML-Nubank** ([PA22](#pa22)). Todos podem ser editados, e novos podem ser criados. | Produto |
+| <a id="rn02"></a>RN02 | O ambiente já nasce com os bancos de perfil **Banco Estável, Banco Lento, Banco Instável, Banco Timeout e Banco Restritivo** e com 11 bancos de nome real, listados nas [personas](../00-visao-geral/personas.md#bancos-com-nome-real). Todos podem ser editados, e novos podem ser criados. | Produto |
 | <a id="rn03"></a>RN03 | Criar uma instituição exige só **nome** e **perfil de comportamento**. Sem perfil informado, vale `estavel`. Os demais campos têm padrão ([campos obrigatórios](campos-obrigatorios.md)). | Produto |
 | <a id="rn04"></a>RN04 | Um **perfil de comportamento** é um modelo: copiar um perfil para uma instituição permite ajustar os valores depois, sem mudar o modelo nem as outras instituições. | Produto |
 | <a id="rn05"></a>RN05 | Mudar a configuração de uma instituição vale para as próximas chamadas, sem reiniciar, e fica no histórico com usuário, antes e depois. | Produto |
 | <a id="rn06"></a>RN06 | Uma instituição com clientes não é apagada, só **inativada**. Inativa, ela responde como fora do ar. | Produto |
 | <a id="rn07"></a>RN07 | A instituição chamada é identificada pelo **endereço** usado, como numa instituição real, e não por um cabeçalho próprio do simulador ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
 | <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido segue a regra oficial: permissões por seleção individual são removidas do consentimento, e as de seleção agrupada são mantidas ([RN83](#rn83)). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento. Bancos de perfil têm nome fictício. | Produto |
+| <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento. Bancos de perfil têm nome fictício. Bancos de nome real usam o perfil `estavel`, e o que os diferencia são variáveis, como os consentimentos ativos. | Produto |
 
 ## Comportamento
 | ID | Regra | Origem |
@@ -191,6 +191,6 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="pa18"></a>PA18 | **Como é o login simulado?** Proposta: usuário e senha de teste exibidos na tela, com opção de simular "segundo fator". |
 | <a id="pa19"></a>PA19 | **O relógio acelerado vale em homologação?** A POC comprime o mês em 5 minutos. Isso ajuda o teste de cota, mas pode confundir sistemas integrados. Proposta: só por instituição de teste, nunca global. |
 | <a id="pa21"></a>PA21 | **O que fazer com `page-size` acima de 1.000?** A spec limita a 1.000, e a orientação só fala do pedido dentro desse máximo. A POC reduz para 1.000. Proposta: reduzir e mostrar no `self`, por ser o comportamento menos brusco. |
-| <a id="pa22"></a>PA22 | **Quais bancos de nome real nascem prontos, e com qual comportamento?** Itaú e Nubank foram citados pelo volume. Bradesco e outros entram? Qual o perfil de cada um? |
+| <a id="pa22"></a>PA22 | ~~Quais bancos de nome real nascem prontos, e com qual comportamento?~~ **Respondida:** os 11 nomes da POC, com o perfil `estavel` e variáveis próprias, sem perfil novo. Ver [RN09](#rn09). |
 | <a id="pa23"></a>PA23 | **Qual dígito inicial do CPF e quais campos levam a marca?** Falta escolher o dígito de [RN57](#rn57) e os campos de texto de [RN63](#rn63) que podem levar `[SIM-HML]` sem atrapalhar os testes. |
 | <a id="pa20"></a>PA20 | **Como um timeout real se parece?** Quais formas vemos nas instituições: 504, conexão cortada, nenhuma resposta? A resposta muda o perfil `timeout`. Dados reais de telemetria ajudariam a calibrar todos os perfis. |
