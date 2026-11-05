@@ -31,6 +31,18 @@ Funcionalidade: Marcar os dados com ambiente e natureza
       | persistido | hml-p-  |
       | virtual    | hml-v-  |
 
+  # RN62
+  Esquema do Cenário: Prefixo dos consentimentos
+    Dado um ambiente "hml"
+    Quando é criado um consentimento "<natureza>"
+    Então o consentId deve começar com "<prefixo>"
+    E o consentId deve seguir o padrão oficial
+
+    Exemplos:
+      | natureza   | prefixo        |
+      | persistido | urn:sim-hml:p- |
+      | virtual    | urn:sim-hml:v- |
+
   # RN63
   Cenário: Marca nos campos livres
     Dado um ambiente "hml"

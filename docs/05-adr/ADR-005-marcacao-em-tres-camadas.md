@@ -1,6 +1,6 @@
 # ADR-005: Marcação em três camadas
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-11-05
 
 ## Contexto
@@ -12,7 +12,7 @@ Marcar em três lugares: **cabeçalho** da resposta, **prefixo dos identificador
 Exemplos em `hml`:
 - `x-sim-environment: hml` e `x-sim-data-nature: virtual`
 - `accountId`: `hml-v-1a2b3c`, dentro do padrão `^[a-zA-Z0-9][a-zA-Z0-9\-]{0,99}$` da spec
-- `consentId`: `urn:sim-hml:…`
+- `consentId`: `urn:sim-hml:v-1a2b3c`
 - `transactionName`: `[SIM-HML] PIX recebido`
 
 ## Consequências
