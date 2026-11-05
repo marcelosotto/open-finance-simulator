@@ -4,7 +4,7 @@
 **Data:** 2026-11-05
 
 ## Contexto
-A POC não tem segurança, e por isso o coletor usa cabeçalhos próprios, fora do caminho de produção. O perfil FAPI Brasil completo (mTLS, DCR, PAR, JARM, assinatura) é caro de construir e de operar em desenvolvimento.
+Sem segurança, a receptora precisaria de cabeçalhos próprios, fora do caminho de produção. O perfil FAPI Brasil completo (mTLS, DCR, PAR, JARM, assinatura) é caro de construir e de operar em desenvolvimento.
 
 ## Decisão
 Dois modos, por ambiente:

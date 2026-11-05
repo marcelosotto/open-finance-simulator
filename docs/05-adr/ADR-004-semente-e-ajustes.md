@@ -4,7 +4,7 @@
 **Data:** 2026-11-05
 
 ## Contexto
-Gravar transações de milhões de clientes sairia caro. A POC gera transações por `recurso + dia` e provou a ideia, inclusive com saldo coerente.
+Gravar transações de milhões de clientes sairia caro. Gerar por `recurso + dia` evita esse custo e mantém o saldo coerente.
 
 ## Decisão
 Manter o gerador por semente. Entidades (cliente, consentimento e recurso) podem ser persistidas ou virtuais. Transações nunca são gravadas. Alterações ficam em **ajustes**, aplicados sobre o resultado calculado.

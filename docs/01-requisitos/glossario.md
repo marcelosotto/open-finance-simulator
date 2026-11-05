@@ -4,7 +4,7 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 
 | Termo | Definição |
 |---|---|
-| **Simulador** | Este sistema. Substitui o nome FakeProxy da POC. |
+| **Simulador** | Este sistema. |
 | **Instituição simulada** | Banco fictício que responde às APIs como uma transmissora. Na tela, "banco". |
 | **Transmissora** | Instituição que entrega os dados do cliente. No simulador, sempre uma instituição simulada. |
 | **Receptora** | Instituição que consome os dados. Ex.: o coletor da XP. |

@@ -191,6 +191,6 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="pa18"></a>PA18 | ~~Como é o login simulado?~~ **Respondida:** usuário e senha de teste mostrados na tela. |
 | <a id="pa19"></a>PA19 | ~~O relógio acelerado vale em homologação?~~ **Respondida:** sim, só por instituição, nunca global. |
 | <a id="pa21"></a>PA21 | ~~O que fazer com `page-size` acima de 1.000?~~ **Respondida:** reduzir para 1.000 e mostrar no `self`. |
-| <a id="pa22"></a>PA22 | ~~Quais bancos de nome real nascem prontos, e com qual comportamento?~~ **Respondida:** os 11 nomes da POC, com o perfil `estavel` e variáveis próprias, sem perfil novo. Ver [RN09](#rn09). |
+| <a id="pa22"></a>PA22 | ~~Quais bancos de nome real nascem prontos, e com qual comportamento?~~ **Respondida:** os 11 nomes listados nas personas, com o perfil `estavel` e variáveis próprias, sem perfil novo. Ver [RN09](#rn09). |
 | <a id="pa23"></a>PA23 | ~~Qual dígito inicial do CPF e quais campos levam a marca?~~ **Respondida:** dígito 9. A marca vai em `transactionName` e no nome do cliente. |
 | <a id="pa20"></a>PA20 | ~~Como um timeout real se parece?~~ **Respondida (provisória):** assumimos 504 até alguém confirmar nas instituições. Não há telemetria real, então os perfis são estimativas. Ver [RN12](#rn12). |

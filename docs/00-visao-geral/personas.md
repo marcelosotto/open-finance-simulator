@@ -34,7 +34,7 @@ Têm nome fictício, que já diz o comportamento.
 ### Bancos com nome real
 Usam o perfil `estavel`, sem perfil próprio. O que muda entre eles são as variáveis, como os consentimentos ativos, que definem o TPM da alta frequência. O nome leva o prefixo do ambiente: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento ([RN09](../01-requisitos/regras-de-negocio.md#rn09)).
 
-Os consentimentos são os valores fictícios da POC, como ponto de partida, e não dados reais dos bancos.
+Os consentimentos são valores fictícios, como ponto de partida, e não dados reais dos bancos.
 
 | Banco | Nome em homologação | Consentimentos ativos |
 |---|---|---|

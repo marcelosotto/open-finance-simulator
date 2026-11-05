@@ -15,7 +15,7 @@ flowchart TB
   rec["<b>Receptora</b><br/><small>Coletor da XP ou outro cliente</small>"]
   specs["<b>open-finance-specs</b><br/><small>Specs oficiais fixadas por commit</small>"]
   obs["<b>Observabilidade</b><br/><small>OTLP</small>"]
-  pcm["<b>Central PCM simulada</b><br/><small>Em aberto: PA07</small>"]
+  pcm["<b>Central PCM simulada</b><br/><small>Depois da primeira versão</small>"]
 
   rec -->|"APIs Open Finance"| sim
   dev --> sim

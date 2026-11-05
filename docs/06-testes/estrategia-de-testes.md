@@ -10,7 +10,7 @@
 | Integração | Testcontainers (MongoDB e Redis) | Contadores compartilhados, histórico, expirações |
 | Contrato | Validação contra as specs fixadas | Toda operação com `estavel` valida no schema |
 | Aceitação | Reqnroll com os `.feature` ([ADR-009](../05-adr/ADR-009-gherkin-reqnroll.md)) | Regras em linguagem de negócio |
-| Tabela oficial | Teste que compara classe, TPM, cota e SLA de cada endpoint com a [tabela](../01-requisitos/tabela-de-endpoints.md) | Evita o erro da POC, que tinha 25 classes diferentes |
+| Tabela oficial | Teste que compara classe, TPM, cota e SLA de cada endpoint com a [tabela](../01-requisitos/tabela-de-endpoints.md) | Evita classe ou limite diferente do oficial |
 | Jornada | Playwright | As seis etapas no navegador |
 | Carga | k6 | Capacidade própria do simulador ([RNF02](../01-requisitos/requisitos.md#rnf02)) e mundo virtual |
 

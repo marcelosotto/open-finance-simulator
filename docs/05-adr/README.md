@@ -4,7 +4,7 @@ As ADRs em **Proposto** aguardam a discussão.
 
 | ID | Título | Status |
 |---|---|---|
-| [001](ADR-001-backend-dotnet-10.md) | Back-end em .NET 10 | Proposto |
+| [001](ADR-001-backend-dotnet-10.md) | Back-end em .NET 10 | Aceito |
 | [002](ADR-002-specs-fixadas-por-commit.md) | Specs oficiais fixadas por commit | Proposto |
 | [003](ADR-003-mongodb-e-redis.md) | MongoDB para estado e Redis para contadores | Aceito |
 | [004](ADR-004-semente-e-ajustes.md) | Transações por semente, com ajustes persistidos | Proposto |

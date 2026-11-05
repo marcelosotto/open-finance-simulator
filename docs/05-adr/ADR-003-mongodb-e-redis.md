@@ -4,7 +4,7 @@
 **Data:** 2026-11-05
 
 ## Contexto
-A POC guarda bancos em arquivo JSON, massa no ClickHouse e contadores em memória. O arquivo não tem histórico nem concorrência. O ClickHouse é analítico: cada edição vira linha nova, lida com `FINAL`, e a máquina de estados do consentimento precisa de atualização atômica. Contador em memória não funciona com várias instâncias.
+O simulador precisa guardar configuração, massa e contadores. Arquivo JSON não tem histórico nem concorrência. O ClickHouse é analítico: cada edição vira linha nova, lida com `FINAL`, e a máquina de estados do consentimento precisa de atualização atômica. Contador em memória não funciona com várias instâncias.
 
 ## Decisão
 - **MongoDB** para bancos, clientes, consentimentos, recursos, ajustes, cenários e histórico.
@@ -19,4 +19,4 @@ A POC guarda bancos em arquivo JSON, massa no ClickHouse e contadores em memóri
 - **Manter ClickHouse:** bom para análise, inadequado para estado.
 
 ## Consequências
-Duas dependências no ambiente, as mesmas que a POC já usava no coletor. Redis perdido zera contadores, o que é aceitável em homologação.
+Duas dependências no ambiente. Redis perdido zera contadores, o que é aceitável em homologação.

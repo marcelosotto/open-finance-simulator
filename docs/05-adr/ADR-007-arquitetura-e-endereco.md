@@ -4,7 +4,7 @@
 **Data:** 2026-11-05
 
 ## Contexto
-A receptora não deve mudar para falar com o simulador ([PR07](../00-visao-geral/premissas.md#pr07)), e a POC escolhe o banco por cabeçalho.
+A receptora não deve mudar para falar com o simulador ([PR07](../00-visao-geral/premissas.md#pr07)).
 
 ## Decisão
 - **Monólito modular:** um código, com módulos separados. API, jornada, administração e worker podem rodar juntos no começo e separados depois.
