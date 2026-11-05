@@ -23,7 +23,7 @@ Um teste precisa ser repetível. Com a mesma semente, a mesma massa e o mesmo re
 Rotas, contratos e exemplos saem das specs do repositório `open-finance-specs`, fixadas por commit. Nenhuma API é escrita à mão: uma versão nova entra atualizando o commit, sem reescrever o simulador ([ADR-002](../05-adr/ADR-002-specs-fixadas-por-commit.md)).
 
 ## <a id="pr07"></a>PR07 — O cliente sob teste não muda de código para falar com o simulador
-Para a receptora, o simulador é uma instituição. Ela usa os mesmos caminhos, cabeçalhos e fluxos que usaria em produção, trocando só o endereço e as credenciais. Atalhos de teste existem, mas ficam em APIs de administração separadas.
+Para a receptora, o simulador é uma instituição. Ela usa os mesmos caminhos, cabeçalhos e fluxos que usaria em produção, trocando só o endereço e as credenciais. Atalhos de teste existem, mas ficam em APIs de administração separadas. Exceção: o consentimento nasce `AUTHORISED`, sem a etapa de autorização ([RN80](../01-requisitos/regras-de-negocio.md#rn80)).
 
 ## <a id="pr08"></a>PR08 — Foco em desenvolvimento e homologação
 O simulador existe para desenvolvimento e homologação, e não recebe dado real. O uso em produção não é bloqueado nem decidido agora. Se um dia houver, será preciso decidir como fica a marcação dos dados ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).
