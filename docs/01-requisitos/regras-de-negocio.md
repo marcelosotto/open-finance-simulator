@@ -79,7 +79,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Massa de dados e semente
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn50"></a>RN50 | Todo dado do simulador é **simulado**. Ele tem uma de duas naturezas: **persistido**, gravado no banco, ou **virtual**, calculado na hora a partir de uma semente. | Produto |
+| <a id="rn50"></a>RN50 | Todo dado gerado aqui é **simulado** e tem uma de duas naturezas: **persistido**, gravado no banco, ou **virtual**, calculado na hora a partir de uma semente. | Produto |
 | <a id="rn51"></a>RN51 | Cliente, consentimento, recurso, instituição e configuração são **persistidos** quando criados por tela, API ou lote. Transações nunca são gravadas uma a uma: saem de uma semente, com **ajustes** gravados por cima. | Produto |
 | <a id="rn52"></a>RN52 | O **mundo virtual** existe para carga: milhões de clientes, consentimentos e recursos calculados pelo índice, sem gravar nada, com o mesmo gerador da massa persistida. | Produto |
 | <a id="rn53"></a>RN53 | Um dado virtual pode receber um **ajuste** persistido (ex.: revogar um consentimento virtual). O ajuste vence o cálculo. | Produto |

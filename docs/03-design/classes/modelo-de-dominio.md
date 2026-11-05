@@ -28,7 +28,7 @@ classDiagram
     organisationId
     qcaPorInstituicao
   }
-  class ClienteSintetico {
+  class ClienteSimulado {
     documento
     tipoPessoa
     marca
@@ -75,15 +75,15 @@ classDiagram
 
   Instituicao "1" --> "1" PerfilDeComportamento : usa copia de
   Instituicao "1" --> "1" ConfiguracaoDeLimites
-  Instituicao "1" --> "*" ClienteSintetico
+  Instituicao "1" --> "*" ClienteSimulado
   Receptora "1" --> "*" Consentimento
-  ClienteSintetico "1" --> "*" Consentimento
-  ClienteSintetico "1" --> "*" Recurso
+  ClienteSimulado "1" --> "*" Consentimento
+  ClienteSimulado "1" --> "*" Recurso
   Consentimento "*" --> "*" Recurso
   Consentimento "1" --> "*" Aprovacao
   Recurso "*" --> "1" PerfilDeDados
   Recurso "1" --> "*" Ajuste
-  Lote "1" --> "*" ClienteSintetico
+  Lote "1" --> "*" ClienteSimulado
   RegraDeCenario "*" --> "0..1" Instituicao : alcance
 ```
 
