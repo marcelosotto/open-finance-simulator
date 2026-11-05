@@ -8,9 +8,8 @@ Relacionados: [regras de negócio](../regras-de-negocio.md) · [requisitos](../r
 | **Operador** | Mantém bancos, configuração e massa (Diego). |
 | **QA** | Monta cenários e confere resultados (Bruno). |
 | **Desenvolvedor** | Integra a receptora contra o simulador (Ana). |
-| **Analista** | Valida regras e demonstra a jornada (Carla). |
+| **Analista** | Valida regras e cria consentimentos para demonstrar (Carla). |
 | **Receptora** | Sistema que chama as APIs. Ex.: o coletor. |
-| **Cliente simulado** | Pessoa fictícia que faz a jornada de consentimento. |
 | **Sistema** | Processos automáticos: expiração, geração e limites. |
 
 ## Diagrama
@@ -21,7 +20,6 @@ flowchart LR
   Q([QA])
   D([Desenvolvedor])
   R([Receptora])
-  C([Cliente simulado])
   S([Sistema])
 
   subgraph Config["Configuração"]
@@ -41,9 +39,8 @@ flowchart LR
   end
   subgraph Cons["Consentimento e recursos"]
     UC25[UC25 Autenticar a receptora]
-    UC09[UC09 Criar consentimento]
-    UC10[UC10 Jornada PF]
-    UC11[UC11 Jornada PJ com alçadas]
+    UC10[UC10 Criar consentimento no painel]
+    UC11[UC11 Múltiplas alçadas]
     UC12[UC12 Consultar e revogar]
     UC13[UC13 Renovar]
     UC14[UC14 Consultar recursos]
@@ -63,9 +60,8 @@ flowchart LR
 
   O --> UC01 & UC02 & UC03 & UC05 & UC07 & UC15 & UC27
   D --> UC24
-  Q --> UC04 & UC06 & UC08 & UC22 & UC26 & UC28
-  R --> UC25 & UC09 & UC12 & UC13 & UC14 & UC16 & UC17
-  C --> UC10 & UC11
+  Q --> UC04 & UC06 & UC08 & UC10 & UC11 & UC22 & UC26 & UC28
+  R --> UC25 & UC12 & UC13 & UC14 & UC16 & UC17
   S --> UC18 & UC19 & UC20 & UC21 & UC23
 ```
 
@@ -75,6 +71,7 @@ flowchart LR
 | **Rascunho** | Escrito, ainda não revisado pela equipe. |
 | **Em revisão** | Sendo validado; pode ter pontos em aberto. |
 | **Aprovado** | Revisado ponto a ponto, sem perguntas em aberto. Pronto para virar spec. |
+| **Adiado** | Fora desta versão. |
 
 Todos começam como **Rascunho**.
 
@@ -153,9 +150,8 @@ Todos começam como **Rascunho**.
 - **Status:** Aprovado
 - **Ator:** QA ou Desenvolvedor
 - **Objetivo:** ter um cliente específico para um teste.
-- **Fluxo principal:** 1. Escolhe o tipo (PF ou PJ), o perfil de dados e os bancos onde o cliente tem produtos. 2. O sistema gera documento válido, nome e produtos em cada banco. 3. Mostra os dados de login, que valem em todos os bancos.
-- **Fluxo alternativo — já autorizado:** marca "criar consentimento autorizado" para pular a jornada.
-- **Fluxo alternativo — novo consentimento:** o mesmo cliente pode dar outro consentimento no mesmo banco ou em outro ([RN49](../regras-de-negocio.md#rn49)).
+- **Fluxo principal:** 1. Escolhe o tipo (PF ou PJ), o perfil de dados e os bancos onde o cliente tem produtos. 2. O sistema gera documento válido, nome e produtos em cada banco. 3. Mostra o cliente criado.
+- **Fluxo alternativo — consentimento:** segue para o [UC10](#uc10). O mesmo cliente pode ter outro consentimento no mesmo banco ou em outro ([RN49](../regras-de-negocio.md#rn49)).
 - **Regras:** [RN49](../regras-de-negocio.md#rn49), [RN51](../regras-de-negocio.md#rn51), [RN54](../regras-de-negocio.md#rn54), [RN57](../regras-de-negocio.md#rn57), [RN60](../regras-de-negocio.md#rn60).
 
 ### <a id="uc07"></a>UC07 — Gerar lote
@@ -165,7 +161,7 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Informa quantidade, distribuição, consentimentos por cliente, permissões e semente. 2. Acompanha o progresso em segundo plano. 3. Recebe o resumo.
 - **Fluxo alternativo — cancelar:** para e mantém o que já foi criado, marcado como parcial.
 - **Fluxo alternativo — semente repetida:** gera normalmente, com outros documentos e IDs ([RN54](../regras-de-negocio.md#rn54)).
-- **Pós-condição:** consentimentos já nascem `AUTHORISED`; é um atalho de teste, identificado no lote.
+- **Pós-condição:** consentimentos nascem `AUTHORISED` ([RN80](../regras-de-negocio.md#rn80)).
 - **Regras:** [RN51](../regras-de-negocio.md#rn51), [RN56](../regras-de-negocio.md#rn56), [RN58](../regras-de-negocio.md#rn58).
 
 ### <a id="uc08"></a>UC08 — Usar o mundo virtual
@@ -187,57 +183,51 @@ Todos começam como **Rascunho**.
 ## Consentimento e recursos
 
 ### <a id="uc25"></a>UC25 — Autenticar a receptora
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Receptora
-- **Objetivo:** obter acesso do mesmo jeito que em uma instituição real.
-- **Fluxo principal (modo FAPI):** 1. Registra-se por DCR. 2. Usa `client_credentials` para criar o consentimento. 3. Envia o pedido por PAR, com PKCE. 4. Depois da jornada, troca o código por token vinculado ao consentimento.
-- **Fluxo alternativo — modo simples:** usa um token emitido por API própria do simulador, ligado a receptora e consentimento.
-- **Exceções:** certificado, cliente, escopo ou redirect inválidos → recusado.
-- **Regras:** [RN120](../regras-de-negocio.md#rn120) a [RN123](../regras-de-negocio.md#rn123).
+- **Objetivo:** identificar quem chama o simulador, porque cada receptora tem seus limites.
+- **Pré-condição:** o operador cadastrou a receptora com nome e `organisationId`, e o simulador gerou usuário e senha de teste.
+- **Fluxo principal:** 1. A receptora envia usuário, senha e `consentId`. 2. O simulador devolve um token ligado à receptora e ao consentimento. 3. A receptora usa o token nas APIs.
+- **Exceções:** credencial inválida ou consentimento que não esteja `AUTHORISED` → recusado.
+- **Regras:** [RN120](../regras-de-negocio.md#rn120), [RN122](../regras-de-negocio.md#rn122), [RN123](../regras-de-negocio.md#rn123).
 
-### <a id="uc09"></a>UC09 — Criar consentimento
-- **Status:** Rascunho
-- **Ator:** Receptora
-- **Fluxo principal:** 1. Chama `POST /consents` com usuário, permissões e validade. 2. O sistema valida grupos e tipo de pessoa. 3. Cria em `AWAITING_AUTHORISATION` e responde 201.
-- **Exceções:** erros 422 de [RN83](../regras-de-negocio.md#rn83) e [RN84](../regras-de-negocio.md#rn84).
-- **Pós-condição:** sem aprovação em 60 minutos, vai para `REJECTED` ([RN81](../regras-de-negocio.md#rn81)).
-- **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN80](../regras-de-negocio.md#rn80) a [RN85](../regras-de-negocio.md#rn85).
+### <a id="uc09"></a>UC09 — Criar consentimento por API
+- **Status:** Adiado
+- **Observação:** por enquanto, consentimentos nascem pelo painel, por lote ou pelo mundo virtual ([adiados](../regras-de-negocio.md#adiados)).
 
-### <a id="uc10"></a>UC10 — Fazer a jornada de consentimento (PF)
-- **Status:** Rascunho
-- **Ator:** Cliente simulado
-- **Pré-condição:** consentimento em `AWAITING_AUTHORISATION` ([UC09](#uc09)).
-- **Fluxo principal:** 1. **Consentimento:** na receptora, o cliente escolhe banco, dados e prazo. 2. **Direcionamento:** tela de transição. 3. **Autenticação:** login no banco simulado e conferência de titularidade. 4. **Confirmação:** vê destinatário, prazo e dados, escolhe contas e cartões e confirma. 5. **Redirecionamento:** tela de transição de volta. 6. **Efetivação:** a receptora mostra o resultado.
-- **Fluxo alternativo — sem receptora própria:** a receptora de demonstração faz as etapas 1, 2 e 6 ([RN91](../regras-de-negocio.md#rn91)).
-- **Fluxos de exceção:** titular diferente → interrompe ([RN93](../regras-de-negocio.md#rn93)); cliente cancela → `REJECTED` ([RN96](../regras-de-negocio.md#rn96)); falha no login ou fora do ar → consentimento segue pendente e pode ser retomado em até 60 minutos ([RN81](../regras-de-negocio.md#rn81)).
-- **Pós-condição:** `AUTHORISED`, com recursos selecionados.
-- **Regras:** [RN90](../regras-de-negocio.md#rn90) a [RN97](../regras-de-negocio.md#rn97), [RN99](../regras-de-negocio.md#rn99).
+### <a id="uc10"></a>UC10 — Criar consentimento no painel
+- **Status:** Aprovado
+- **Ator:** QA, Desenvolvedor ou Analista, já autenticado no sistema
+- **Objetivo:** criar um consentimento por um menu, sem login no banco.
+- **Pré-condição:** cliente simulado com produto na instituição ([UC06](#uc06)).
+- **Fluxo principal:** 1. Escolhe o cliente. 2. Escolhe a instituição e a receptora. 3. Escolhe as permissões, as contas e os cartões, e o prazo. 4. Confirma, e o consentimento nasce `AUTHORISED`.
+- **Exceções:** combinação de permissões inválida ou nenhuma origem selecionada → recusado.
+- **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN49](../regras-de-negocio.md#rn49), [RN80](../regras-de-negocio.md#rn80), [RN83](../regras-de-negocio.md#rn83) a [RN85](../regras-de-negocio.md#rn85), [RN95](../regras-de-negocio.md#rn95).
 
-### <a id="uc11"></a>UC11 — Fazer a jornada com múltiplas alçadas (PJ)
-- **Status:** Rascunho
-- **Ator:** Cliente simulado (representante da empresa)
-- **Fluxo principal:** 1. Helena faz a jornada da Indústria Aurora. 2. O consentimento fica `AUTHORISED`, e os recursos, `PENDING_AUTHORISATION`. 3. Paula aprova na tela da instituição. 4. Os recursos vão para `AVAILABLE`.
-- **Fluxo alternativo — recusa:** um aprovador recusa, e os recursos vão para `UNAVAILABLE`.
-- **Fluxo alternativo — prazo:** sem aprovação no prazo, os recursos não ficam disponíveis.
-- **Fluxo alternativo — sócio único:** Comércio Sol aprova sem etapa extra.
+### <a id="uc11"></a>UC11 — Múltiplas alçadas (PJ)
+- **Status:** Aprovado
+- **Ator:** QA, Desenvolvedor ou Analista
+- **Fluxo principal:** 1. Ao criar o consentimento da Indústria Aurora, marca "exige múltiplas alçadas" e informa quantas aprovações faltam. 2. O consentimento fica `AUTHORISED`, e os recursos, `PENDING_AUTHORISATION`. 3. Aprova no painel quantas vezes for preciso. 4. Os recursos vão para `AVAILABLE`.
+- **Fluxo alternativo — recusa:** recusa no painel, e os recursos vão para `UNAVAILABLE`.
+- **Fluxo alternativo — prazo:** sem aprovação em até 15 dias, os recursos vão para `UNAVAILABLE`.
 - **Regras:** [RN98](../regras-de-negocio.md#rn98), [RN107](../regras-de-negocio.md#rn107).
 
 ### <a id="uc12"></a>UC12 — Consultar e revogar consentimento
-- **Status:** Rascunho
-- **Ator:** Receptora ou Cliente simulado
-- **Fluxo principal:** 1. A receptora consulta `GET /consents/{consentId}`. 2. Revoga por `DELETE`, ou o cliente revoga na tela de gestão do banco. 3. Vai para `REJECTED`, com quem rejeitou.
-- **Pós-condição:** as APIs passam a responder 401 ([RN88](../regras-de-negocio.md#rn88)).
+- **Status:** Aprovado
+- **Ator:** Receptora, QA ou Desenvolvedor
+- **Fluxo principal:** 1. A receptora consulta `GET /consents/{consentId}`. 2. Revoga por `DELETE`, ou alguém revoga no painel. 3. Vai para `REJECTED`, com quem rejeitou.
+- **Pós-condição:** as APIs passam a responder 401 para esse consentimento ([RN88](../regras-de-negocio.md#rn88)). Os outros consentimentos do cliente seguem valendo ([RN49](../regras-de-negocio.md#rn49)).
 - **Regras:** [RN82](../regras-de-negocio.md#rn82), [RN86](../regras-de-negocio.md#rn86), [RN88](../regras-de-negocio.md#rn88).
 
 ### <a id="uc13"></a>UC13 — Renovar consentimento
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Receptora
 - **Fluxo principal:** 1. Chama `POST /consents/{consentId}/extends` com a nova validade. 2. O sistema valida estado, data e documento. 3. Registra a extensão, consultável em `/extensions`.
 - **Exceções:** erros 422 de [RN87](../regras-de-negocio.md#rn87).
 - **Regras:** [RN87](../regras-de-negocio.md#rn87).
 
 ### <a id="uc14"></a>UC14 — Consultar recursos
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Receptora
 - **Fluxo principal:** 1. Chama `GET /resources`. 2. Recebe os recursos com tipo e estado.
 - **Fluxo alternativo — preparando:** 202 sem corpo, enquanto a instituição prepara, até 5 minutos; depois, 504 ([RN103](../regras-de-negocio.md#rn103)).
@@ -245,10 +235,10 @@ Todos começam como **Rascunho**.
 - **Regras:** [RN47](../regras-de-negocio.md#rn47), [RN100](../regras-de-negocio.md#rn100) a [RN107](../regras-de-negocio.md#rn107).
 
 ### <a id="uc15"></a>UC15 — Alterar recursos
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Operador ou QA
 - **Objetivo:** simular bloqueio, encerramento ou produto novo.
-- **Fluxo principal:** 1. Abre o recurso. 2. Muda o estado ou adiciona um produto. 3. Vale na próxima chamada.
+- **Fluxo principal:** 1. Abre o recurso. 2. Muda o estado ou adiciona um produto. 3. Vale na próxima chamada. Em recurso virtual, a mudança vira um ajuste.
 - **Exceções:** transição proibida → recusado, salvo anomalia ([RN101](../regras-de-negocio.md#rn101)).
 - **Regras:** [RN101](../regras-de-negocio.md#rn101), [RN106](../regras-de-negocio.md#rn106), [RN108](../regras-de-negocio.md#rn108).
 

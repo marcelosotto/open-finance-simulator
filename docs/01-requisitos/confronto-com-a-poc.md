@@ -1,5 +1,7 @@
 # Confronto da POC com as regras oficiais
 
+> A jornada com redirecionamento e a criação de consentimento por API foram [adiadas](regras-de-negocio.md#adiados) depois desta análise.
+
 Compara o `src/OpenFinance.FakeProxy` do repositório OpenToken (commit `d3fe839`) com as [fontes oficiais](../00-visao-geral/referencias.md). A comparação foi feita pela leitura do código, sem executar a POC. A interpretação das regras ainda precisa de revisão humana.
 
 **Resumo:** a POC acerta a base (rotas a partir da spec, minuto cheio, faixas de TPM, chave de paginação de 60 minutos, consistência de saldo e semente). Ela erra na classe de 25 de 69 endpoints de dados, na contagem da cota, em vários códigos de retorno e não tem a máquina de estados do consentimento nem a segurança.
@@ -86,11 +88,11 @@ A [tabela de endpoints](tabela-de-endpoints.md) traz todos os valores oficiais.
 |---|---|---|---|---|
 | `POST /consents` | Devolve o exemplo da spec, sem criar nada | Cria em `AWAITING_AUTHORISATION` e valida permissões | ➖ | [RN80](regras-de-negocio.md#rn80) a [RN84](regras-de-negocio.md#rn84) |
 | Criação de consentimento | API interna do sandbox, que já nasce autorizado | Passa pela jornada | ⚠️ Vale como atalho de teste | [UC07](casos-de-uso/README.md#uc07) |
-| Expiração de 60 minutos | Ausente | `REJECTED` | ➖ | [RN81](regras-de-negocio.md#rn81) |
+| Expiração de 60 minutos | Ausente | `REJECTED` | ➖ | [adiado](regras-de-negocio.md#adiados) |
 | `DELETE /consents/{id}` | Devolve o exemplo; a revogação usa API do sandbox | Revoga | ➖ | [RN86](regras-de-negocio.md#rn86) |
 | Renovação | Devolve o exemplo | Regras e erros próprios | ➖ | [RN87](regras-de-negocio.md#rn87) |
 | Consentimento revogado | Responde **403** `CONSENT_STATUS_REJECTED` | Responde **401** | ❌ | [RN88](regras-de-negocio.md#rn88) |
-| Jornada do cliente | Tela do sandbox, sem login, confirmação ou redirecionamento | Seis etapas | ➖ | [RN90](regras-de-negocio.md#rn90) |
+| Jornada do cliente | Tela do sandbox, sem login, confirmação ou redirecionamento | Seis etapas | ➖ | [adiado](regras-de-negocio.md#adiados) |
 | 36 permissões oficiais | Sim | Sim | ✅ | [RN83](regras-de-negocio.md#rn83) |
 | Estados do recurso | Os quatro | Os quatro | ✅ | [RN100](regras-de-negocio.md#rn100) |
 | Transições do recurso | Edição livre | Transições restritas | ⚠️ | [RN101](regras-de-negocio.md#rn101) |

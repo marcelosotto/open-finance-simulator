@@ -11,31 +11,22 @@ Funcionalidade: Autenticar a receptora
     Quando Ana consulta contas sem token
     Então a resposta deve ter status 401
 
-  # RN121
-  @fapi
-  Cenário: PAR é obrigatório
-    Dado o modo de segurança "FAPI"
-    Quando Ana pede autorização sem PAR
-    Então o pedido deve ser recusado
-
-  # RN121
-  @fapi
-  Cenário: request_uri de uso único
-    Dado um request_uri já usado
-    Quando Ana usa de novo
-    Então o pedido deve ser recusado
-
-  # RN121
-  @fapi
-  Cenário: Validade do token
-    Quando Ana obtém um access token
-    Então a validade deve ficar entre 300 e 900 segundos
-
   # RN122
   Cenário: Token sem a permissão
     Dado um consentimento só com contas
     Quando Ana consulta cartões
     Então a resposta deve ter status 403
+
+  # RN120
+  Cenário: Token só para consentimento autorizado
+    Dado um consentimento revogado
+    Quando a receptora pede um token para ele
+    Então o pedido deve ser recusado
+
+  # RN120
+  Cenário: Credencial inválida
+    Quando a receptora pede um token com senha errada
+    Então o pedido deve ser recusado
 
   # RN71
   Cenário: Administração separada

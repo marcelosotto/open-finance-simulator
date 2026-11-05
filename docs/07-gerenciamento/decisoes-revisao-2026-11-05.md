@@ -32,7 +32,11 @@ O projeto usa só **simulado** para o que é fictício: instituição, cliente e
 
 ## Próximo passo
 
-Revisão dos casos de uso. Blocos de configuração e de massa de dados aprovados: UC01 a UC08, UC24, UC27 e UC28.
+Revisão dos casos de uso. Blocos de configuração, massa de dados e consentimento aprovados.
+
+## Consentimento sem jornada
+
+Cliente simulado é só massa de dados, sem login nem telas. Consentimentos nascem `AUTHORISED`, pelo painel, por lote ou pelo mundo virtual. Criação por API, jornada com redirecionamento, consentimento recusado e modo FAPI ficaram [adiados](../01-requisitos/regras-de-negocio.md#adiados).
 
 ## Cliente e consentimento
 

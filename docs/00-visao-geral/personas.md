@@ -13,7 +13,7 @@ Integra o coletor. Quer ver o que acontece quando um banco devolve 429 no meio d
 Monta cenários repetíveis: "este cliente sempre dá timeout em saldos". Precisa que o resultado de hoje seja igual ao de amanhã.
 
 ### Carla — analista de produto
-Conhece as regras do Open Finance e valida se o simulador se comporta como as instituições. Usa a jornada de consentimento para mostrar o fluxo ao negócio.
+Conhece as regras do Open Finance e valida se o simulador se comporta como as instituições. Cria consentimentos pelo painel para mostrar o fluxo ao negócio.
 
 ### Diego — operador de homologação
 Cadastra bancos, gera lotes de massa, limpa o ambiente e acompanha o que foi configurado.
@@ -51,15 +51,16 @@ Os consentimentos são valores fictícios, como ponto de partida, e não dados r
 | Sicredi | `HML-Sicredi` | 600.000 |
 
 ## Clientes simulados
+São só massa de dados: não fazem login nem usam telas.
 
 ### Mariana Alves — pessoa física
-Tem uma conta, um cartão e um empréstimo no Banco Estável. Usada na jornada PF.
+Tem uma conta, um cartão e um empréstimo no Banco Estável.
 
 ### Rafael Lima — pessoa física com conta bloqueada
 Tem uma conta disponível e outra com bloqueio temporário. Usado nos cenários de recursos.
 
 ### Indústria Aurora Ltda — pessoa jurídica
-Tem produtos no Banco Estável, com duas aprovadoras: **Helena** e **Paula**. Usada na jornada PJ com múltiplas alçadas.
+Tem produtos no Banco Estável e exige duas aprovações. Usada nos cenários de múltiplas alçadas.
 
 ### Sócio único Comércio Sol — pessoa jurídica
-Empresa com um único sócio pessoa natural, que aprova sozinho.
+Empresa que não exige múltiplas alçadas.

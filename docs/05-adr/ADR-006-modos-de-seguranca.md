@@ -15,3 +15,5 @@ Nos dois, a identidade da receptora, o cliente e o consentimento vêm do token, 
 
 ## Consequências
 O modo simples já tira os cabeçalhos próprios. O fornecedor do servidor de autorização do modo FAPI segue em aberto. O simulador não substitui a certificação oficial.
+
+**Atualização da revisão:** o modo FAPI depende da jornada com redirecionamento, que foi [adiada](../01-requisitos/regras-de-negocio.md#adiados). Nesta versão, só o modo simples existe, e a receptora é cadastrada pelo operador.

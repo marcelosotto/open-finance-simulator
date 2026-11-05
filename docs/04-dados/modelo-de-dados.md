@@ -12,7 +12,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
 | `distribuicoes` | Divisão da massa entre bancos, perfis e produtos | Bancos e perfis somam 100%; produtos têm porcentagem própria |
 | `receptoras` | `organisationId` e QCA sobrescrito por instituição | [PA10](../01-requisitos/regras-de-negocio.md#pa10) |
-| `clientes` | Documento, nome, tipo, credenciais de teste, marca e natureza | Índice por documento; o cliente não pertence a um banco |
+| `clientes` | Documento, nome, tipo, marca e natureza | Índice por documento; o cliente não pertence a um banco |
 | `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações | Mudança de estado atômica; índice para expirar |
 | `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e por cliente e banco |
 | `mundos_virtuais` | Total e semente por banco | Reproduz o mesmo mundo |
@@ -21,7 +21,6 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `cenarios` | Regras, defeitos e anomalias | Índice por alcance |
 | `historico` | Quem mudou o quê, com antes e depois | Toda escrita de administração |
 | `registros_chamada` | Chamada, status, tempo, regra aplicada | Expira em 7 dias ([PA17](../01-requisitos/regras-de-negocio.md#pa17)) |
-| `sessoes_jornada` | Etapa, cliente e consentimento | Expira em 60 minutos |
 
 ## Redis
 | Chave | Conteúdo | Expira |

@@ -6,7 +6,7 @@ Simular dados de Open Finance é muito difícil. Os times que consomem dados de 
 Sem isso, o problema aparece só em produção, quando a instituição real se comporta de um jeito que ninguém testou.
 
 ## Objetivo
-Oferecer um ambiente que se comporte **o mais perto possível do que as outras instituições financeiras oferecem de verdade**, nas APIs, na jornada de consentimento e nos defeitos, para uso em desenvolvimento e homologação.
+Oferecer um ambiente que se comporte **o mais perto possível do que as outras instituições financeiras oferecem de verdade**, nas APIs e nos defeitos, para uso em desenvolvimento e homologação.
 
 ## Stakeholders
 | Papel | Descrição |
@@ -21,7 +21,7 @@ Oferecer um ambiente que se comporte **o mais perto possível do que as outras i
 ## Escopo inicial
 - Cadastro de **instituições simuladas**, com bancos prontos: estável, lento, instável, timeout e restritivo, além de bancos com nome real e prefixo do ambiente, como `HML-Itaú`
 - **Comportamento configurável**: latência, erros, indisponibilidade, timeout e cenários programados
-- **Jornada de consentimento** o mais parecida possível com a real, com autenticação, confirmação e redirecionamento
+- **Consentimento pelo painel**: um menu para escolher cliente, instituição e permissões, com o consentimento já autorizado
 - **API de Consentimentos e de Recursos**, com as máquinas de estados oficiais
 - **APIs de dados cadastrais e transacionais** geradas a partir das specs oficiais
 - **Limites oficiais**: tráfego (429), operacional (423) e capacidade (529)

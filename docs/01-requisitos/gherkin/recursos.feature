@@ -47,6 +47,12 @@ Funcionalidade: API de Recursos
     Quando Ana consulta uma conta que não é de Rafael
     Então a resposta deve ter status 403 com "RESOURCE_FORBIDDEN"
 
+  # RN105
+  Cenário: Conta fora do consentimento
+    Dado que Mariana tem a conta A em um consentimento e a conta B em outro
+    Quando Ana consulta a conta B com o primeiro consentimento
+    Então a resposta deve ter status 403 com "RESOURCE_FORBIDDEN"
+
   # RN101
   Esquema do Cenário: Transições de estado
     Dado um recurso em "<de>"

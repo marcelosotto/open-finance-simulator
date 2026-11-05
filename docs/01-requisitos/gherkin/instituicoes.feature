@@ -66,7 +66,7 @@ Funcionalidade: Cadastrar instituições simuladas
     Então deve ver público, produtos, marca e organisationId
 
   # RN08
-  Cenário: Instituição sem conta de depósito
-    Dado que o "Banco Azul" não oferece contas
-    Quando Ana cria um consentimento de contas e cartões nesse banco
-    Então as permissões de contas devem sair do consentimento
+  Cenário: Produto não oferecido não aparece para consentir
+    Dado um banco que não oferece contas
+    Quando Bruno abre as permissões nesse banco
+    Então contas não devem aparecer

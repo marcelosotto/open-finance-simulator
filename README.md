@@ -1,6 +1,6 @@
 # Simulador Open Finance
 
-Simula instituições financeiras do Open Finance Brasil para que os times testem situações reais sem depender de um banco de verdade: jornada de consentimento, recursos, dados cadastrais e transacionais, limites, lentidão, timeout, instabilidade e dados ruins.
+Simula instituições financeiras do Open Finance Brasil para que os times testem situações reais sem depender de um banco de verdade: consentimentos, recursos, dados cadastrais e transacionais, limites, lentidão, timeout, instabilidade e dados ruins.
 
 > **Situação:** documentação em rascunho, para discussão. Ainda não há código. Depois de aprovados os casos de uso, as specs do Spec Kit geram o projeto.
 

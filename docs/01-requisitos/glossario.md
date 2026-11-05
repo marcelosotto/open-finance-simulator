@@ -10,7 +10,7 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **Receptora** | Instituição que consome os dados. Ex.: o coletor da XP. |
 | **Perfil de comportamento** | Modelo de como uma instituição responde: latência, erros, limites e anomalias. Ex.: `lento`. |
 | **Perfil de dados** | Modelo de como os dados de um cliente se parecem: volume, valores e produtos. Ex.: `alto-volume`. |
-| **Cliente simulado** | Pessoa ou empresa fictícia, identificada pelo documento. Não pertence a um banco: pode ter produtos e consentimentos em vários. |
+| **Cliente simulado** | Pessoa ou empresa fictícia, identificada pelo documento. É só massa de dados, sem login. Não pertence a um banco: pode ter produtos e consentimentos em vários. |
 | **Dado simulado** | Qualquer dado criado pelo simulador, sem origem em cliente real. Sua natureza é persistido ou virtual. |
 | **Dado persistido** | Dado simulado gravado no banco. |
 | **Dado virtual** | Dado simulado calculado na hora a partir de uma semente, sem gravar. |
@@ -32,6 +32,5 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **QCA** | Quantidade de consentimentos ativos entre receptora e transmissora. Define o TPM da alta frequência. No simulador, é um valor configurado. |
 | **Classe de frequência** | Alta, média-alta, média ou baixa. Define TPM, limite operacional e SLA. |
 | **`pagination-key`** | Identificador criado pela transmissora para não contar as páginas seguintes na cota. |
-| **Hybrid flow** | Fluxo com redirecionamento para a instituição autenticar e confirmar. |
 | **Alçada** | Aprovação de uma pessoa autorizada. Uma empresa pode exigir mais de uma. |
 | **Seleção de origem** | Escolha de quais contas ou cartões compartilhar. |

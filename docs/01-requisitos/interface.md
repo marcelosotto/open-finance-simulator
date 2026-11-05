@@ -14,13 +14,10 @@ Detalhes de interface que **não são regra de negócio**. Ao mudar um botão, a
 | <a id="ui07"></a>UI07 | Distribuição | Soma as porcentagens de bancos e perfis e bloqueia salvar fora de 100%. Produtos têm porcentagem própria, sem soma. | [RN56](regras-de-negocio.md#rn56) |
 | <a id="ui08"></a>UI08 | Registros de chamada | Mostra a regra aplicada, o defeito e a anomalia de cada chamada. | [RN74](regras-de-negocio.md#rn74) |
 
-## Jornada na instituição simulada
+## Consentimento no painel
 | ID | Tela | Comportamento | Regra |
 |---|---|---|---|
-| <a id="ui10"></a>UI10 | Login | Mostra os dados do cliente de teste, sem pedir que alguém os memorize. | [PA18](regras-de-negocio.md#pa18) |
-| <a id="ui11"></a>UI11 | Titularidade | Em divergência, mostra a mensagem de erro e o caminho para resolver, sem resumo do consentimento. | [RN93](regras-de-negocio.md#rn93) |
-| <a id="ui12"></a>UI12 | Confirmação | Mostra destinatário, prazo e categorias. Detalhes secundários ficam em botão de mais informações. | [RN94](regras-de-negocio.md#rn94) |
+| <a id="ui10"></a>UI10 | Novo consentimento | Um menu em passos: cliente, instituição e receptora, permissões e prazo. | [RN80](regras-de-negocio.md#rn80) |
 | <a id="ui13"></a>UI13 | Seleção de origem | Contas e cartões já marcados, com no mínimo um. | [RN95](regras-de-negocio.md#rn95) |
-| <a id="ui14"></a>UI14 | Botões | "Cancelar" não pode ter mais destaque que "Confirmar". | [RN96](regras-de-negocio.md#rn96) |
-| <a id="ui15"></a>UI15 | Redirecionamento | Tela informativa, sem clique, avisando que é seguro. | [RN97](regras-de-negocio.md#rn97) |
+| <a id="ui14"></a>UI14 | Alçadas | Mostra quantas aprovações faltam, com botões de aprovar e recusar. | [RN98](regras-de-negocio.md#rn98) |
 | <a id="ui16"></a>UI16 | Todas | Faixa fixa: "Ambiente simulado, dados fictícios". | [PR03](../00-visao-geral/premissas.md#pr03) |

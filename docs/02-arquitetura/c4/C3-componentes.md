@@ -49,13 +49,12 @@ flowchart LR
 | Instituições | Bancos, perfis, configuração e histórico |
 | Massa | Clientes, lotes, perfis de dados e distribuição |
 | Gerador de dados | Semente, mundo virtual, ajustes e coerência |
-| Consentimentos | Máquina de estados, permissões e renovação |
-| Jornada | Sessão, login, confirmação e alçadas |
+| Consentimentos | Criação no painel, máquina de estados, permissões, alçadas e renovação |
 | Recursos | Estados, preparação e seleção |
 | Limites | TPM, TPS e limite operacional |
 | Cenários | Regras, defeitos e anomalias |
 | Marcação | Ambiente e natureza |
-| Segurança | Modos simples e FAPI |
+| Segurança | Modo simples |
 | Registros | Chamadas e investigação |
 
 Cada etapa é uma porta testável sozinha. A ordem segue [RN39](../../01-requisitos/regras-de-negocio.md#rn39).

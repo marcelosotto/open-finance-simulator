@@ -100,9 +100,7 @@ classDiagram
 ### Consentimento
 ```mermaid
 stateDiagram-v2
-  [*] --> AWAITING_AUTHORISATION : POST /consents
-  AWAITING_AUTHORISATION --> AUTHORISED : cliente confirma
-  AWAITING_AUTHORISATION --> REJECTED : recusa ou 60 minutos
+  [*] --> AUTHORISED : painel, lote ou mundo virtual
   AUTHORISED --> REJECTED : vence, revogação ou fraude
   REJECTED --> [*]
 ```

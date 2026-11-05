@@ -16,7 +16,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn05"></a>RN05 | Mudar a configuração de uma instituição vale para as próximas chamadas, sem reiniciar, e fica no histórico com usuário, antes e depois. | Produto |
 | <a id="rn06"></a>RN06 | Uma instituição com clientes não é apagada, só **inativada**. Inativa, ela responde como fora do ar. | Produto |
 | <a id="rn07"></a>RN07 | A instituição chamada é identificada pelo **endereço** usado, como numa instituição real, e não por um cabeçalho próprio do simulador ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
-| <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido segue a regra oficial: permissões por seleção individual são removidas do consentimento, e as de seleção agrupada são mantidas ([RN83](#rn83)). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
+| <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido não aparece para consentir. | Produto |
 | <a id="rn09"></a>RN09 | Um banco inspirado em um banco real usa o **nome real com o prefixo do ambiente**: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento. Bancos de perfil têm nome fictício. Bancos de nome real usam o perfil `estavel`, e o que os diferencia são variáveis, como os consentimentos ativos. | Produto |
 
 ## Comportamento
@@ -80,7 +80,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Massa de dados e semente
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn49"></a>RN49 | Um **cliente simulado** é identificado pelo documento e não pertence a um banco. Ele pode ter produtos em vários bancos e mais de um consentimento no mesmo banco. Contas, cartões e demais produtos pertencem ao cliente em cada banco. O login de teste é o mesmo em todos os bancos. | Produto |
+| <a id="rn49"></a>RN49 | Um **cliente simulado** é identificado pelo documento e não pertence a um banco. Ele é só massa de dados: não faz login nem usa telas. Pode ter produtos em vários bancos e mais de um consentimento no mesmo banco, cada um independente dos outros: revogar um não afeta os demais. Contas, cartões e demais produtos pertencem ao cliente em cada banco. | Produto |
 | <a id="rn50"></a>RN50 | Todo dado gerado aqui é **simulado** e tem uma de duas naturezas: **persistido**, gravado no banco, ou **virtual**, calculado na hora a partir de uma semente. | Produto |
 | <a id="rn51"></a>RN51 | Cliente, consentimento, recurso, instituição e configuração são **persistidos** quando criados por tela, API ou lote. Transações nunca são gravadas uma a uma: saem de uma semente, com **ajustes** gravados por cima. | Produto |
 | <a id="rn52"></a>RN52 | O **mundo virtual** existe para carga: milhões de clientes, consentimentos e recursos calculados pelo índice, sem gravar os itens, com o mesmo gerador da massa persistida. Cada banco tem um mundo virtual, e ficam gravados só o **total** e a **semente**, para reproduzir o mesmo mundo depois. | Produto |
@@ -115,29 +115,20 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Consentimento
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn80"></a>RN80 | O consentimento nasce em `AWAITING_AUTHORISATION`, como intenção, sem recursos escolhidos. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn81"></a>RN81 | Sem aprovação em **60 minutos** desde a criação, vai para `REJECTED`. Durante esse tempo, a mesma intenção pode ser retomada depois de uma falha na jornada. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn82"></a>RN82 | De `AUTHORISED`, vai para `REJECTED` ao vencer, por revogação do cliente na receptora ou transmissora, ou por suspeita de fraude. `REJECTED` é final, e registra quem rejeitou (`USER`, `ASPSP`, `TPP`). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn83"></a>RN83 | Permissões vêm em grupos oficiais. Combinação fora do grupo responde 422 `COMBINACAO_PERMISSOES_INCORRETA`. Produto de seleção individual não oferecido sai do pedido; de seleção agrupada, fica. Sem permissão funcional restante: 422 `SEM_PERMISSOES_FUNCIONAIS_RESTANTES`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn84"></a>RN84 | Permissões PJ sem dados PJ: 422 `INFORMACOES_PJ_NAO_INFORMADAS`. Dados PJ com permissões PF: 422 `PERMISSOES_PJ_INCORRETAS`. PF e PJ juntas: 422 `PERMISSAO_PF_PJ_EM_CONJUNTO`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
-| <a id="rn85"></a>RN85 | Sem `expirationDateTime`, o prazo é indeterminado. | Oficial [F12](../00-visao-geral/referencias.md#f12) |
-| <a id="rn86"></a>RN86 | `DELETE /consents/{consentId}` revoga o consentimento. Uma tela de gestão no ambiente da instituição simulada também revoga. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
+| <a id="rn80"></a>RN80 | Todo consentimento nasce em `AUTHORISED`, criado pelo painel, por lote ou pelo mundo virtual. Por enquanto, não há API para criar consentimento ([adiados](#adiados)). | Produto |
+| <a id="rn82"></a>RN82 | De `AUTHORISED`, vai para `REJECTED` ao vencer, por revogação na receptora ou no painel, ou por suspeita de fraude. `REJECTED` é final, e registra quem rejeitou (`USER`, `ASPSP`, `TPP`). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
+| <a id="rn83"></a>RN83 | As permissões seguem os grupos oficiais, e o painel e o lote só aceitam combinações válidas. | Oficial [F06](../00-visao-geral/referencias.md#f06) + Produto |
+| <a id="rn84"></a>RN84 | Cliente PF recebe só permissões PF, e cliente PJ, só permissões PJ. | Oficial [F06](../00-visao-geral/referencias.md#f06) + Produto |
+| <a id="rn85"></a>RN85 | Sem validade informada, o prazo é indeterminado. | Oficial [F12](../00-visao-geral/referencias.md#f12) |
+| <a id="rn86"></a>RN86 | `DELETE /consents/{consentId}` revoga o consentimento. O painel também revoga. | Oficial [F06](../00-visao-geral/referencias.md#f06) + Produto |
 | <a id="rn87"></a>RN87 | A **renovação** só vale para `AUTHORISED`, muda só validade e finalidade, e não tem redirecionamento. `REJECTED`: 422 `ESTADO_CONSENTIMENTO_INVALIDO`. Múltiplas alçadas: 422 `DEPENDE_MULTIPLA_ALCADA`. Data inválida: 422 `DATA_EXPIRACAO_INVALIDA`. | Oficial [F06](../00-visao-geral/referencias.md#f06) |
 | <a id="rn88"></a>RN88 | Consentimento inexistente, não autorizado, revogado ou expirado responde **401** em Recursos e nas APIs de produto, porque o token associado deixa de valer. | Oficial [F08](../00-visao-geral/referencias.md#f08) |
 
-## Jornada de consentimento
+## Criação no painel
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn90"></a>RN90 | A jornada tem seis etapas: consentimento, direcionamento, autenticação, confirmação, redirecionamento e efetivação. Autenticação e confirmação acontecem na instituição; as outras, na receptora. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
-| <a id="rn91"></a>RN91 | O simulador oferece as telas da **instituição**. Para quem não tem receptora pronta, oferece também uma **receptora de demonstração**, que faz as etapas 1, 2 e 6. | Produto |
-| <a id="rn92"></a>RN92 | A autenticação usa login simulado, com usuário e senha de teste mostrados na tela ([PA18](#pa18)), e não pode ter etapa extra que desestimule o compartilhamento, salvo por anomalia configurada. | Oficial [F10](../00-visao-geral/referencias.md#f10) + Produto |
-| <a id="rn93"></a>RN93 | Depois do login, a instituição confere a titularidade. Divergência interrompe a jornada, sem mostrar resumo nem dados, e explica o motivo. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
-| <a id="rn94"></a>RN94 | A confirmação mostra quem recebe os dados, o prazo (ou "Indeterminado") e só as categorias pedidas. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
-| <a id="rn95"></a>RN95 | Só contas e cartões têm seleção de origem. Todas as opções vêm marcadas, e pelo menos uma precisa ficar. Crédito, investimento, câmbio e dados cadastrais compartilham tudo. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
-| <a id="rn96"></a>RN96 | A confirmação exige um único clique além da seleção, e o cliente pode interromper antes de confirmar. Interromper rejeita o consentimento e volta à receptora. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
-| <a id="rn97"></a>RN97 | O redirecionamento é automático, com tela informativa, e volta ao mesmo ambiente de onde veio. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
-| <a id="rn98"></a>RN98 | Na PJ, o consentimento pode depender de **múltiplas alçadas**: fica `AUTHORISED`, com recursos em `PENDING_AUTHORISATION` até a última aprovação, com prazo de até 15 dias corridos. Empresa com um sócio único não tem etapa extra. | Oficial [F07](../00-visao-geral/referencias.md#f07) e [F13](../00-visao-geral/referencias.md#f13) |
-| <a id="rn99"></a>RN99 | Falhas da jornada também são simuláveis: cliente desiste, erro no login, timeout no redirecionamento, instituição fora do ar. | Produto |
+| <a id="rn95"></a>RN95 | Ao criar pelo painel, só contas e cartões têm seleção de origem. Todas as opções vêm marcadas, e pelo menos uma precisa ficar. Crédito, investimento, câmbio e dados cadastrais compartilham tudo. | Oficial [F10](../00-visao-geral/referencias.md#f10) |
+| <a id="rn98"></a>RN98 | Na PJ, o consentimento pode exigir **múltiplas alçadas**, informando quantas aprovações faltam. Ele fica `AUTHORISED`, com recursos em `PENDING_AUTHORISATION`, até a última aprovação, com prazo de até 15 dias corridos. Aprovar e recusar são feitos no painel. Recusa ou fim do prazo levam os recursos a `UNAVAILABLE`. | Oficial [F07](../00-visao-geral/referencias.md#f07) e [F13](../00-visao-geral/referencias.md#f13) + Produto |
 
 ## Recursos
 | ID | Regra | Origem |
@@ -147,10 +138,10 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn102"></a>RN102 | Todo recurso selecionado aparece em Recursos, em qualquer estado. Sem recursos, responde 200 com lista vazia. | Oficial [F07](../00-visao-geral/referencias.md#f07) |
 | <a id="rn103"></a>RN103 | Enquanto a instituição prepara a lista, a primeira consulta responde **202** sem corpo. O limite é 5 minutos depois da criação do consentimento; passou disso, **504**. A duração é configurável por instituição. | Oficial [F07](../00-visao-geral/referencias.md#f07) |
 | <a id="rn104"></a>RN104 | Recurso fora de `AVAILABLE` não aparece na lista da API de produto (200) e responde **403** no acesso direto, com `STATUS_RESOURCE_<estado>` ([PA08](#pa08)). | Oficial [F08](../00-visao-geral/referencias.md#f08) |
-| <a id="rn105"></a>RN105 | Recurso de outro cliente ou inexistente responde 403 `RESOURCE_FORBIDDEN`. | Oficial [F08](../00-visao-geral/referencias.md#f08) |
+| <a id="rn105"></a>RN105 | Recurso de outro cliente, inexistente ou fora daquele consentimento responde 403 `RESOURCE_FORBIDDEN`. | Oficial [F08](../00-visao-geral/referencias.md#f08) + Produto |
 | <a id="rn106"></a>RN106 | Em seleção agrupada, um produto novo do cliente entra sozinho no consentimento vigente. A tela permite adicionar um recurso para simular isso. | Oficial [F07](../00-visao-geral/referencias.md#f07) |
 | <a id="rn107"></a>RN107 | Estados por recurso são independentes dentro do mesmo consentimento. | Oficial [F07](../00-visao-geral/referencias.md#f07) |
-| <a id="rn108"></a>RN108 | Mudar o estado de um recurso vale na próxima chamada e pode ser agendado por regra de cenário. | Produto |
+| <a id="rn108"></a>RN108 | Mudar o estado de um recurso vale na próxima chamada e pode ser agendado por regra de cenário. Em recurso virtual, a mudança é um [ajuste](#rn53). | Produto |
 
 ## Defeitos e anomalias
 | ID | Regra | Origem |
@@ -165,16 +156,24 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Segurança
 | ID | Regra | Origem |
 |---|---|---|
-| <a id="rn120"></a>RN120 | O simulador tem dois **modos de segurança**, por ambiente: **simples** (token emitido por API própria, sem mTLS) e **FAPI** (o mais perto do perfil brasileiro). Sem nenhuma autenticação não é opção ([ADR-006](../05-adr/ADR-006-modos-de-seguranca.md)). | Produto |
-| <a id="rn121"></a>RN121 | No modo FAPI, o servidor de autorização exige PAR e PKCE, `request_uri` de uso único e válido por pelo menos 120 segundos, e access token entre 300 e 900 segundos. | Oficial [F13](../00-visao-geral/referencias.md#f13) |
+| <a id="rn120"></a>RN120 | O **modo simples** é o modo de segurança desta versão: o operador cadastra a receptora, que recebe usuário e senha de teste e pede um token por consentimento. Só consentimento `AUTHORISED` recebe token. Sem nenhuma autenticação não é opção ([ADR-006](../05-adr/ADR-006-modos-de-seguranca.md)). | Produto |
+| <a id="rn121"></a>RN121 | No modo FAPI, que está [adiado](#adiados), o servidor de autorização exige PAR e PKCE, `request_uri` de uso único e válido por pelo menos 120 segundos, e access token entre 300 e 900 segundos. | Oficial [F13](../00-visao-geral/referencias.md#f13) |
 | <a id="rn122"></a>RN122 | O token dá acesso aos escopos concedidos e ao `consent:{consentId}`. Revogado o consentimento, o token deixa de valer. | Oficial [F08](../00-visao-geral/referencias.md#f08) |
 | <a id="rn123"></a>RN123 | Credenciais e certificados do simulador são de teste e não servem para nada fora dele. | Produto |
+
+## <a id="adiados"></a>Adiados
+Fora desta versão. Voltam como novos casos de uso, quando fizerem falta.
+
+- **Criar consentimento por API:** `POST /consents`, com a intenção de 60 minutos e os erros 422 oficiais de permissões ([F06](../00-visao-geral/referencias.md#f06)).
+- **Jornada com redirecionamento:** login no banco, titularidade, confirmação e volta à receptora ([F10](../00-visao-geral/referencias.md#f10) e [F11](../00-visao-geral/referencias.md#f11)).
+- **Consentimento recusado ou não autorizado:** simular esses casos em testes.
+- **Modo FAPI:** depende da jornada com redirecionamento.
 
 ## Perguntas em aberto
 | ID | Pergunta |
 |---|---|
 | <a id="pa01"></a>PA01 | ~~Qual banco guarda o estado?~~ **Respondida:** MongoDB para o estado, porque a empresa já usa, e Redis para os contadores, por desempenho. Ver [ADR-003](../05-adr/ADR-003-mongodb-e-redis.md). |
-| <a id="pa02"></a>PA02 | ~~Quando o modo FAPI completo entra?~~ **Respondida:** FAPI completo entra por último, na spec 011. Até lá, modo simples. |
+| <a id="pa02"></a>PA02 | ~~Quando o modo FAPI completo entra?~~ **Respondida:** adiado, porque depende da jornada com redirecionamento. Até lá, modo simples ([adiados](#adiados)). |
 | <a id="pa03"></a>PA03 | ~~Usamos nomes de bancos reais?~~ **Respondida:** sim, com o prefixo do ambiente. Bancos de perfil continuam com nome fictício. Ver [RN09](#rn09). |
 | <a id="pa04"></a>PA04 | ~~Como evitar CPF de pessoa real?~~ **Respondida:** CPF com um dígito inicial fixo, até 100 milhões. O risco foi aceito. Ver [RN57](#rn57). |
 | <a id="pa05"></a>PA05 | ~~E o ambiente de produção?~~ **Respondida:** o uso em produção não é bloqueado nem decidido agora. Ver [RN70](#rn70). |
@@ -190,7 +189,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="pa15"></a>PA15 | ~~Quem aprova?~~ **Respondida:** Marcelo, por enquanto. |
 | <a id="pa16"></a>PA16 | ~~Onde roda em homologação?~~ **Respondida:** Docker agora. A plataforma de homologação é decidida na implantação. |
 | <a id="pa17"></a>PA17 | ~~Por quanto tempo guardamos a massa?~~ **Respondida:** massa sem limpeza automática; registros de chamada por 7 dias. |
-| <a id="pa18"></a>PA18 | ~~Como é o login simulado?~~ **Respondida:** usuário e senha de teste mostrados na tela. |
+| <a id="pa18"></a>PA18 | ~~Como é o login simulado?~~ **Respondida:** não há login de cliente. A pessoa usa o painel, já autenticada ([RN49](#rn49)). |
 | <a id="pa19"></a>PA19 | ~~O relógio acelerado vale em homologação?~~ **Respondida:** sim, só por instituição, nunca global. |
 | <a id="pa21"></a>PA21 | ~~O que fazer com `page-size` acima de 1.000?~~ **Respondida:** reduzir para 1.000 e mostrar no `self`. |
 | <a id="pa22"></a>PA22 | ~~Quais bancos de nome real nascem prontos, e com qual comportamento?~~ **Respondida:** os 11 nomes listados nas personas, com o perfil `estavel` e variáveis próprias, sem perfil novo. Ver [RN09](#rn09). |

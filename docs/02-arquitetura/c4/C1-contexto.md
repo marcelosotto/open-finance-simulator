@@ -8,7 +8,6 @@ Mostra quem usa o simulador e com o que ele fala.
 flowchart TB
   dev(["<b>Desenvolvedor e QA</b><br/><small>Configuram e investigam</small>"])
   op(["<b>Operador</b><br/><small>Mantém bancos e massa</small>"])
-  cli(["<b>Cliente simulado</b><br/><small>Faz a jornada no navegador</small>"])
 
   sim["<b>Simulador Open Finance</b><br/><small>Instituições simuladas para dev e homologação</small>"]
 
@@ -20,7 +19,6 @@ flowchart TB
   rec -->|"APIs Open Finance"| sim
   dev --> sim
   op --> sim
-  cli -->|"Jornada"| sim
   specs -->|"Contratos"| sim
   sim --> obs
   sim -.->|"Reporte SERVER"| pcm

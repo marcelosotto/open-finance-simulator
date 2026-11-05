@@ -12,7 +12,7 @@ Fonte: [referência de endpoints do portal](../00-visao-geral/referencias.md#f02
 
 | API | Endpoint | Frequência | SLA (ms) |
 |---|---|---|---|
-| Consentimento | `POST /consents` | Alta | 1.500 |
+| Consentimento | `POST /consents` ([adiado](regras-de-negocio.md#adiados)) | Alta | 1.500 |
 | Consentimento | `GET /consents/{consentId}` | Alta | 1.500 |
 | Consentimento | `DELETE /consents/{consentId}` | Alta | 1.500 |
 | Consentimento | `POST /consents/{consentId}/extends` | Baixa | 4.000 |
