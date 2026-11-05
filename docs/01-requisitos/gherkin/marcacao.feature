@@ -40,8 +40,8 @@ Funcionalidade: Marcar os dados com ambiente e natureza
 
     Exemplos:
       | natureza   | prefixo        |
-      | persistido | urn:sim-hml:p- |
-      | virtual    | urn:sim-hml:v- |
+      | persistido | urn:hml:p- |
+      | virtual    | urn:hml:v- |
 
   # RN63
   Cenário: Marca nos campos livres
