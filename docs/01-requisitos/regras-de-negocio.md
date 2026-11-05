@@ -80,15 +80,16 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 ## Massa de dados e semente
 | ID | Regra | Origem |
 |---|---|---|
+| <a id="rn49"></a>RN49 | Um **cliente simulado** é identificado pelo documento e não pertence a um banco. Ele pode ter produtos em vários bancos e mais de um consentimento no mesmo banco. Contas, cartões e demais produtos pertencem ao cliente em cada banco. O login de teste é o mesmo em todos os bancos. | Produto |
 | <a id="rn50"></a>RN50 | Todo dado gerado aqui é **simulado** e tem uma de duas naturezas: **persistido**, gravado no banco, ou **virtual**, calculado na hora a partir de uma semente. | Produto |
 | <a id="rn51"></a>RN51 | Cliente, consentimento, recurso, instituição e configuração são **persistidos** quando criados por tela, API ou lote. Transações nunca são gravadas uma a uma: saem de uma semente, com **ajustes** gravados por cima. | Produto |
-| <a id="rn52"></a>RN52 | O **mundo virtual** existe para carga: milhões de clientes, consentimentos e recursos calculados pelo índice, sem gravar nada, com o mesmo gerador da massa persistida. | Produto |
-| <a id="rn53"></a>RN53 | Um dado virtual pode receber um **ajuste** persistido (ex.: revogar um consentimento virtual). O ajuste vence o cálculo. | Produto |
-| <a id="rn54"></a>RN54 | Cada gerador tem semente explícita. A mesma semente com a mesma data e configuração dá o mesmo dado. O sorteio de erro e latência usa semente aleatória por padrão, e uma semente fixa quando o cenário pedir repetição. | Produto |
+| <a id="rn52"></a>RN52 | O **mundo virtual** existe para carga: milhões de clientes, consentimentos e recursos calculados pelo índice, sem gravar os itens, com o mesmo gerador da massa persistida. Cada banco tem um mundo virtual, e ficam gravados só o **total** e a **semente**, para reproduzir o mesmo mundo depois. | Produto |
+| <a id="rn53"></a>RN53 | Um dado virtual pode receber um **ajuste** persistido (ex.: revogar um consentimento virtual). O ajuste vence o cálculo. Trocar a semente de um mundo virtual apaga os ajustes dele, depois de confirmação na tela. | Produto |
+| <a id="rn54"></a>RN54 | Cada gerador tem semente explícita. A mesma semente com a mesma data e configuração dá o mesmo dado. O sorteio de erro e latência usa semente aleatória por padrão, e uma semente fixa quando o cenário pedir repetição. Dois lotes podem usar a mesma semente no mesmo ambiente: documento e IDs mudam, para não duplicar, e o resto fica igual. | Produto |
 | <a id="rn55"></a>RN55 | Um **perfil de dados** define volume de transações por dia, faixa de valores, saldo inicial, tipos de lançamento e produtos. Vêm prontos: cliente comum, sem movimento e alto volume. | Produto |
-| <a id="rn56"></a>RN56 | A **distribuição** diz como a massa se divide entre instituições, produtos e perfis de dados. A soma de cada dimensão precisa dar 100%. | Produto |
-| <a id="rn57"></a>RN57 | CPFs e CNPJs gerados têm dígitos válidos, inclusive CNPJ alfanumérico, Todo CPF gerado começa com o **dígito 9**, o que permite até 100 milhões de CPFs. Risco aceito: não há garantia de que um CPF gerado não pertença a uma pessoa real. | Produto |
-| <a id="rn58"></a>RN58 | Um lote pode ser apagado inteiro. Apagar um lote remove clientes, consentimentos, recursos e ajustes dele, e fica no histórico. | Produto |
+| <a id="rn56"></a>RN56 | A **distribuição** diz como a massa se divide. Os **consentimentos** se dividem entre os bancos, e os clientes, entre os perfis de dados; cada uma dessas somas precisa dar 100%. Cada **produto** tem uma porcentagem própria, de 0 a 100%, sem soma, porque um cliente pode ter vários. O lote também informa quantos consentimentos cada cliente tem, com padrão 1. | Produto |
+| <a id="rn57"></a>RN57 | CPFs e CNPJs gerados têm dígitos válidos, inclusive CNPJ alfanumérico. Todo CPF gerado começa com o **dígito 9**, o que permite até 100 milhões de CPFs. Risco aceito: não há garantia de que um CPF gerado não pertença a uma pessoa real. | Produto |
+| <a id="rn58"></a>RN58 | Um lote não tem limite de tamanho e pode ser apagado inteiro. Apagar um lote remove clientes, consentimentos, recursos e ajustes dele, e fica no histórico. | Produto |
 | <a id="rn59"></a>RN59 | Dados transacionais e de crédito vão até 12 meses para trás, conforme a regra oficial de compartilhamento. Para testar limites, o histórico gerado pode ser maior. | Oficial [F10](../00-visao-geral/referencias.md#f10) + Produto |
 
 ## Marcação dos dados

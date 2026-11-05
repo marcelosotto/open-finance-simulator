@@ -62,6 +62,10 @@ classDiagram
     alvo
     alteracao
   }
+  class MundoVirtual {
+    total
+    semente
+  }
   class RegraDeCenario {
     alcance
     efeito
@@ -76,7 +80,9 @@ classDiagram
 
   Instituicao "1" --> "1" PerfilDeComportamento : usa copia de
   Instituicao "1" --> "1" ConfiguracaoDeLimites
-  Instituicao "1" --> "*" ClienteSimulado
+  Instituicao "1" --> "*" Consentimento
+  Instituicao "1" --> "*" Recurso
+  Instituicao "1" --> "0..1" MundoVirtual
   Receptora "1" --> "*" Consentimento
   ClienteSimulado "1" --> "*" Consentimento
   ClienteSimulado "1" --> "*" Recurso
@@ -84,6 +90,7 @@ classDiagram
   Consentimento "1" --> "*" Aprovacao
   Recurso "*" --> "1" PerfilDeDados
   Recurso "1" --> "*" Ajuste
+  MundoVirtual "1" --> "*" Ajuste
   Lote "1" --> "*" ClienteSimulado
   RegraDeCenario "*" --> "0..1" Instituicao : alcance
 ```

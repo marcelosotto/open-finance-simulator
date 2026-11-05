@@ -10,15 +10,16 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **Receptora** | Instituição que consome os dados. Ex.: o coletor da XP. |
 | **Perfil de comportamento** | Modelo de como uma instituição responde: latência, erros, limites e anomalias. Ex.: `lento`. |
 | **Perfil de dados** | Modelo de como os dados de um cliente se parecem: volume, valores e produtos. Ex.: `alto-volume`. |
+| **Cliente simulado** | Pessoa ou empresa fictícia, identificada pelo documento. Não pertence a um banco: pode ter produtos e consentimentos em vários. |
 | **Dado simulado** | Qualquer dado criado pelo simulador, sem origem em cliente real. Sua natureza é persistido ou virtual. |
 | **Dado persistido** | Dado simulado gravado no banco. |
 | **Dado virtual** | Dado simulado calculado na hora a partir de uma semente, sem gravar. |
-| **Mundo virtual** | Conjunto de clientes, consentimentos e recursos virtuais, usado em teste de carga. |
+| **Mundo virtual** | Conjunto de clientes, consentimentos e recursos virtuais de um banco, usado em teste de carga. Só o total, a semente e os ajustes ficam gravados. |
 | **Massa** | Conjunto de dados simulados criado para um teste. |
 | **Lote** | Massa criada de uma vez, que pode ser apagada de uma vez. |
 | **Semente** | Valor que faz o gerador produzir sempre o mesmo resultado. |
 | **Ajuste** | Alteração persistida sobre um dado calculado. Ex.: mudar uma transação ou revogar um consentimento virtual. |
-| **Distribuição** | Como a massa se divide entre instituições, produtos e perfis. |
+| **Distribuição** | Como a massa se divide: consentimentos entre bancos, clientes entre perfis e porcentagem de cada produto. |
 | **Marca** | Indicação de ambiente e natureza presente em todo dado. |
 | **Regra de cenário** | Mudança de comportamento com alcance e período. Ex.: "este cliente sempre dá timeout". |
 | **Pacote de cenário** | Grupo de regras de cenário com nome, ligado de uma vez. |

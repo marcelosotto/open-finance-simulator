@@ -142,44 +142,47 @@ Todos começam como **Rascunho**.
 ## Massa de dados
 
 ### <a id="uc05"></a>UC05 — Definir perfis de dados e distribuição
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Operador
 - **Objetivo:** dizer como é a massa.
-- **Fluxo principal:** 1. Escolhe ou cria um perfil de dados. 2. Define a distribuição entre instituições, produtos e perfis. 3. O sistema confere as somas.
-- **Exceções:** soma diferente de 100% → recusado ([RN56](../regras-de-negocio.md#rn56)); perfil em uso → não pode ser apagado.
+- **Fluxo principal:** 1. Escolhe ou cria um perfil de dados. 2. Define a divisão dos consentimentos entre bancos, a divisão dos clientes entre perfis e a porcentagem de cada produto. 3. O sistema confere as somas de bancos e perfis.
+- **Exceções:** soma de bancos ou perfis diferente de 100% → recusado ([RN56](../regras-de-negocio.md#rn56)); perfil em uso → não pode ser apagado.
 - **Regras:** [RN55](../regras-de-negocio.md#rn55), [RN56](../regras-de-negocio.md#rn56).
 
 ### <a id="uc06"></a>UC06 — Criar cliente simulado
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** QA ou Desenvolvedor
 - **Objetivo:** ter um cliente específico para um teste.
-- **Fluxo principal:** 1. Escolhe a instituição, o tipo (PF ou PJ) e o perfil de dados. 2. O sistema gera documento válido, nome e produtos. 3. Mostra os dados de login para a jornada.
+- **Fluxo principal:** 1. Escolhe o tipo (PF ou PJ), o perfil de dados e os bancos onde o cliente tem produtos. 2. O sistema gera documento válido, nome e produtos em cada banco. 3. Mostra os dados de login, que valem em todos os bancos.
 - **Fluxo alternativo — já autorizado:** marca "criar consentimento autorizado" para pular a jornada.
-- **Regras:** [RN51](../regras-de-negocio.md#rn51), [RN54](../regras-de-negocio.md#rn54), [RN57](../regras-de-negocio.md#rn57), [RN60](../regras-de-negocio.md#rn60).
+- **Fluxo alternativo — novo consentimento:** o mesmo cliente pode dar outro consentimento no mesmo banco ou em outro ([RN49](../regras-de-negocio.md#rn49)).
+- **Regras:** [RN49](../regras-de-negocio.md#rn49), [RN51](../regras-de-negocio.md#rn51), [RN54](../regras-de-negocio.md#rn54), [RN57](../regras-de-negocio.md#rn57), [RN60](../regras-de-negocio.md#rn60).
 
 ### <a id="uc07"></a>UC07 — Gerar lote
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Operador
 - **Objetivo:** criar N clientes com consentimentos e recursos, para testes e demonstrações.
-- **Fluxo principal:** 1. Informa quantidade, distribuição, permissões e semente. 2. Acompanha o progresso em segundo plano. 3. Recebe o resumo.
+- **Fluxo principal:** 1. Informa quantidade, distribuição, consentimentos por cliente, permissões e semente. 2. Acompanha o progresso em segundo plano. 3. Recebe o resumo.
 - **Fluxo alternativo — cancelar:** para e mantém o que já foi criado, marcado como parcial.
+- **Fluxo alternativo — semente repetida:** gera normalmente, com outros documentos e IDs ([RN54](../regras-de-negocio.md#rn54)).
 - **Pós-condição:** consentimentos já nascem `AUTHORISED`; é um atalho de teste, identificado no lote.
 - **Regras:** [RN51](../regras-de-negocio.md#rn51), [RN56](../regras-de-negocio.md#rn56), [RN58](../regras-de-negocio.md#rn58).
 
 ### <a id="uc08"></a>UC08 — Usar o mundo virtual
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** QA
-- **Objetivo:** testar carga com milhões de itens, sem gravar nada.
-- **Fluxo principal:** 1. Define total e semente. 2. Pede uma faixa de itens por uma API de administração. 3. Usa os IDs nas APIs.
+- **Objetivo:** testar carga com milhões de itens, sem gravar os itens.
+- **Fluxo principal:** 1. Define total e semente do banco, que ficam gravados. 2. Pede uma faixa de itens por uma API de administração. 3. Usa os IDs nas APIs.
 - **Fluxo alternativo — ajuste:** revoga um consentimento virtual, e o ajuste passa a valer ([RN53](../regras-de-negocio.md#rn53)).
+- **Fluxo alternativo — trocar a semente:** o sistema avisa e, confirmado, apaga os ajustes daquele mundo virtual.
 - **Regras:** [RN52](../regras-de-negocio.md#rn52) a [RN54](../regras-de-negocio.md#rn54), [RN62](../regras-de-negocio.md#rn62).
 
 ### <a id="uc27"></a>UC27 — Limpar massa
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Operador
-- **Fluxo principal:** 1. Escolhe um lote, uma instituição ou tudo. 2. Vê o que será apagado. 3. Confirma.
+- **Fluxo principal:** 1. Escolhe um lote, uma instituição, os ajustes do mundo virtual ou tudo. 2. Vê o que será apagado. 3. Confirma.
 - **Exceções:** instituições e perfis prontos não são apagados.
-- **Regras:** [RN58](../regras-de-negocio.md#rn58), [RN71](../regras-de-negocio.md#rn71).
+- **Regras:** [RN53](../regras-de-negocio.md#rn53), [RN58](../regras-de-negocio.md#rn58), [RN71](../regras-de-negocio.md#rn71).
 
 ## Consentimento e recursos
 

@@ -53,13 +53,13 @@ Os consentimentos são valores fictícios, como ponto de partida, e não dados r
 ## Clientes simulados
 
 ### Mariana Alves — pessoa física
-Cliente do Banco Estável, com uma conta, um cartão e um empréstimo. Usada na jornada PF.
+Tem uma conta, um cartão e um empréstimo no Banco Estável. Usada na jornada PF.
 
 ### Rafael Lima — pessoa física com conta bloqueada
 Tem uma conta disponível e outra com bloqueio temporário. Usado nos cenários de recursos.
 
 ### Indústria Aurora Ltda — pessoa jurídica
-Cliente do Banco Estável, com duas aprovadoras: **Helena** e **Paula**. Usada na jornada PJ com múltiplas alçadas.
+Tem produtos no Banco Estável, com duas aprovadoras: **Helena** e **Paula**. Usada na jornada PJ com múltiplas alçadas.
 
 ### Sócio único Comércio Sol — pessoa jurídica
 Empresa com um único sócio pessoa natural, que aprova sozinho.
