@@ -21,13 +21,14 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **Distribuição** | Como a massa se divide entre instituições, produtos e perfis. |
 | **Marca** | Indicação de ambiente e natureza presente em todo dado. |
 | **Regra de cenário** | Mudança de comportamento com alcance e período. Ex.: "este cliente sempre dá timeout". |
+| **Pacote de cenário** | Grupo de regras de cenário com nome, ligado de uma vez. |
 | **Defeito de dado** | Alteração proposital do conteúdo da resposta. |
 | **Anomalia de protocolo** | Desvio proposital de uma regra oficial. |
 | **Registro de chamada** | Anotação de cada chamada recebida, com a regra aplicada. |
 | **TPM** | Transações por minuto: limite de tráfego por endpoint e origem. Resposta 429. |
 | **TPS** | Transações por segundo: capacidade da instituição. Resposta 529. |
 | **Limite operacional** | Teto mensal por endpoint, objeto, cliente e receptora. Resposta 423. |
-| **QCA** | Quantidade de consentimentos ativos entre receptora e transmissora. Define o TPM da alta frequência. |
+| **QCA** | Quantidade de consentimentos ativos entre receptora e transmissora. Define o TPM da alta frequência. No simulador, é um valor configurado. |
 | **Classe de frequência** | Alta, média-alta, média ou baixa. Define TPM, limite operacional e SLA. |
 | **`pagination-key`** | Identificador criado pela transmissora para não contar as páginas seguintes na cota. |
 | **Hybrid flow** | Fluxo com redirecionamento para a instituição autenticar e confirmar. |

@@ -19,6 +19,7 @@ Relacionados: [regras de negócio](../regras-de-negocio.md) · [requisitos](../r
 flowchart LR
   O([Operador])
   Q([QA])
+  D([Desenvolvedor])
   R([Receptora])
   C([Cliente simulado])
   S([Sistema])
@@ -60,7 +61,8 @@ flowchart LR
     UC26[UC26 Investigar chamadas]
   end
 
-  O --> UC01 & UC02 & UC03 & UC05 & UC07 & UC15 & UC24 & UC27
+  O --> UC01 & UC02 & UC03 & UC05 & UC07 & UC15 & UC27
+  D --> UC24
   Q --> UC04 & UC06 & UC08 & UC22 & UC26 & UC28
   R --> UC25 & UC09 & UC12 & UC13 & UC14 & UC16 & UC17
   C --> UC10 & UC11
@@ -93,45 +95,48 @@ Todos começam como **Rascunho**.
 - **Exemplo:** Diego cria o "Banco Azul" com o perfil `lento` e, no dia seguinte, reduz a lentidão só nesse banco.
 
 ### <a id="uc02"></a>UC02 — Configurar comportamento
-- **Status:** Em revisão
+- **Status:** Aprovado
 - **Ator:** Operador
 - **Objetivo:** dizer como a instituição responde.
 - **Fluxo principal:** 1. Abre a instituição. 2. Ajusta latência por classe de frequência, taxa de erro e pesos por status. 3. A tela compara com o SLA oficial ([UI04](../interface.md#ui04)). 4. Salva.
-- **Exceções:** taxa fora de 0 a 100% → recusado; status que a spec não declara → recusado ([RN13](../regras-de-negocio.md#rn13)).
+- **Exceções:** taxa fora de 0 a 100% → recusado; status que nenhuma spec declara, ou 429, 423 e 529 → recusado ([RN13](../regras-de-negocio.md#rn13)).
 - **Regras:** [RN04](../regras-de-negocio.md#rn04), [RN05](../regras-de-negocio.md#rn05), [RN10](../regras-de-negocio.md#rn10) a [RN13](../regras-de-negocio.md#rn13).
 - **Observação:** sem telemetria real, os valores dos perfis são estimativas ([PA20](../regras-de-negocio.md#pa20)).
 
 ### <a id="uc03"></a>UC03 — Configurar limites e paginação
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** Operador
 - **Objetivo:** definir TPM, limite operacional, capacidade e paginação da instituição.
-- **Fluxo principal:** 1. Vê os valores oficiais já preenchidos. 2. Informa o QCA de cada receptora. 3. Liga ou desliga o limite operacional. 4. Ajusta TPS, `page-size` máximo e validade da chave. 5. Salva.
-- **Fluxo alternativo — valor abaixo do oficial:** o sistema avisa e, confirmado, registra uma anomalia ([RN113](../regras-de-negocio.md#rn113)).
-- **Regras:** [RN20](../regras-de-negocio.md#rn20) a [RN32](../regras-de-negocio.md#rn32).
+- **Fluxo principal:** 1. Vê os valores oficiais já preenchidos. 2. Informa o QCA do banco, que vale para toda receptora. 3. Liga ou desliga o limite operacional. 4. Ajusta TPS, `page-size` máximo e validade da chave. 5. Salva.
+- **Fluxo alternativo — QCA por receptora:** sobrescreve o valor do banco para uma receptora ([RN21](../regras-de-negocio.md#rn21)).
+- **Fluxo alternativo — valor diferente do oficial:** o sistema aceita e avisa na tela quando fica abaixo do oficial ([RN26](../regras-de-negocio.md#rn26)).
+- **Regras:** [RN20](../regras-de-negocio.md#rn20) a [RN37](../regras-de-negocio.md#rn37).
 
 ### <a id="uc04"></a>UC04 — Programar regra de cenário
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** QA
 - **Objetivo:** provocar uma situação específica, de forma repetível.
-- **Fluxo principal:** 1. Escolhe o alcance: instituição, endpoint, cliente ou recurso. 2. Escolhe o efeito: latência, status, timeout, indisponibilidade, defeito ou mudança de estado. 3. Define frequência, período e semente. 4. Salva.
-- **Fluxo alternativo — pacote de cenário:** salva várias regras com um nome e liga tudo de uma vez.
+- **Fluxo principal:** 1. Escolhe o alcance: instituição, endpoint, cliente, recurso ou uma combinação deles. 2. Escolhe o efeito: latência, status, timeout, indisponibilidade, defeito ou mudança de estado. 3. Define frequência, período e semente. 4. Salva.
+- **Fluxo alternativo — pacote de cenário:** salva várias regras com um nome e liga tudo de uma vez ([RN19](../regras-de-negocio.md#rn19)).
 - **Pós-condição:** a regra mais específica vence, e o registro de chamada mostra qual agiu ([RN15](../regras-de-negocio.md#rn15)).
-- **Regras:** [RN14](../regras-de-negocio.md#rn14) a [RN18](../regras-de-negocio.md#rn18), [RN54](../regras-de-negocio.md#rn54).
+- **Regras:** [RN13](../regras-de-negocio.md#rn13) a [RN19](../regras-de-negocio.md#rn19), [RN54](../regras-de-negocio.md#rn54).
 - **Exemplo:** Bruno faz "Mariana sempre recebe 504 em saldos" e roda o mesmo teste todo dia.
 
 ### <a id="uc24"></a>UC24 — Atualizar specs
-- **Status:** Rascunho
-- **Ator:** Operador
+- **Status:** Aprovado
+- **Ator:** Desenvolvedor
 - **Objetivo:** adotar uma nova versão oficial.
-- **Fluxo principal:** 1. Atualiza o commit fixado de `open-finance-specs`. 2. O sistema confere os hashes. 3. Mostra operações novas, alteradas e removidas. 4. Publica a nova versão.
-- **Exceções:** hash divergente → recusado.
+- **Fluxo principal:** 1. Muda o commit em `specs.lock.json` e abre um PR. 2. O CI confere os hashes. 3. O CI mostra operações novas, alteradas e removidas. 4. Com o PR aprovado, o deploy publica a nova imagem. Não há tela para isso.
+- **Exceções:** hash divergente → o build falha.
 - **Regras:** [PR06](../../00-visao-geral/premissas.md#pr06), [ADR-002](../../05-adr/ADR-002-specs-fixadas-por-commit.md).
 
 ### <a id="uc28"></a>UC28 — Controlar o relógio
-- **Status:** Rascunho
+- **Status:** Aprovado
 - **Ator:** QA
 - **Objetivo:** testar o que depende de tempo sem esperar: 60 minutos do consentimento, virada do mês.
 - **Fluxo principal:** 1. Escolhe a instituição. 2. Fixa uma data ou define um fator de aceleração. 3. As respostas passam a usar a hora simulada, e o cabeçalho `x-sim-clock` a mostra.
+- **Fluxo alternativo — voltar ao normal:** volta ao relógio real.
+- **Pós-condição:** TPM e capacidade seguem a hora real ([RN73](../regras-de-negocio.md#rn73)).
 - **Regras:** [RN73](../regras-de-negocio.md#rn73).
 
 ## Massa de dados

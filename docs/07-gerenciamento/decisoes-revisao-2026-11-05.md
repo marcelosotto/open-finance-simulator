@@ -32,4 +32,8 @@ O projeto usa só **simulado** para o que é fictício: instituição, cliente e
 
 ## Próximo passo
 
-Revisão dos casos de uso, começando pelo UC01.
+Revisão dos casos de uso. UC01, UC02, UC03, UC04, UC24 e UC28 aprovados.
+
+## Limites
+
+Todo banco nasce com os limites oficiais, e cada valor pode ser alterado depois, mesmo abaixo do oficial. Isso é configuração, não anomalia ([RN26](../01-requisitos/regras-de-negocio.md#rn26)). O QCA é um valor configurado ([RN21](../01-requisitos/regras-de-negocio.md#rn21)).

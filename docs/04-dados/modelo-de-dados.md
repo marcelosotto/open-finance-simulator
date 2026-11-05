@@ -11,7 +11,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `perfis_comportamento` | Modelos de comportamento | Prontos não são apagados |
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
 | `distribuicoes` | Divisão da massa entre bancos, produtos e perfis | Somas em 100% |
-| `receptoras` | `organisationId` e QCA por instituição | [PA10](../01-requisitos/regras-de-negocio.md#pa10) |
+| `receptoras` | `organisationId` e QCA sobrescrito por instituição | [PA10](../01-requisitos/regras-de-negocio.md#pa10) |
 | `clientes` | Documento, nome, tipo, credenciais de teste, marca e natureza | Índice por instituição e documento |
 | `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações | Mudança de estado atômica; índice para expirar |
 | `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e cliente |

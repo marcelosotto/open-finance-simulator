@@ -25,23 +25,24 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn10"></a>RN10 | O comportamento de latência é definido por **classe de frequência**: tempo típico, variação e cauda lenta. Não há configuração por endpoint. O perfil diz se o p95 fica dentro ou fora do SLA oficial ([tabela](tabela-de-endpoints.md)). | Produto |
 | <a id="rn11"></a>RN11 | O SLA oficial é p95 diário de 1.500 ms (alta e média-alta), 2.000 ms (média) e 4.000 ms (baixa). O simulador usa esses valores como referência dos perfis; não mede nem cobra SLA. | Oficial [F01](../00-visao-geral/referencias.md#f01) |
 | <a id="rn12"></a>RN12 | O **timeout oficial** de cada endpoint é 15 segundos. No perfil `timeout`, a chamada afetada fica pendente até o limite e termina em **504** ([PA20](#pa20)). | Oficial [F02](../00-visao-geral/referencias.md#f02) + Produto |
-| <a id="rn13"></a>RN13 | Erros são sorteados pela **taxa de erro** e pelos **pesos por status** da instituição. Só entram status que a spec do endpoint declara. | Produto |
-| <a id="rn14"></a>RN14 | Uma **regra de cenário** muda o comportamento dentro de um alcance: instituição, endpoint, cliente ou recurso, com período opcional. Exemplo: "Banco Estável fora do ar das 10h às 10h30" ou "este cliente sempre dá 500 em saldos". | Produto |
-| <a id="rn15"></a>RN15 | Com várias regras valendo, a mais específica ganha: recurso, cliente, endpoint e instituição, nessa ordem. O histórico mostra qual regra agiu em cada chamada. | Produto |
+| <a id="rn13"></a>RN13 | Erros são sorteados pela **taxa de erro** e pelos **pesos por status** da instituição. Ao salvar, só é recusado o status que nenhuma spec declara. Na chamada, só entram os que a spec daquele endpoint declara. **429, 423 e 529** não entram no sorteio: só aparecem quando o limite estoura ou por uma regra de cenário. | Produto |
+| <a id="rn14"></a>RN14 | Uma **regra de cenário** muda o comportamento dentro de um alcance: instituição, endpoint, cliente ou recurso, com período opcional. O alcance pode combinar cliente, recurso e endpoint. Exemplo: "Banco Estável fora do ar das 10h às 10h30" ou "este cliente sempre dá 500 em saldos". | Produto |
+| <a id="rn15"></a>RN15 | Com várias regras valendo, a mais específica ganha: recurso, cliente, endpoint e instituição, nessa ordem. Se empatar, ganha a que tem mais filtros e, depois, a mais recente. O histórico mostra qual regra agiu em cada chamada. | Produto |
 | <a id="rn16"></a>RN16 | Uma **janela de indisponibilidade** faz a instituição responder 503, 504 ou cortar a conexão, conforme configurado, para todas as chamadas do alcance. | Produto |
 | <a id="rn17"></a>RN17 | Falhas de transporte também são simuladas: conexão cortada, corpo truncado e JSON inválido. | Produto |
 | <a id="rn18"></a>RN18 | O simulador informa por que uma resposta saiu como saiu nos registros de chamada, nunca na resposta da API ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
+| <a id="rn19"></a>RN19 | Um **pacote de cenário** é um grupo de regras com nome, ligado e desligado de uma vez. Dentro dele, cada regra segue [RN15](#rn15). | Produto |
 
 ## Limites
 | ID | Regra | Origem |
 |---|---|---|
 | <a id="rn20"></a>RN20 | O **limite de tráfego** é por **endpoint e por origem**. A origem autenticada é a instituição receptora (`organizationId`), e a não autenticada é o IP. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
-| <a id="rn21"></a>RN21 | O TPM segue a classe do endpoint: baixa 1.000, média 1.500, média-alta 2.000. A alta depende dos consentimentos ativos entre receptora e transmissora (QCA): até 1 milhão, 2.500; até 2 milhões, 5.000; até 3 milhões, 8.000; até 6 milhões, 10.000; acima disso, soma 2.000 a cada faixa de 2 milhões. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
+| <a id="rn21"></a>RN21 | O TPM segue a classe do endpoint: baixa 1.000, média 1.500, média-alta 2.000. A alta depende dos consentimentos ativos entre receptora e transmissora (QCA): até 1 milhão, 2.500; até 2 milhões, 5.000; até 3 milhões, 8.000; até 6 milhões, 10.000; acima disso, soma 2.000 a cada faixa de 2 milhões. No simulador, o QCA é um **valor configurado**, sem contar consentimentos: o valor do banco vale para toda receptora e pode ser sobrescrito por receptora. Banco sem valor fica na primeira faixa. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn22"></a>RN22 | O TPM conta por **minuto cheio**: do segundo 00,000 ao 59,999, zerando na virada. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn23"></a>RN23 | Passar do TPM responde **429**, que é exclusivo desse limite. O `Retry-After` vem ligado e é configurável por instituição. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn24"></a>RN24 | Não há limite por origem em Token, DCR/DCM, Consentimentos, Recursos e Serviços. | Oficial [F03](../00-visao-geral/referencias.md#f03) |
 | <a id="rn25"></a>RN25 | O **limite operacional** é opcional para a instituição. Quando ligado, conta por mês, endpoint, objeto mais granular (consentimento, recurso ou produto), cliente e receptora. | Oficial [F04](../00-visao-geral/referencias.md#f04) |
-| <a id="rn26"></a>RN26 | Os mínimos por mês são 8 (baixa), 30 (média), 120 (média-alta), 240 (alta) e 420 para saldos e limites da conta. A instituição pode ampliar. Ficar abaixo é proibido, então só existe como [anomalia](#rn113). | Oficial [F04](../00-visao-geral/referencias.md#f04) |
+| <a id="rn26"></a>RN26 | Os mínimos por mês são 8 (baixa), 30 (média), 120 (média-alta), 240 (alta) e 420 para saldos e limites da conta. A instituição pode ampliar. No simulador, todo banco nasce com os valores oficiais de TPM, limite operacional e capacidade, e cada valor pode ser alterado depois, mesmo abaixo do oficial. A tela avisa quando isso acontece. | Oficial [F04](../00-visao-geral/referencias.md#f04) + Produto |
 | <a id="rn27"></a>RN27 | Só contam no limite operacional as respostas **2XX**. Páginas seguintes da mesma consulta não contam. | Oficial [F01](../00-visao-geral/referencias.md#f01) |
 | <a id="rn28"></a>RN28 | Passar do limite operacional responde **423**. Consentimentos, Recursos, Dados Abertos, Serviços e Segurança não têm esse limite. | Oficial [F04](../00-visao-geral/referencias.md#f04) |
 | <a id="rn29"></a>RN29 | A **capacidade** mínima é 300 requisições por segundo. Ao passar da capacidade configurada, a instituição responde **529**. | Oficial [F01](../00-visao-geral/referencias.md#f01) |
@@ -107,7 +108,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn70"></a>RN70 | O foco são os ambientes `dev` e `hml`. O uso em produção não é bloqueado nem decidido agora; se houver, será preciso decidir como fica a marcação ([PA05](#pa05)). | Produto |
 | <a id="rn71"></a>RN71 | APIs de administração ficam em endereço separado das APIs Open Finance e exigem usuário. Toda alteração grava usuário, data, antes e depois. | Produto |
 | <a id="rn72"></a>RN72 | Em `dev` e `hml`, cada tela mostra o ambiente em destaque. | Produto |
-| <a id="rn73"></a>RN73 | O relógio pode ser **acelerado ou fixado** para testes, sempre por instituição, nunca global. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
+| <a id="rn73"></a>RN73 | O relógio pode ser **acelerado ou fixado** para testes, sempre por instituição, nunca global. Ele vale para as datas das respostas, as expirações, a cota mensal e o horário das regras de cenário. TPM e capacidade seguem a hora real, porque medem tráfego real. O operador pode voltar ao relógio real a qualquer momento. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
 | <a id="rn74"></a>RN74 | Cada chamada recebida gera um **registro de chamada**: instituição, endpoint, status, tempo, regra aplicada e `x-fapi-interaction-id`. Dado pessoal fica mascarado, e o registro expira em 7 dias. | Produto |
 
 ## Consentimento
@@ -156,8 +157,8 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn110"></a>RN110 | Um **defeito de dado** altera o conteúdo da resposta de propósito: campo obrigatório faltando, formato inválido, enum fora da lista, valor incoerente, data fora da janela, `transactionId` repetido, `totalRecords` errado. | Produto |
 | <a id="rn111"></a>RN111 | O defeito tem taxa e alcance como uma [regra de cenário](#rn14). Sem configuração, nenhum defeito acontece. | Produto |
 | <a id="rn112"></a>RN112 | O simulador não diz na resposta da API que há defeito. O registro de chamada diz qual foi aplicado, para quem testa conferir. | Produto |
-| <a id="rn113"></a>RN113 | Uma **anomalia de protocolo** faz a instituição desobedecer uma regra oficial: limite abaixo do mínimo, `pagination-key` inválida com 422, 401 trocado por 403, `x-fapi-interaction-id` diferente. Cada anomalia tem nome, vem desligada e fica registrada ([PR02](../00-visao-geral/premissas.md#pr02)). | Produto |
-| <a id="rn114"></a>RN114 | Só o perfil `restritivo` nasce com anomalias ligadas, e isso aparece na tela da instituição. | Produto |
+| <a id="rn113"></a>RN113 | Uma **anomalia de protocolo** faz a instituição desobedecer uma regra oficial: `pagination-key` inválida com 422, 401 trocado por 403, `x-fapi-interaction-id` diferente. Cada anomalia tem nome, vem desligada e fica registrada ([PR02](../00-visao-geral/premissas.md#pr02)). | Produto |
+| <a id="rn114"></a>RN114 | Nenhum perfil nasce com anomalias ligadas. Quando há alguma ligada, isso aparece na tela da instituição. | Produto |
 | <a id="rn115"></a>RN115 | Um cenário pode simular dado mudando durante a paginação: registros novos ou removidos entre as páginas. | Produto |
 
 ## Segurança

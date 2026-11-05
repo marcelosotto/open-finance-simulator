@@ -24,7 +24,7 @@ Compara o `src/OpenFinance.FakeProxy` do repositório OpenToken (commit `d3fe839
 | Páginas seguintes | Não contam | Não contam | ✅ | [RN27](regras-de-negocio.md#rn27) |
 | Dimensões da cota | Instituição, rota, objeto e cliente | Mês, endpoint, objeto, cliente e **receptora** | ⚠️ Só conhece uma receptora | [RN25](regras-de-negocio.md#rn25) |
 | Valores da cota | 8, 30, 120, 240 e 420 | Igual | ✅ | [RN26](regras-de-negocio.md#rn26) |
-| Cota abaixo do mínimo | `monthlyQuotaPercent` permite | Proibido | ⚠️ Útil, mas precisa virar anomalia explícita | [RN113](regras-de-negocio.md#rn113) |
+| Cota abaixo do mínimo | `monthlyQuotaPercent` permite | Proibido | ⚠️ Útil, vira configuração com aviso na tela | [RN26](regras-de-negocio.md#rn26) |
 | Capacidade (529) | Só erro sorteado; **não conta requisições por segundo** | 529 ao passar do limite de TPS | ➖ | [RN29](regras-de-negocio.md#rn29) |
 | Contadores | Em memória, por instância | Únicos para o ambiente | ⚠️ Com duas instâncias, cada uma conta metade | [RN30](regras-de-negocio.md#rn30) |
 | Mês da cota | Comprimido em 300 s no compose | Mês civil | ⚠️ Ferramenta de teste, não padrão | [RN73](regras-de-negocio.md#rn73) |

@@ -11,11 +11,12 @@
 | Chamadas que passam de 15 s | Nenhuma | 0,1% | 0,5% | 5% | Nenhuma |
 | Janelas de indisponibilidade | Nenhuma | Nenhuma | 2 min a cada hora | Nenhuma | Nenhuma |
 | Recurso indisponível | 0,2% | 0,2% | 2% | 0,2% | 1% |
-| Limite operacional | Ligado no mínimo oficial | Ligado | Ligado | Ligado | Ligado |
+| Limite operacional | Ligado, no oficial | Ligado, no oficial | Ligado, no oficial | Ligado, no oficial | Ligado, na metade do oficial |
+| TPM | Oficial | Oficial | Oficial | Oficial | Metade do oficial |
+| Validade da `pagination-key` | 60 min | 60 min | 60 min | 60 min | 10 min |
 | `page-size` máximo | 1.000 | 500 | 1.000 | 1.000 | 200 |
 | Preparação de Recursos (202) | Nenhuma | 30 s | 1 min | 3 min | Nenhuma |
-| Anomalias ligadas | Nenhuma | Nenhuma | Nenhuma | Nenhuma | Cota e TPM abaixo do oficial |
 
 Em endpoints de média e baixa frequência, os tempos crescem na proporção do SLA da classe.
 
-Os `page-size` menores são permitidos pela regra oficial ([RN32](../01-requisitos/regras-de-negocio.md#rn32)). Limite abaixo do oficial não é, e por isso aparece como anomalia ([RN113](../01-requisitos/regras-de-negocio.md#rn113)).
+Todo banco nasce com os limites oficiais, e o Banco Restritivo já vem com os dele alterados. Qualquer banco pode ter os limites alterados depois ([RN26](../01-requisitos/regras-de-negocio.md#rn26)). Nenhum perfil nasce com anomalias ligadas ([RN114](../01-requisitos/regras-de-negocio.md#rn114)).

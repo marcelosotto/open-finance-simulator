@@ -37,6 +37,32 @@ Funcionalidade: Simular o comportamento real das instituições
     Então a resposta deve ter status 200
     E o registro de chamada deve mostrar a regra de cliente
 
+  # RN15
+  Cenário: Com o mesmo alcance, vence a regra com mais filtros
+    Dado uma regra "Mariana responde 503"
+    E uma regra "Mariana responde 500 em saldos"
+    Quando o saldo de Mariana é consultado
+    Então a resposta deve ter status 500
+
+  # RN15
+  Cenário: Em empate, vence a regra mais recente
+    Dado uma regra "Mariana responde 503"
+    E uma regra criada depois "Mariana responde 500"
+    Quando Mariana é consultada
+    Então a resposta deve ter status 500
+
+  # RN19
+  Cenário: Pacote de cenário liga várias regras
+    Dado um pacote "Black Friday" com duas regras
+    Quando Bruno liga o pacote
+    Então as duas regras devem valer
+
+  # RN13
+  Cenário: Erro sorteado não simula limite
+    Dado que os pesos do "Banco Azul" incluem 429
+    Quando Diego salva a configuração
+    Então a configuração deve ser recusada
+
   # RN16
   Cenário: Janela de indisponibilidade
     Dado uma janela do "Banco Estável" das 10h às 10h30
@@ -70,6 +96,18 @@ Funcionalidade: Simular o comportamento real das instituições
     Quando Ana consulta o saldo
     Então a resposta deve usar a data simulada
     E o cabeçalho "x-sim-clock" deve mostrar a data simulada
+
+  # RN73
+  Cenário: Relógio alterado não muda o TPM
+    Dado que o relógio do "Banco Azul" está acelerado
+    Quando Ana faz chamadas dentro de um minuto real
+    Então o TPM deve contar pela hora real
+
+  # RN73
+  Cenário: Voltar ao relógio real
+    Dado que o relógio do "Banco Azul" está fixado
+    Quando Bruno volta ao relógio real
+    Então o cabeçalho "x-sim-clock" não deve ser enviado
 
   # RN10
   Cenário: Latência por classe de frequência

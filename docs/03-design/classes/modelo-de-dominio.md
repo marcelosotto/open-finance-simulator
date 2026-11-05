@@ -19,6 +19,7 @@ classDiagram
     timeout
   }
   class ConfiguracaoDeLimites {
+    qcaPadrao
     tpmPorClasse
     capacidadeTps
     limiteOperacionalLigado

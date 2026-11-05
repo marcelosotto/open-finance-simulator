@@ -94,3 +94,24 @@ Funcionalidade: Aplicar os limites oficiais
     Dado que o endpoint já passou do TPM
     Quando Ana chama com consentimento revogado
     Então a resposta deve ter status 401
+
+  # RN21
+  Cenário: QCA do banco vale para toda receptora
+    Dado que o "HML-Itaú" tem QCA de 7.000.000
+    Quando uma receptora sem valor próprio chama um endpoint de alta frequência
+    Então o TPM deve ser o da faixa de 7.000.000
+
+  # RN21
+  Cenário: QCA sobrescrito por receptora
+    Dado que o "HML-Itaú" tem QCA de 7.000.000
+    E que a receptora "Coletor" tem QCA de 500.000 nesse banco
+    Quando "Coletor" chama um endpoint de alta frequência
+    Então o TPM deve ser 2.500
+
+  # RN26
+  Cenário: Limite abaixo do oficial é aceito
+    Dado o "Banco Azul" com os limites oficiais
+    Quando Diego muda o limite de baixa frequência para 5
+    Então a configuração deve ser salva
+    E a tela deve avisar que o valor está abaixo do oficial
+    E a 6ª chamada do mês deve responder 423

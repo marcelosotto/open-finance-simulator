@@ -44,11 +44,10 @@ Funcionalidade: Injetar defeitos e anomalias
       | revogado-com-403       | consentimento revogado   | status 403        |
       | chave-recusada-com-422 | chave expirada           | status 422        |
       | interacao-diferente    | chamada válida           | outro id na volta |
-      | cota-abaixo-do-minimo  | 5ª chamada de baixa      | status 423        |
 
   # RN114
   Cenário: Anomalias ligadas aparecem na tela
-    Dado o "Banco Restritivo"
+    Dado o "Banco Azul" com a anomalia "revogado-com-403" ligada
     Quando Diego abre a lista de bancos
     Então o banco deve mostrar um aviso de anomalias ligadas
 

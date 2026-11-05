@@ -32,7 +32,7 @@ Têm nome fictício, que já diz o comportamento.
 | Banco Restritivo | `restritivo` | Aplica limites apertados e chave de paginação curta |
 
 ### Bancos com nome real
-Usam o perfil `estavel`, sem perfil próprio. O que muda entre eles são as variáveis, como os consentimentos ativos, que definem o TPM da alta frequência. O nome leva o prefixo do ambiente: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento ([RN09](../01-requisitos/regras-de-negocio.md#rn09)).
+Usam o perfil `estavel`, sem perfil próprio. O que muda entre eles são as variáveis, como os consentimentos ativos (QCA), que definem o TPM da alta frequência. O valor da tabela vale para toda receptora e pode ser sobrescrito ([RN21](../01-requisitos/regras-de-negocio.md#rn21)). O nome leva o prefixo do ambiente: `HML-Itaú` em homologação e `DEV-Itaú` em desenvolvimento ([RN09](../01-requisitos/regras-de-negocio.md#rn09)).
 
 Os consentimentos são valores fictícios, como ponto de partida, e não dados reais dos bancos.
 
