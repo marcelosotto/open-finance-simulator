@@ -169,9 +169,9 @@ Todos começam como **Rascunho**.
 - **Status:** Aprovado
 - **Ator:** QA
 - **Objetivo:** testar carga com milhões de itens, sem gravar os itens.
-- **Fluxo principal:** 1. Define total e semente do banco, que ficam gravados. 2. Pede uma faixa de itens por uma API de administração. 3. Usa os IDs nas APIs.
+- **Fluxo principal:** 1. Define total, semente e distribuição entre os bancos, que ficam gravados. 2. Pede uma faixa de itens por uma API de administração. 3. Usa os IDs nas APIs.
 - **Fluxo alternativo — ajuste:** revoga um consentimento virtual, e o ajuste passa a valer ([RN53](../regras-de-negocio.md#rn53)).
-- **Fluxo alternativo — trocar a semente:** o sistema avisa e, confirmado, apaga os ajustes daquele mundo virtual.
+- **Fluxo alternativo — trocar a semente:** o sistema avisa e, confirmado, apaga os ajustes do mundo virtual.
 - **Regras:** [RN52](../regras-de-negocio.md#rn52) a [RN54](../regras-de-negocio.md#rn54), [RN62](../regras-de-negocio.md#rn62).
 
 ### <a id="uc27"></a>UC27 — Limpar massa

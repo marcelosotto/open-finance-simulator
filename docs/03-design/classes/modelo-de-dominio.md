@@ -65,6 +65,7 @@ classDiagram
   class MundoVirtual {
     total
     semente
+    distribuicao
   }
   class RegraDeCenario {
     alcance
@@ -82,7 +83,6 @@ classDiagram
   Instituicao "1" --> "1" ConfiguracaoDeLimites
   Instituicao "1" --> "*" Consentimento
   Instituicao "1" --> "*" Recurso
-  Instituicao "1" --> "0..1" MundoVirtual
   Receptora "1" --> "*" Consentimento
   ClienteSimulado "1" --> "*" Consentimento
   ClienteSimulado "1" --> "*" Recurso

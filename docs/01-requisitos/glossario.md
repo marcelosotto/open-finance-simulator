@@ -14,7 +14,7 @@ Relacionados: [regras de negócio](regras-de-negocio.md) · [modelo de domínio]
 | **Dado simulado** | Qualquer dado criado pelo simulador, sem origem em cliente real. Sua natureza é persistido ou virtual. |
 | **Dado persistido** | Dado simulado gravado no banco. |
 | **Dado virtual** | Dado simulado calculado na hora a partir de uma semente, sem gravar. |
-| **Mundo virtual** | Conjunto de clientes, consentimentos e recursos virtuais de um banco, usado em teste de carga. Só o total, a semente e os ajustes ficam gravados. |
+| **Mundo virtual** | Conjunto de clientes, consentimentos e recursos virtuais do ambiente, divididos entre os bancos, usado em teste de carga. Só o total, a semente, a distribuição e os ajustes ficam gravados. |
 | **Massa** | Conjunto de dados simulados criado para um teste. |
 | **Lote** | Massa criada de uma vez, que pode ser apagada de uma vez. |
 | **Semente** | Valor que faz o gerador produzir sempre o mesmo resultado. |

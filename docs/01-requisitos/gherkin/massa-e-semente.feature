@@ -31,6 +31,18 @@ Funcionalidade: Gerar massa de dados
     Então os IDs devem funcionar nas APIs
     E só o total e a semente devem estar gravados
 
+  # RN52
+  Cenário: Um pedido se divide entre os bancos
+    Dado uma distribuição de 50% no "HML-Itaú" e 50% no "HML-Nubank"
+    Quando Bruno pede 1.000 itens do mundo virtual
+    Então cerca de metade dos itens deve ser de cada banco
+    E cada chamada deve seguir as regras do banco do item
+
+  # RN52
+  Cenário: Pedir itens de um banco só
+    Quando Bruno pede 1.000 itens do "HML-Itaú"
+    Então todos os itens devem ser desse banco
+
   # RN53
   Cenário: Revogar um consentimento virtual
     Dado um consentimento virtual

@@ -15,7 +15,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `clientes` | Documento, nome, tipo, marca e natureza | Índice por documento; o cliente não pertence a um banco |
 | `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações | Mudança de estado atômica; índice para expirar |
 | `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e por cliente e banco |
-| `mundos_virtuais` | Total e semente por banco | Reproduz o mesmo mundo |
+| `mundo_virtual` | Total, semente e distribuição | Um por ambiente; reproduz o mesmo mundo |
 | `ajustes` | Mudanças sobre transação ou dado virtual | Chave: alvo; vence o cálculo |
 | `lotes` | Parâmetros, semente, progresso e situação | Apagar leva tudo junto |
 | `cenarios` | Regras, defeitos e anomalias | Índice por alcance |
@@ -32,6 +32,6 @@ O documento do cliente entra na chave como hash.
 
 ## O que não é gravado
 - Transações: saem de `recurso + dia + semente`.
-- Itens do mundo virtual: saem do índice. Só total, semente e ajustes são gravados.
+- Itens do mundo virtual: saem do índice. Só total, semente, distribuição e ajustes são gravados.
 - Chave de paginação: é assinada e carrega o que precisa.
 - Chamadas recebidas: o simulador só responde. Quem precisar analisar chamadas usa os logs da aplicação que consome.

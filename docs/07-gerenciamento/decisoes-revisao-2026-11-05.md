@@ -34,6 +34,10 @@ O projeto usa só **simulado** para o que é fictício: instituição, cliente e
 
 Revisão dos casos de uso. Blocos de configuração, massa de dados e consentimento aprovados.
 
+## Mundo virtual
+
+Existe um mundo virtual por ambiente, e um pedido se divide entre os bancos pela distribuição. O coletor pede o token normalmente, sem token na lista.
+
 ## Registro de chamadas
 
 O simulador só responde. Quem registra e investiga as chamadas é a aplicação que consome, e por isso o UC26 foi removido.
