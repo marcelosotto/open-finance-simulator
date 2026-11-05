@@ -1,6 +1,6 @@
 # ADR-007: Monólito modular e instituição por endereço
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-11-05
 
 ## Contexto

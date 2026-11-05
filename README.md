@@ -7,7 +7,7 @@ Simula instituições financeiras do Open Finance Brasil para que os times teste
 O projeto nasce da POC `src/OpenFinance.FakeProxy` do repositório [OpenToken](https://github.com/marcelosotto/OpenToken). A POC provou a ideia; este repositório especifica a versão para desenvolvimento e homologação.
 
 ## Stack
-- Back-end: .NET 10, proposto ([ADR-001](docs/05-adr/ADR-001-backend-dotnet-10.md))
+- Back-end: .NET 10 ([ADR-001](docs/05-adr/ADR-001-backend-dotnet-10.md))
 - Dados: MongoDB para o que tem estado e Redis para os contadores, decididos ([ADR-003](docs/05-adr/ADR-003-mongodb-e-redis.md))
 - Specs oficiais: repositório [open-finance-specs](https://github.com/marcelosotto/open-finance-specs), fixado por commit ([ADR-002](docs/05-adr/ADR-002-specs-fixadas-por-commit.md))
 

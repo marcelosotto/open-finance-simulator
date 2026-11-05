@@ -1,6 +1,6 @@
 # ADR-006: Modos de segurança simples e FAPI
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-11-05
 
 ## Contexto

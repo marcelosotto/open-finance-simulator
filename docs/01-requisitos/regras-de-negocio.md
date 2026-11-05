@@ -96,7 +96,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn60"></a>RN60 | Todo dado gerado carrega a marca do **ambiente** (`dev` ou `hml`) em três lugares, para continuar visível depois de copiado: **cabeçalho** da resposta, **prefixo dos identificadores** e **texto** de campos livres. | Produto |
 | <a id="rn61"></a>RN61 | O **cabeçalho** `x-sim-environment` traz o ambiente, e `x-sim-data-nature` traz `persistido`, `virtual` ou `misto`. A resposta oficial não muda de formato: receptora que ignora esses cabeçalhos não sente diferença. | Produto |
 | <a id="rn62"></a>RN62 | O **prefixo** dos IDs usa os padrões oficiais: `hml-p-…` para persistido e `hml-v-…` para virtual. Em consentimentos, a natureza também aparece: `urn:hml:p-…` e `urn:hml:v-…`. | Produto |
-| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` (`[SIM-HML] PIX recebido`) e nome do cliente (`[SIM-HML] Mariana Alves`). | Produto |
+| <a id="rn63"></a>RN63 | O **texto** marcado usa dois campos, dentro do tamanho oficial: `transactionName` (`[HML] PIX recebido`) e nome do cliente (`[HML] Mariana Alves`). | Produto |
 | <a id="rn64"></a>RN64 | A marca é aplicada na criação do dado e nunca muda. Dado gerado em `dev` continua `dev` mesmo se for copiado para outro ambiente. | Produto |
 | <a id="rn65"></a>RN65 | Uma resposta com dado persistido e dado virtual se declara `misto`. Cada item mostra sua natureza no prefixo do ID. | Produto |
 | <a id="rn66"></a>RN66 | Os valores e a forma da marca nunca dependem de configuração da instituição: nenhum perfil desliga a marcação. | Produto |

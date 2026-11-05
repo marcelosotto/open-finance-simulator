@@ -1,6 +1,6 @@
 # ADR-008: Pipeline único de avaliação da chamada
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-11-05
 
 ## Contexto

@@ -1,6 +1,6 @@
 # ADR-009: Cenários Gherkin executados com Reqnroll
 
-**Status:** Proposto
+**Status:** Aceito
 **Data:** 2026-11-05
 
 ## Contexto

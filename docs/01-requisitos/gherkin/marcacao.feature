@@ -47,7 +47,7 @@ Funcionalidade: Marcar os dados com ambiente e natureza
   Cenário: Marca nos campos livres
     Dado um ambiente "hml"
     Quando Ana consulta uma transação
-    Então transactionName deve começar com "[SIM-HML]"
+    Então transactionName deve começar com "[HML]"
     E o campo deve respeitar o tamanho oficial
 
   # RN61
