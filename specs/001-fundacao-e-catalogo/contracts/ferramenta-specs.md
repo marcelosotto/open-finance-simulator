@@ -8,7 +8,7 @@ operação.
 
 | Comando | O que faz | Opções |
 |---|---|---|
-| `specs baixar` | Baixa o pacote do commit do `specs.lock.json` e grava os contratos travados e o `catalog.json` em `.specs/{commit}/` | `--token` (padrão: variável `SPECS_TOKEN`); `--lock` (padrão: `specs.lock.json`) |
+| `specs baixar` | Baixa o pacote do commit do `specs.lock.json` e grava os contratos travados e o `catalog.json` em `.specs/{commit}/` | `--token` (opcional; padrão: variável `SPECS_TOKEN`, se existir); `--lock` (padrão: `specs.lock.json`) |
 | `specs verificar` | Confere o SHA-256 de cada contrato contra o lock e contra o `catalog.json`. Falha em divergência, arquivo faltando ou contrato fora do catálogo | `--lock`, `--pasta` (padrão: `.specs/{commit}`) |
 | `specs diferencas` | Compara as operações de dois locks e lista novas, removidas e alteradas. Com `--resumo`, escreve em Markdown no arquivo indicado (no CI, `$GITHUB_STEP_SUMMARY`) | `--base <lock>`, `--novo <lock>`, `--resumo <arquivo>` |
 | `cobertura conferir` | Lê relatórios Cobertura e falha abaixo do mínimo | `--relatorios <glob>`, `--dominio 100`, `--total 80`, `--filtro-dominio "*.Dominio.*"` |

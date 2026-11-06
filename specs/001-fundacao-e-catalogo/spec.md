@@ -10,6 +10,14 @@
 
 **Origem em `docs/`**: [UC24](../../docs/01-requisitos/casos-de-uso/README.md#uc24), [UC23](../../docs/01-requisitos/casos-de-uso/README.md#uc23), [RF17](../../docs/01-requisitos/requisitos.md#rf17), [RF18](../../docs/01-requisitos/requisitos.md#rf18), [RN60](../../docs/01-requisitos/regras-de-negocio.md#rn60) a [RN66](../../docs/01-requisitos/regras-de-negocio.md#rn66), [RN70](../../docs/01-requisitos/regras-de-negocio.md#rn70), [RN72](../../docs/01-requisitos/regras-de-negocio.md#rn72), [RNF01](../../docs/01-requisitos/requisitos.md#rnf01), [RNF07](../../docs/01-requisitos/requisitos.md#rnf07), [RNF08](../../docs/01-requisitos/requisitos.md#rnf08), [RNF10](../../docs/01-requisitos/requisitos.md#rnf10), [RNF11](../../docs/01-requisitos/requisitos.md#rnf11), [PR01](../../docs/00-visao-geral/premissas.md#pr01), [PR03](../../docs/00-visao-geral/premissas.md#pr03), [PR06](../../docs/00-visao-geral/premissas.md#pr06), [PR07](../../docs/00-visao-geral/premissas.md#pr07), [PA23](../../docs/01-requisitos/regras-de-negocio.md#pa23), [ADR-002](../../docs/05-adr/ADR-002-specs-fixadas-por-commit.md), [ADR-005](../../docs/05-adr/ADR-005-marcacao-em-tres-camadas.md), [ADR-007](../../docs/05-adr/ADR-007-arquitetura-e-endereco.md), [ADR-009](../../docs/05-adr/ADR-009-gherkin-reqnroll.md), [tabela oficial de endpoints](../../docs/01-requisitos/tabela-de-endpoints.md), [estratégia de testes](../../docs/06-testes/estrategia-de-testes.md). Cenários Gherkin: [marcacao.feature](../../docs/01-requisitos/gherkin/marcacao.feature).
 
+## Clarifications
+
+### Session 2026-11-05
+
+- Q: Nesta spec, a API de administração pode ficar sem login, deixando a autenticação para a spec 002? → A: Sim. Sem login na 001; a porta de administração fica só dentro da rede do Docker Compose, e o login entra na 002, com as primeiras alterações.
+- Q: Se uma spec travada tiver operação fora da tabela oficial de endpoints, o que acontece? → A: O build quebra. Resolve-se em `docs/`: incluindo a linha na tabela, com fonte, ou registrando a operação numa lista de exclusões, com o motivo.
+- Q: Como quem não tem acesso ao repositório privado `open-finance-specs` roda o simulador e os testes? → A: O `open-finance-specs` passou a ser público (2026-11-06), e o download não exige token.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Catálogo das APIs a partir das specs fixadas (Priority: P1)
@@ -124,7 +132,7 @@ Como desenvolvedor, quero um monólito modular que sobe por inteiro com um coman
 
 **Catálogo de specs**
 
-- **FR-001**: O sistema MUST ler as specs oficiais de `open-finance-specs` no commit registrado no arquivo de travamento `specs.lock.json`, começando pelo commit `7bdb9c1a6c4c265d7aabcdbc662f94c61718135e` ([ADR-002](../../docs/05-adr/ADR-002-specs-fixadas-por-commit.md)).
+- **FR-001**: O sistema MUST ler as specs oficiais de `open-finance-specs` no commit registrado no arquivo de travamento `specs.lock.json`, começando pelo commit `7bdb9c1a6c4c265d7aabcdbc662f94c61718135e` ([ADR-002](../../docs/05-adr/ADR-002-specs-fixadas-por-commit.md)). O download MUST funcionar sem token, porque o repositório é público; um token, se informado, é usado só para evitar o limite de chamadas anônimas da API do GitHub.
 - **FR-002**: O build MUST conferir o SHA-256 de cada arquivo de spec contra o registrado e falhar, nomeando o arquivo, se algum divergir, faltar ou sobrar ([UC24](../../docs/01-requisitos/casos-de-uso/README.md#uc24)).
 - **FR-003**: As specs MUST ir empacotadas na imagem, para que o simulador suba sem acesso à rede ([ADR-002](../../docs/05-adr/ADR-002-specs-fixadas-por-commit.md)).
 - **FR-004**: O catálogo MUST cobrir as APIs de consentimento, recursos e todas as famílias de dados da [tabela oficial](../../docs/01-requisitos/tabela-de-endpoints.md) ([PA06](../../docs/01-requisitos/regras-de-negocio.md#pa06)).
@@ -141,7 +149,7 @@ Como desenvolvedor, quero um monólito modular que sobe por inteiro com um coman
 - **FR-012**: O arquivo MUST distinguir endpoints de mesmo caminho em APIs diferentes.
 - **FR-013**: Endpoints com TPM "Faixa QCA" MUST ficar marcados como dependentes dos consentimentos ativos ([RN21](../../docs/01-requisitos/regras-de-negocio.md#rn21)); o cálculo da faixa fica para a spec de limites.
 - **FR-014**: Um teste MUST comparar cada linha do arquivo com a tabela oficial e falhar no primeiro valor divergente, nomeando endpoint e campo.
-- **FR-015**: O CI MUST falhar se houver operação do catálogo sem linha no arquivo, ou linha sem operação no catálogo.
+- **FR-015**: O CI MUST falhar se houver operação do catálogo sem linha no arquivo, ou linha sem operação no catálogo. A correção é sempre em `docs/`: incluir a linha na [tabela oficial](../../docs/01-requisitos/tabela-de-endpoints.md), com fonte, ou registrar a operação numa lista de exclusões em `docs/`, com o motivo. Operação excluída não é publicada e não conta como falha.
 
 **Marcação**
 
@@ -157,7 +165,7 @@ Como desenvolvedor, quero um monólito modular que sobe por inteiro com um coman
 **Fundação**
 
 - **FR-024**: O sistema MUST ser um monólito modular, com módulos de fronteira explícita, de modo que API Open Finance, administração e worker possam rodar juntos agora e separados depois ([ADR-007](../../docs/05-adr/ADR-007-arquitetura-e-endereco.md)).
-- **FR-025**: As APIs de administração MUST ficar em endereço separado das APIs Open Finance ([RN71](../../docs/01-requisitos/regras-de-negocio.md#rn71), [PR07](../../docs/00-visao-geral/premissas.md#pr07)).
+- **FR-025**: As APIs de administração MUST ficar em endereço separado das APIs Open Finance ([RN71](../../docs/01-requisitos/regras-de-negocio.md#rn71), [PR07](../../docs/00-visao-geral/premissas.md#pr07)). Nesta spec elas só leem (catálogo e saúde), não exigem login e MUST ficar acessíveis só na rede do Docker Compose e na própria máquina (porta ligada a `127.0.0.1`). A exigência de usuário da RN71 entra na spec 002.
 - **FR-026**: O ambiente completo MUST subir localmente com um único comando ([RNF11](../../docs/01-requisitos/requisitos.md#rnf11)).
 - **FR-027**: O CI MUST bloquear o merge quando falhar formatação, análise estática, testes, cenários Gherkin, cobertura (100% no domínio e 80% no total), conformidade com as specs ou o teste da tabela oficial ([RNF08](../../docs/01-requisitos/requisitos.md#rnf08)).
 - **FR-028**: Os cenários de `marcacao.feature` (exceto `@tela`) MUST existir como testes de aceitação antes da implementação e rodar no CI ([ADR-009](../../docs/05-adr/ADR-009-gherkin-reqnroll.md)).
@@ -189,6 +197,7 @@ Como desenvolvedor, quero um monólito modular que sobe por inteiro com um coman
 - A decisão do FR-019 (marca configurável e vazia em produção) já está em `docs/` (RN09, RN60 a RN66, RN70, RN72, PA05, ADR-005, `marcacao.feature`) e na constituição 2.0.0, princípio IV.
 - Com a marca vazia, a natureza continua aparecendo no ID e no cabeçalho `x-sim-data-nature`.
 - O sistema não confere o valor da marca. Valor com caractere fora de letras, números e hífen deixa os IDs fora do padrão oficial; é responsabilidade de quem configura.
+- O repositório `open-finance-specs` é público desde 2026-11-06.
 - O escopo das APIs é o da primeira versão: consentimento, recursos e dados ([PA06](../../docs/01-requisitos/regras-de-negocio.md#pa06)). Pagamentos e demais famílias ficam fora.
 - O comportamento real das operações (consentimento, recursos, dados, paginação, limites) chega nas specs 004 a 007. Esta spec entrega o catálogo, as rotas e a marcação como mecanismo, testados com dados de teste.
 - O cadastro de instituições é da spec 002. Aqui as rotas já carregam o prefixo `{banco}`, e os testes usam uma instituição de teste.

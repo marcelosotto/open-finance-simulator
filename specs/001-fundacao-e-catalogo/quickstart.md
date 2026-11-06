@@ -6,8 +6,8 @@ em [contracts/](contracts/); as entidades, em [data-model.md](data-model.md).
 ## Pré-requisitos
 
 - SDK do .NET 10 e Docker com Compose.
-- Token do GitHub com leitura em `marcelosotto/open-finance-specs` (repositório privado), na
-  variável `SPECS_TOKEN`.
+- Acesso à internet para baixar o `open-finance-specs`, que é público. Token não é exigido; se
+  houver, a variável `SPECS_TOKEN` é usada.
 
 ## 1. Baixar e conferir as specs (FR-001, FR-002)
 

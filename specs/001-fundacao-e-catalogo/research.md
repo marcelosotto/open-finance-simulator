@@ -6,7 +6,7 @@ Cada item segue: **Decisão**, **Por quê** e **Alternativas consideradas**.
 
 ## R01 — De onde vêm as specs e como elas são travadas
 
-**Fato levantado:** o repositório `marcelosotto/open-finance-specs` é **privado**. No commit
+**Fato levantado:** o repositório `marcelosotto/open-finance-specs` é **público** desde 2026-11-06. No commit
 `7bdb9c1a6c4c265d7aabcdbc662f94c61718135e` ele traz:
 
 - `contracts/expansion/catalog.json`: 35 contratos ativos e 143 operações. Cada contrato tem
@@ -19,12 +19,15 @@ Cada item segue: **Decisão**, **Por quê** e **Alternativas consideradas**.
 - `specs.lock.json`, na raiz do simulador, guarda o repositório, o commit e a lista dos
   **contratos usados**, cada um com `id`, `localPath` e `sha256` copiados do catálogo
   ([contrato](contracts/specs-lock.schema.json)).
-- O build baixa o pacote do commit pela API do GitHub com um token de leitura, confere o
+- O build baixa o pacote do commit pela API do GitHub, confere o
   SHA-256 de cada arquivo travado e copia só os snapshots travados para `.specs/`. Essa pasta
   está no `.gitignore` e vai para a imagem.
 - A conferência é dupla: o hash do arquivo contra o `specs.lock.json` e contra o
   `catalog.json` do próprio commit. Contrato travado que falta no catálogo, ou hash
   divergente, quebra o build.
+
+**Acesso:** o repositório é público, e o download não exige token. O `SPECS_TOKEN` é opcional
+e só é enviado se existir, para evitar o limite de chamadas anônimas da API do GitHub.
 
 **Por quê:** segue a [ADR-002](../../docs/05-adr/ADR-002-specs-fixadas-por-commit.md). O
 `catalog.json` já tem o hash, e repetir o hash no lock torna a troca de versão visível no
@@ -107,7 +110,9 @@ prefixo, mas o cadastro de bancos é da spec 002.
   verdade, princípio I), associa cada seção ao contrato pelo campo `secao` e compara campo a
   campo. Falha nomeando seção, endpoint, campo, valor esperado e valor encontrado.
 - Um segundo teste cruza o arquivo com o catálogo: operação sem linha, ou linha sem operação,
-  falha (FR-015).
+  falha (FR-015). As exclusões ficam numa seção "Operações fora da tabela" no próprio
+  `docs/01-requisitos/tabela-de-endpoints.md`, com contrato, operação e motivo. O teste lê essa
+  seção, e operação excluída não é publicada (clarify de 2026-11-05).
 
 **Por quê:** a [ADR-002](../../docs/05-adr/ADR-002-specs-fixadas-por-commit.md) pede arquivo
 próprio, porque as specs não trazem a classe. Ler o Markdown no teste evita uma terceira cópia.
@@ -190,7 +195,7 @@ e não é publicada fora da rede do Compose.
 1. `dotnet format --verify-no-changes`.
 2. Build com `TreatWarningsAsErrors` e `AnalysisLevel=latest-recommended` (analisadores do
    próprio SDK).
-3. `specs baixar` e `specs verificar` da ferramenta própria, com o segredo `SPECS_TOKEN`.
+3. `specs baixar` e `specs verificar` da ferramenta própria (o segredo `SPECS_TOKEN` é opcional).
 4. Testes de unidade, integração e aceitação, com `coverlet.collector` (Cobertura XML).
 5. `cobertura conferir`: 100% de linhas e ramos em `*.Dominio`, 80% no total.
 6. Em PR que muda o `specs.lock.json`: `specs diferencas`, que compara as operações do commit
