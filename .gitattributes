@@ -1,0 +1,19 @@
+# Quebra de linha LF em todo texto, no Windows e no CI.
+* text=auto eol=lf
+
+# Scripts do Windows precisam de CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binários.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.zip binary
+*.gz binary
