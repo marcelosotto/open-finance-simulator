@@ -12,3 +12,4 @@
 | [007](ADR-007-arquitetura-e-endereco.md) | Monólito modular e instituição por endereço | Aceito |
 | [008](ADR-008-pipeline-de-avaliacao.md) | Pipeline único de avaliação da chamada | Aceito |
 | [009](ADR-009-gherkin-reqnroll.md) | Cenários Gherkin executados com Reqnroll | Aceito |
+| [010](ADR-010-front-end-react.md) | Back-office em React com Webpack e Clean Architecture | Aceito |

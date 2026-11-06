@@ -14,7 +14,7 @@
 
 ### Session 2026-11-05
 
-- Q: Nesta spec, a API de administração pode ficar sem login, deixando a autenticação para a spec 002? → A: Sim. Sem login na 001; a porta de administração fica só dentro da rede do Docker Compose, e o login entra na 002, com as primeiras alterações.
+- Q: Nesta spec, a API de administração pode ficar sem login, deixando a autenticação para a spec 002? → A: Sim. Sem login na 001; a porta de administração fica só dentro da rede do Docker Compose. **Atualização de 2026-11-06:** a administração não terá login em nenhuma spec ([RN71](../../docs/01-requisitos/regras-de-negocio.md#rn71), [ADR-010](../../docs/05-adr/ADR-010-front-end-react.md)).
 - Q: Se uma spec travada tiver operação fora da tabela oficial de endpoints, o que acontece? → A: O build quebra. Resolve-se em `docs/`: incluindo a linha na tabela, com fonte, ou registrando a operação numa lista de exclusões, com o motivo.
 - Q: Como quem não tem acesso ao repositório privado `open-finance-specs` roda o simulador e os testes? → A: O `open-finance-specs` passou a ser público (2026-11-06), e o download não exige token.
 
@@ -165,7 +165,7 @@ Como desenvolvedor, quero um monólito modular que sobe por inteiro com um coman
 **Fundação**
 
 - **FR-024**: O sistema MUST ser um monólito modular, com módulos de fronteira explícita, de modo que API Open Finance, administração e worker possam rodar juntos agora e separados depois ([ADR-007](../../docs/05-adr/ADR-007-arquitetura-e-endereco.md)).
-- **FR-025**: As APIs de administração MUST ficar em endereço separado das APIs Open Finance ([RN71](../../docs/01-requisitos/regras-de-negocio.md#rn71), [PR07](../../docs/00-visao-geral/premissas.md#pr07)). Nesta spec elas só leem (catálogo e saúde), não exigem login e MUST ficar acessíveis só na rede do Docker Compose e na própria máquina (porta ligada a `127.0.0.1`). A exigência de usuário da RN71 entra na spec 002.
+- **FR-025**: As APIs de administração MUST ficar em endereço separado das APIs Open Finance ([RN71](../../docs/01-requisitos/regras-de-negocio.md#rn71), [PR07](../../docs/00-visao-geral/premissas.md#pr07)). Nesta spec elas só leem (catálogo e saúde), não têm login e MUST ficar acessíveis só na rede do Docker Compose e na própria máquina (porta ligada a `127.0.0.1`).
 - **FR-026**: O ambiente completo MUST subir localmente com um único comando ([RNF11](../../docs/01-requisitos/requisitos.md#rnf11)).
 - **FR-027**: O CI MUST bloquear o merge quando falhar formatação, análise estática, testes, cenários Gherkin, cobertura (100% no domínio e 80% no total), conformidade com as specs ou o teste da tabela oficial ([RNF08](../../docs/01-requisitos/requisitos.md#rnf08)).
 - **FR-028**: Os cenários de `marcacao.feature` (exceto `@tela`) MUST existir como testes de aceitação antes da implementação e rodar no CI ([ADR-009](../../docs/05-adr/ADR-009-gherkin-reqnroll.md)).

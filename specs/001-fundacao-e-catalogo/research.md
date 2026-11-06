@@ -184,9 +184,8 @@ para a administração. Na 8081 ficam `GET /admin/catalogo`, `GET /saude/vivo` e
 **Por quê:** [RN71](../../docs/01-requisitos/regras-de-negocio.md#rn71) exige endereço
 separado. Um processo só cumpre o "juntos agora, separados depois" da ADR-007.
 
-**Pendência herdada:** a RN71 exige usuário nas APIs de administração. A autenticação da
-administração não é desta spec. Nesta fase a porta 8081 só expõe leitura do catálogo e saúde,
-e não é publicada fora da rede do Compose.
+**Sem login:** a RN71 define que a administração não tem login nem autenticação. Nesta fase a
+porta 8081 só expõe leitura do catálogo e saúde, e não é publicada fora da rede do Compose.
 
 ## R10 — CI e portões
 

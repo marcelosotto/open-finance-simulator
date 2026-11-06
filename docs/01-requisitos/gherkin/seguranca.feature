@@ -29,9 +29,14 @@ Funcionalidade: Autenticar a receptora
     Então o pedido deve ser recusado
 
   # RN71
-  Cenário: Administração separada
+  Cenário: Administração sem login
     Quando Ana chama uma API de administração sem usuário
-    Então a resposta deve ter status 401
+    Então a chamada deve ser atendida
+
+  # RN71
+  Cenário: Administração separada das APIs Open Finance
+    Quando Ana chama uma API de administração pelo endereço das APIs Open Finance
+    Então a resposta deve ter status 404
 
   # RN123
   Cenário: Credencial do simulador não vale fora dele

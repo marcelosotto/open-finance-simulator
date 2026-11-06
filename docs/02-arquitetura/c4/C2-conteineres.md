@@ -10,7 +10,7 @@ flowchart TB
   subgraph sim["Simulador Open Finance"]
     api["<b>API Open Finance</b><br/><small>.NET 10 · N instâncias<br/>Rotas das specs, limites e cenários</small>"]
     admin["<b>API de administração</b><br/><small>.NET 10 · bancos, massa, consentimentos, cenários</small>"]
-    bo["<b>Back-office</b><br/><small>Tela web</small>"]
+    bo["<b>Back-office</b><br/><small>React · Webpack · sem login</small>"]
     worker["<b>Worker</b><br/><small>Lotes e expirações</small>"]
     mongo[("<b>MongoDB</b><br/><small>Bancos, clientes, consentimentos,<br/>recursos, ajustes, cenários, histórico</small>")]
     redis[("<b>Redis</b><br/><small>TPM, TPS e limite operacional</small>")]

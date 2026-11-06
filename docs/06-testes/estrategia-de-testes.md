@@ -11,6 +11,7 @@
 | Contrato | Validação contra as specs fixadas | Toda operação com `estavel` valida no schema |
 | Aceitação | Reqnroll com os `.feature` ([ADR-009](../05-adr/ADR-009-gherkin-reqnroll.md)) | Regras em linguagem de negócio |
 | Tabela oficial | Teste que compara classe, TPM, cota e SLA de cada endpoint com a [tabela](../01-requisitos/tabela-de-endpoints.md) | Evita classe ou limite diferente do oficial |
+| Front-end | Jest 30 e Testing Library ([guia](../08-front-end/README.md#testes)) | Entidades, casos de uso e componentes; 100% no `core` |
 | Painel | Playwright | Criação de consentimento e alçadas no navegador |
 | Carga | k6 | Capacidade própria do simulador ([RNF02](../01-requisitos/requisitos.md#rnf02)) e mundo virtual |
 

@@ -56,9 +56,8 @@ decisões em [research.md](research.md).
 | Stack | .NET 10 Minimal API, monólito modular, Docker Compose, xUnit e Reqnroll. Nenhum item da stack trocado. | ✅ |
 | Portões de CI | Formatação, análise estática, testes, cobertura, conformidade com as specs e tabela oficial (R10). | ✅ |
 
-**Pendência registrada (não é violação):** a RN71 exige usuário nas APIs de administração. Nesta
-spec a porta de administração só expõe leitura do catálogo e saúde, dentro da rede do Compose.
-A autenticação da administração entra com a spec 002, quando surgem as primeiras alterações.
+**Administração sem login:** a RN71 define que a administração não tem login nem autenticação.
+Nesta spec a porta de administração só expõe leitura do catálogo e saúde, dentro da rede do Compose.
 
 **Re-check após a Fase 1:** o desenho em [data-model.md](data-model.md) e [contracts/](contracts/)
 não introduz armazenamento, dependência ou caminho fora do previsto. Todos os itens seguem ✅.

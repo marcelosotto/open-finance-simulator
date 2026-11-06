@@ -2,8 +2,7 @@
 
 Origem: história 1, cenário 3 da [spec](../spec.md), [RN71](../../../docs/01-requisitos/regras-de-negocio.md#rn71) e [RNF09](../../../docs/01-requisitos/requisitos.md#rnf09). Fica em porta separada das APIs Open Finance (porta 8080).
 
-Nesta spec só há leitura. A autenticação de usuário exigida pela RN71 entra na spec 002, junto
-com as primeiras alterações (ver Constitution Check do [plano](../plan.md)).
+Nesta spec só há leitura. A administração não tem login nem autenticação ([RN71](../../../docs/01-requisitos/regras-de-negocio.md#rn71)).
 
 ## GET /admin/catalogo
 

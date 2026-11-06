@@ -13,7 +13,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | <a id="rn02"></a>RN02 | O ambiente já nasce com os bancos de perfil **Banco Estável, Banco Lento, Banco Instável, Banco Timeout e Banco Restritivo** e com 11 bancos de nome real, listados nas [personas](../00-visao-geral/personas.md#bancos-com-nome-real). Todos podem ser editados, e novos podem ser criados. | Produto |
 | <a id="rn03"></a>RN03 | Criar uma instituição exige só **nome** e **perfil de comportamento**. Sem perfil informado, vale `estavel`. Os demais campos têm padrão ([campos obrigatórios](campos-obrigatorios.md)). | Produto |
 | <a id="rn04"></a>RN04 | Um **perfil de comportamento** é um modelo: copiar um perfil para uma instituição permite ajustar os valores depois, sem mudar o modelo nem as outras instituições. | Produto |
-| <a id="rn05"></a>RN05 | Mudar a configuração de uma instituição vale para as próximas chamadas, sem reiniciar, e fica no histórico com usuário, antes e depois. | Produto |
+| <a id="rn05"></a>RN05 | Mudar a configuração de uma instituição vale para as próximas chamadas, sem reiniciar, e fica no histórico com data, antes e depois. | Produto |
 | <a id="rn06"></a>RN06 | Uma instituição com clientes não é apagada, só **inativada**. Inativa, ela responde como fora do ar. | Produto |
 | <a id="rn07"></a>RN07 | A instituição chamada é identificada pelo **endereço** usado, como numa instituição real, e não por um cabeçalho próprio do simulador ([PR07](../00-visao-geral/premissas.md#pr07)). | Produto |
 | <a id="rn08"></a>RN08 | A instituição define se oferece cada produto. Produto não oferecido segue a regra oficial: permissões por seleção individual são removidas do consentimento, e as de seleção agrupada são mantidas ([RN83](#rn83)). | Oficial [F06](../00-visao-geral/referencias.md#f06) |
@@ -107,7 +107,7 @@ Relacionados: [casos de uso](casos-de-uso/README.md) · [requisitos](requisitos.
 | ID | Regra | Origem |
 |---|---|---|
 | <a id="rn70"></a>RN70 | O foco são os ambientes de desenvolvimento e homologação. O uso em produção não é bloqueado; se houver, a marca do ambiente fica vazia e nada é concatenado ([RN60](#rn60), [PA05](#pa05)). | Produto |
-| <a id="rn71"></a>RN71 | APIs de administração ficam em endereço separado das APIs Open Finance e exigem usuário. Toda alteração grava usuário, data, antes e depois. | Produto |
+| <a id="rn71"></a>RN71 | APIs de administração e back-office ficam em endereço separado das APIs Open Finance e **não têm login nem autenticação**: servem só para rodar e testar. Toda alteração grava data, antes e depois. | Produto |
 | <a id="rn72"></a>RN72 | Com a marca do ambiente preenchida, cada tela mostra a marca em destaque. Com a marca vazia, nada é mostrado. | Produto |
 | <a id="rn73"></a>RN73 | O relógio pode ser **acelerado ou fixado** para testes, sempre por instituição, nunca global. Ele vale para as datas das respostas, as expirações, a cota mensal e o horário das regras de cenário. TPM e capacidade seguem a hora real, porque medem tráfego real. O operador pode voltar ao relógio real a qualquer momento. Com relógio alterado, o cabeçalho `x-sim-clock` mostra a hora simulada ([PA19](#pa19)). | Produto |
 
@@ -184,7 +184,7 @@ Fora desta versão. Voltam como novos casos de uso, quando fizerem falta.
 | <a id="pa11"></a>PA11 | ~~Mandamos `Retry-After` no 429?~~ **Respondida:** sim, configurável por instituição e ligado no padrão. |
 | <a id="pa12"></a>PA12 | ~~Precisamos de um Diretório simulado?~~ **Respondida:** não. O endereço da instituição fica em configuração. |
 | <a id="pa13"></a>PA13 | ~~Várias versões da mesma API ao mesmo tempo?~~ **Respondida:** não. Uma versão por API. |
-| <a id="pa14"></a>PA14 | ~~Qual a tecnologia do back-office?~~ **Respondida:** React com TypeScript. |
+| <a id="pa14"></a>PA14 | ~~Qual a tecnologia do back-office?~~ **Respondida:** React com TypeScript, com Webpack e Clean Architecture, sem login. Ver [ADR-010](../05-adr/ADR-010-front-end-react.md) e o [guia de front-end](../08-front-end/README.md). |
 | <a id="pa15"></a>PA15 | ~~Quem aprova?~~ **Respondida:** Marcelo, por enquanto. |
 | <a id="pa16"></a>PA16 | ~~Onde roda em homologação?~~ **Respondida:** Docker agora. A plataforma de homologação é decidida na implantação. |
 | <a id="pa17"></a>PA17 | ~~Por quanto tempo guardamos a massa?~~ **Respondida:** massa sem limpeza automática. O simulador não guarda registro das chamadas. |
