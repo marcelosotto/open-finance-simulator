@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- O Reqnroll usa a cultura pt do .feature. -->
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- Código gerado do .feature vai para obj, nunca para docs/. -->
+    <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="Reqnroll.xunit.v3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="JsonSchema.Net" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Simulador.Host\Simulador.Host.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\ComumHost\*.cs" Link="ComumHost\%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <ReqnrollFeatureFiles Include="../../docs/01-requisitos/gherkin/*.feature" Link="Features/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

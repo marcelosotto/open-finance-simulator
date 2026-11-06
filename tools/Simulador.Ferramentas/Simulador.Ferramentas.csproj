@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modulos\Simulador.Catalogo\Simulador.Catalogo.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Simulador.Testes.Unidade" />
+    <InternalsVisibleTo Include="Simulador.Testes.Integracao" />
+    <InternalsVisibleTo Include="Simulador.Testes.Aceitacao" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,82 @@
+{
+  "repositorio": "marcelosotto/open-finance-specs",
+  "commit": "7bdb9c1a6c4c265d7aabcdbc662f94c61718135e",
+  "catalogo": "contracts/expansion/catalog.json",
+  "contratos": [
+    {
+      "id": "consents",
+      "caminhoLocal": "contracts/expansion/snapshots/consents-3.3.1.yml",
+      "sha256": "11aefe3b7a87e4ad8c0dcaf32b118a9b7f2b873bbbf171786ada6605809aa223"
+    },
+    {
+      "id": "resources",
+      "caminhoLocal": "contracts/expansion/snapshots/resources-3.1.0.yml",
+      "sha256": "c3a74af4395ea03767c88be56083ef730dfb0ed24cacc9832e3ab07da427dccf"
+    },
+    {
+      "id": "customers",
+      "caminhoLocal": "contracts/expansion/snapshots/customers-2.3.0.yaml",
+      "sha256": "c6fd078779a9221bb9b36b6828c0d4a854f84a56ed279bb68a35c35449568dd3"
+    },
+    {
+      "id": "accounts",
+      "caminhoLocal": "contracts/expansion/snapshots/accounts-2.5.1.yaml",
+      "sha256": "ff5348ad631138aa66c60bf74de00eb03cb5a9e9643b937d948269e7b34a3905"
+    },
+    {
+      "id": "credit-cards-accounts",
+      "caminhoLocal": "contracts/expansion/snapshots/credit-cards-accounts-2.4.0.yaml",
+      "sha256": "560f9589090e0c4d8e7345ea5acba37c340496ea3b173e351f15689953968219"
+    },
+    {
+      "id": "loans",
+      "caminhoLocal": "contracts/expansion/snapshots/loans-2.6.0.yaml",
+      "sha256": "31065084c6059464ae80665caac358e35b97a7e2202f3f2b0ccf990d1eb0f6ad"
+    },
+    {
+      "id": "financings",
+      "caminhoLocal": "contracts/expansion/snapshots/financings-2.4.0.yml",
+      "sha256": "5cbca7f8e4d3650f834e010f7b83752fdbed1d95ad8f40f9053426fdc5c0d125"
+    },
+    {
+      "id": "unarranged-accounts-overdraft",
+      "caminhoLocal": "contracts/expansion/snapshots/unarranged-accounts-overdraft-2.5.0.yml",
+      "sha256": "778fd7cd86c47a420e2b283cc5041cd3bf7e96875e0f7b0a314351a18cdc2442"
+    },
+    {
+      "id": "invoice-financings",
+      "caminhoLocal": "contracts/expansion/snapshots/invoice-financings-2.4.0.yml",
+      "sha256": "d446aad0b4aa6105e57a0b5bc4eb6352bafe3d5fe2678f98d3544e7c7a95fb04"
+    },
+    {
+      "id": "bank-fixed-incomes",
+      "caminhoLocal": "contracts/expansion/snapshots/bank-fixed-incomes-1.1.0.yml",
+      "sha256": "81c532446dc455079781e544b522a01206d65a73f358221cf99f20021591f7ae"
+    },
+    {
+      "id": "credit-fixed-incomes",
+      "caminhoLocal": "contracts/expansion/snapshots/credit-fixed-incomes-1.1.0.yml",
+      "sha256": "7b3d344b5748ba8d31798c59e3ac66ffaa21902265896c8a49e8374b75d535db"
+    },
+    {
+      "id": "variable-incomes",
+      "caminhoLocal": "contracts/expansion/snapshots/variable-incomes-1.3.0.yml",
+      "sha256": "ac3b95791024e5985641525fe99357993ad923a736924f403989749fbe8c7e2c"
+    },
+    {
+      "id": "treasure-titles",
+      "caminhoLocal": "contracts/expansion/snapshots/treasure-titles-1.1.0.yml",
+      "sha256": "553aaf46b9095e425d33a6f76447dba027bc773ec34561bd2c409796f74f4157"
+    },
+    {
+      "id": "funds",
+      "caminhoLocal": "contracts/expansion/snapshots/funds-1.1.0.yml",
+      "sha256": "176937cbd391a75bbbb9253f853fb6bb04987e811daf634a0b75559f681593e0"
+    },
+    {
+      "id": "exchanges",
+      "caminhoLocal": "contracts/expansion/snapshots/exchanges-1.1.0.yaml",
+      "sha256": "48ba13e1d62d90a9b1590155c42bea284788e2279a1d897df1b66489e0c99a01"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ Lista as operações do catálogo carregado.
   "commit": "7bdb9c1a6c4c265d7aabcdbc662f94c61718135e",
   "operacoes": [
     {
-      "contrato": "accounts-2.5.1",
+      "contrato": "accounts",
       "api": "accounts",
       "versao": "v2",
       "metodo": "GET",

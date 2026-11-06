@@ -1,0 +1,758 @@
+{
+  "fonte": "F02, captura de 30/10/2026 (docs/01-requisitos/tabela-de-endpoints.md)",
+  "timeoutSegundos": 15,
+  "tps": 300,
+  "endpoints": [
+    {
+      "contrato": "consents",
+      "secao": "Consentimento",
+      "metodo": "POST",
+      "caminho": "/consents",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": null,
+      "limiteMensal": null
+    },
+    {
+      "contrato": "consents",
+      "secao": "Consentimento",
+      "metodo": "GET",
+      "caminho": "/consents/{consentId}",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": null,
+      "limiteMensal": null
+    },
+    {
+      "contrato": "consents",
+      "secao": "Consentimento",
+      "metodo": "DELETE",
+      "caminho": "/consents/{consentId}",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": null,
+      "limiteMensal": null
+    },
+    {
+      "contrato": "consents",
+      "secao": "Consentimento",
+      "metodo": "POST",
+      "caminho": "/consents/{consentId}/extends",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": null,
+      "limiteMensal": null
+    },
+    {
+      "contrato": "consents",
+      "secao": "Consentimento",
+      "metodo": "GET",
+      "caminho": "/consents/{consentId}/extensions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": null,
+      "limiteMensal": null
+    },
+    {
+      "contrato": "resources",
+      "secao": "Recursos",
+      "metodo": "GET",
+      "caminho": "/resources",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": null,
+      "limiteMensal": null
+    },
+    {
+      "contrato": "customers",
+      "secao": "Dados Cadastrais",
+      "metodo": "GET",
+      "caminho": "/personal/identifications",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "customers",
+      "secao": "Dados Cadastrais",
+      "metodo": "GET",
+      "caminho": "/personal/qualifications",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "customers",
+      "secao": "Dados Cadastrais",
+      "metodo": "GET",
+      "caminho": "/personal/financial-relations",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "customers",
+      "secao": "Dados Cadastrais",
+      "metodo": "GET",
+      "caminho": "/business/identifications",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "customers",
+      "secao": "Dados Cadastrais",
+      "metodo": "GET",
+      "caminho": "/business/qualifications",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "customers",
+      "secao": "Dados Cadastrais",
+      "metodo": "GET",
+      "caminho": "/business/financial-relations",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts/{accountId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts/{accountId}/balances",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": "faixa-qca",
+      "limiteMensal": 420
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts/{accountId}/reserved-balances",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": "faixa-qca",
+      "limiteMensal": 420
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts/{accountId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts/{accountId}/transactions-current",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": "faixa-qca",
+      "limiteMensal": 240
+    },
+    {
+      "contrato": "accounts",
+      "secao": "Contas",
+      "metodo": "GET",
+      "caminho": "/accounts/{accountId}/overdraft-limits",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": "faixa-qca",
+      "limiteMensal": 420
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts/{creditCardAccountId}",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts/{creditCardAccountId}/bills",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts/{creditCardAccountId}/bills/{billId}/transactions",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts/{creditCardAccountId}/limits",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": "faixa-qca",
+      "limiteMensal": 240
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts/{creditCardAccountId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "credit-cards-accounts",
+      "secao": "Cartão de Crédito",
+      "metodo": "GET",
+      "caminho": "/accounts/{creditCardAccountId}/transactions-current",
+      "frequencia": "alta",
+      "slaMs": 1500,
+      "tpm": "faixa-qca",
+      "limiteMensal": 240
+    },
+    {
+      "contrato": "loans",
+      "secao": "Empréstimo",
+      "metodo": "GET",
+      "caminho": "/contracts",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "loans",
+      "secao": "Empréstimo",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "loans",
+      "secao": "Empréstimo",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/warranties",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "loans",
+      "secao": "Empréstimo",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/scheduled-instalments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "loans",
+      "secao": "Empréstimo",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/payments",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "financings",
+      "secao": "Financiamento",
+      "metodo": "GET",
+      "caminho": "/contracts",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "financings",
+      "secao": "Financiamento",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "financings",
+      "secao": "Financiamento",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/warranties",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "financings",
+      "secao": "Financiamento",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/scheduled-instalments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "financings",
+      "secao": "Financiamento",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/payments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "unarranged-accounts-overdraft",
+      "secao": "Adiantamento a Depositantes",
+      "metodo": "GET",
+      "caminho": "/contracts",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "unarranged-accounts-overdraft",
+      "secao": "Adiantamento a Depositantes",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "unarranged-accounts-overdraft",
+      "secao": "Adiantamento a Depositantes",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/warranties",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "unarranged-accounts-overdraft",
+      "secao": "Adiantamento a Depositantes",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/scheduled-instalments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "unarranged-accounts-overdraft",
+      "secao": "Adiantamento a Depositantes",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/payments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "invoice-financings",
+      "secao": "Direitos Creditórios Descontados",
+      "metodo": "GET",
+      "caminho": "/contracts",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "invoice-financings",
+      "secao": "Direitos Creditórios Descontados",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "invoice-financings",
+      "secao": "Direitos Creditórios Descontados",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/warranties",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "invoice-financings",
+      "secao": "Direitos Creditórios Descontados",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/scheduled-instalments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "invoice-financings",
+      "secao": "Direitos Creditórios Descontados",
+      "metodo": "GET",
+      "caminho": "/contracts/{contractId}/payments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "bank-fixed-incomes",
+      "secao": "Renda Fixa Bancária",
+      "metodo": "GET",
+      "caminho": "/investments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "bank-fixed-incomes",
+      "secao": "Renda Fixa Bancária",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "bank-fixed-incomes",
+      "secao": "Renda Fixa Bancária",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/balances",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "bank-fixed-incomes",
+      "secao": "Renda Fixa Bancária",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "bank-fixed-incomes",
+      "secao": "Renda Fixa Bancária",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions-current",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "credit-fixed-incomes",
+      "secao": "Renda Fixa Crédito",
+      "metodo": "GET",
+      "caminho": "/investments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "credit-fixed-incomes",
+      "secao": "Renda Fixa Crédito",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "credit-fixed-incomes",
+      "secao": "Renda Fixa Crédito",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/balances",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "credit-fixed-incomes",
+      "secao": "Renda Fixa Crédito",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "credit-fixed-incomes",
+      "secao": "Renda Fixa Crédito",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions-current",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "variable-incomes",
+      "secao": "Renda Variável",
+      "metodo": "GET",
+      "caminho": "/investments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "variable-incomes",
+      "secao": "Renda Variável",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "variable-incomes",
+      "secao": "Renda Variável",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/balances",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "variable-incomes",
+      "secao": "Renda Variável",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "variable-incomes",
+      "secao": "Renda Variável",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions-current",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "variable-incomes",
+      "secao": "Renda Variável",
+      "metodo": "GET",
+      "caminho": "/broker-notes/{brokerNoteId}",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "treasure-titles",
+      "secao": "Tesouro Direto",
+      "metodo": "GET",
+      "caminho": "/investments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "treasure-titles",
+      "secao": "Tesouro Direto",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "treasure-titles",
+      "secao": "Tesouro Direto",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/balances",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "treasure-titles",
+      "secao": "Tesouro Direto",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "treasure-titles",
+      "secao": "Tesouro Direto",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions-current",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "funds",
+      "secao": "Fundos",
+      "metodo": "GET",
+      "caminho": "/investments",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "funds",
+      "secao": "Fundos",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "funds",
+      "secao": "Fundos",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/balances",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "funds",
+      "secao": "Fundos",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "funds",
+      "secao": "Fundos",
+      "metodo": "GET",
+      "caminho": "/investments/{investmentId}/transactions-current",
+      "frequencia": "media-alta",
+      "slaMs": 1500,
+      "tpm": 2000,
+      "limiteMensal": 120
+    },
+    {
+      "contrato": "exchanges",
+      "secao": "Câmbio",
+      "metodo": "GET",
+      "caminho": "/operations",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    },
+    {
+      "contrato": "exchanges",
+      "secao": "Câmbio",
+      "metodo": "GET",
+      "caminho": "/operations/{operationId}",
+      "frequencia": "baixa",
+      "slaMs": 4000,
+      "tpm": 1000,
+      "limiteMensal": 8
+    },
+    {
+      "contrato": "exchanges",
+      "secao": "Câmbio",
+      "metodo": "GET",
+      "caminho": "/operations/{operationId}/events",
+      "frequencia": "media",
+      "slaMs": 2000,
+      "tpm": 1500,
+      "limiteMensal": 30
+    }
+  ],
+  "excluidas": []
+}

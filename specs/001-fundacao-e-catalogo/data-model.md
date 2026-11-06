@@ -20,7 +20,7 @@ Lida de `specs.lock.json` ([schema](contracts/specs-lock.schema.json)).
 
 | Campo | Tipo | Regra |
 |---|---|---|
-| `id` | texto | igual ao `id` do `catalog.json` (ex.: `accounts-2.5.1`) |
+| `id` | texto | igual ao `id` do `catalog.json` (ex.: `accounts`; a versão fica em `caminhoLocal`) |
 | `caminhoLocal` | texto | `localPath` do catálogo |
 | `sha256` | texto | 64 hexadecimais minúsculos |
 

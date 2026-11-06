@@ -1,6 +1,8 @@
 # language: pt
 # Casos de uso: UC18, UC19, UC20 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 006: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-006
 Funcionalidade: Aplicar os limites oficiais
   Como receptora
   Quero que os limites funcionem como no Open Finance

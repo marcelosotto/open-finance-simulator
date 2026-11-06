@@ -29,7 +29,7 @@
         "additionalProperties": false,
         "required": ["id", "caminhoLocal", "sha256"],
         "properties": {
-          "id": { "type": "string", "examples": ["accounts-2.5.1"] },
+          "id": { "type": "string", "examples": ["accounts"] },
           "caminhoLocal": {
             "type": "string",
             "examples": ["contracts/expansion/snapshots/accounts-2.5.1.yaml"]

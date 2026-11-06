@@ -1,6 +1,8 @@
 # language: pt
 # Caso de uso: UC16 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 005: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-005
 Funcionalidade: Consultar dados cadastrais e transacionais
   Como receptora
   Quero respostas iguais às das instituições

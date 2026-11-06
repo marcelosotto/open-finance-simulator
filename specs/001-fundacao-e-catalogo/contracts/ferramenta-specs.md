@@ -19,10 +19,10 @@ operação.
 ## Specs: 7bdb9c1 → 1a2b3c4
 
 ### Novas (1)
-- GET /open-banking/accounts/v2/accounts/{accountId}/statements (accounts-2.6.0)
+- GET /open-banking/accounts/v2/accounts/{accountId}/statements (accounts 2.6.0)
 
 ### Alteradas (1)
-- GET /open-banking/consents/v3/consents/{consentId}: schema de resposta mudou
+- GET /open-banking/consents/v3/consents/{consentId}: schema da resposta 200 mudou
 
 ### Removidas (0)
 ```

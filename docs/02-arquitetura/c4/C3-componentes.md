@@ -18,7 +18,7 @@ flowchart LR
     p7["Regras de cenário<br/><small>latência, erro, timeout</small>"]
     p8["Responder<br/><small>dados e paginação</small>"]
     p9["Defeitos e marca"]
-    p10["Contar cota e registrar"]
+    p10["Contar cota<br/><small>só em 2XX</small>"]
     p1-->p2-->p3-->p4-->p5-->p6-->p7-->p8-->p9-->p10
   end
   req --> p1
@@ -30,6 +30,7 @@ flowchart LR
   ger["Gerador de dados"]
   lim["Contadores"]
   cen["Cenários"]
+  mar["Marcação"]
 
   p1-.->inst
   p2-.->cons
@@ -41,6 +42,8 @@ flowchart LR
   p8-.->ger
   p8-.->rec
   p9-.->cen
+  p9-.->mar
+  p10-.->lim
 ```
 
 | Módulo | Responsabilidade |
@@ -55,6 +58,7 @@ flowchart LR
 | Cenários | Regras, defeitos e anomalias |
 | Marcação | Ambiente e natureza |
 | Segurança | Modo simples |
-| Registros | Chamadas e investigação |
 
-Cada etapa é uma porta testável sozinha. A ordem segue [RN39](../../01-requisitos/regras-de-negocio.md#rn39).
+Cada etapa é uma porta testável sozinha. A ordem segue [RN39](../../01-requisitos/regras-de-negocio.md#rn39). A cota é contada depois da resposta, só em 2XX ([ADR-008](../../05-adr/ADR-008-pipeline-de-avaliacao.md)).
+
+Não há módulo de registro de chamadas: o simulador só responde, e quem registra e investiga é a aplicação que consome ([RN18](../../01-requisitos/regras-de-negocio.md#rn18)). A observabilidade cobre só a saúde do simulador ([RNF09](../../01-requisitos/requisitos.md#rnf09)).

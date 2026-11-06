@@ -22,7 +22,7 @@
         "additionalProperties": false,
         "required": ["contrato", "secao", "metodo", "caminho", "frequencia", "slaMs", "tpm", "limiteMensal"],
         "properties": {
-          "contrato": { "type": "string", "examples": ["accounts-2.5.1"] },
+          "contrato": { "type": "string", "examples": ["accounts"] },
           "secao": { "type": "string", "examples": ["Contas"] },
           "metodo": { "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
           "caminho": { "type": "string", "examples": ["/accounts/{accountId}/balances"] },
@@ -41,6 +41,21 @@
               { "type": "null", "description": "Sem limite operacional" }
             ]
           }
+        }
+      }
+    },
+    "excluidas": {
+      "type": "array",
+      "description": "Operações registradas em 'Operações fora da tabela' de docs/01-requisitos/tabela-de-endpoints.md (FR-015). Não são publicadas.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contrato", "metodo", "caminho", "motivo"],
+        "properties": {
+          "contrato": { "type": "string" },
+          "metodo": { "type": "string" },
+          "caminho": { "type": "string" },
+          "motivo": { "type": "string" }
         }
       }
     }

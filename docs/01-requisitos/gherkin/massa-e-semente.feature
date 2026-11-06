@@ -1,6 +1,8 @@
 # language: pt
 # Casos de uso: UC05, UC06, UC07, UC08, UC27 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 003: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-003
 Funcionalidade: Gerar massa de dados
   Como operador
   Quero massa persistida e virtual

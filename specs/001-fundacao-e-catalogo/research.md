@@ -41,25 +41,25 @@ diff do PR.
 
 ## R02 — Quais contratos entram no catálogo
 
-**Decisão:** entram os 15 contratos que cobrem a [tabela oficial](../../docs/01-requisitos/tabela-de-endpoints.md):
+**Decisão:** entram os 15 contratos (75 operações) que cobrem a [tabela oficial](../../docs/01-requisitos/tabela-de-endpoints.md):
 
 | Contrato | Seção da tabela |
 |---|---|
-| `consents-3.3.1` | Consentimento |
-| `resources-3.1.0` | Recursos |
-| `customers-2.3.0` | Dados Cadastrais |
-| `accounts-2.5.1` | Contas |
-| `credit-cards-accounts-2.4.0` | Cartão de Crédito |
-| `loans-2.6.0` | Empréstimo |
-| `financings-2.4.0` | Financiamento |
-| `unarranged-accounts-overdraft-2.5.0` | Adiantamento a Depositantes |
-| `invoice-financings-2.4.0` | Direitos Creditórios Descontados |
-| `bank-fixed-incomes-1.1.0` | Renda Fixa Bancária |
-| `credit-fixed-incomes-1.1.0` | Renda Fixa Crédito |
-| `variable-incomes-1.3.0` | Renda Variável |
-| `treasure-titles-1.1.0` | Tesouro Direto |
-| `funds-1.1.0` | Fundos |
-| `exchanges-1.1.0` | Câmbio |
+| `consents` (3.3.1) | Consentimento |
+| `resources` (3.1.0) | Recursos |
+| `customers` (2.3.0) | Dados Cadastrais |
+| `accounts` (2.5.1) | Contas |
+| `credit-cards-accounts` (2.4.0) | Cartão de Crédito |
+| `loans` (2.6.0) | Empréstimo |
+| `financings` (2.4.0) | Financiamento |
+| `unarranged-accounts-overdraft` (2.5.0) | Adiantamento a Depositantes |
+| `invoice-financings` (2.4.0) | Direitos Creditórios Descontados |
+| `bank-fixed-incomes` (1.1.0) | Renda Fixa Bancária |
+| `credit-fixed-incomes` (1.1.0) | Renda Fixa Crédito |
+| `variable-incomes` (1.3.0) | Renda Variável |
+| `treasure-titles` (1.1.0) | Tesouro Direto |
+| `funds` (1.1.0) | Fundos |
+| `exchanges` (1.1.0) | Câmbio |
 
 Ficam fora: pagamentos, Pix automático, enrollments, portabilidade, dados abertos, seguros,
 previdência, capitalização, credenciamento, `investments-1.1.0`, `admin`, `common`, `channels`
@@ -203,6 +203,11 @@ porta 8081 só expõe leitura do catálogo e saúde, e não é publicada fora da
 **Por quê:** os portões da constituição e o fluxo do [UC24](../../docs/01-requisitos/casos-de-uso/README.md#uc24).
 Uma ferramenta .NET em `tools/` evita Python e scripts soltos no CI.
 
+**Implementação:** os relatórios trazem caminhos relativos a raízes diferentes; a ferramenta
+combina cada `filename` com o `<source>` do próprio relatório. O formato Cobertura não diz qual
+lado de cada ramo foi coberto, então a soma entre relatórios não junta ramos complementares. Na
+prática, os **testes de unidade cobrem sozinhos 100% do domínio**.
+
 **Alternativas consideradas:** limite do coverlet.msbuild. Ele não separa domínio do total na
 mesma execução sem rodar duas vezes.
 
@@ -210,8 +215,16 @@ mesma execução sem rodar duas vezes.
 
 **Decisão:**
 - **xUnit v3** e **Reqnroll** com `Reqnroll.xunit.v3` ([ADR-009](../../docs/05-adr/ADR-009-gherkin-reqnroll.md)).
-- O projeto de aceitação liga por link o `docs/01-requisitos/gherkin/marcacao.feature`. Cada
-  spec seguinte liga os seus. O cenário `@tela` é filtrado e fica para a spec 010.
+- O projeto de aceitação liga por link **todos** os `.feature` de `docs/01-requisitos/gherkin/`,
+  como manda a ADR-009. Cada arquivo de spec futura leva `@spec-NNN` (o número da
+  [sequência de specs](../../docs/07-gerenciamento/sequencia-de-specs.md)), e um gancho marca esses
+  cenários como ignorados, com o motivo "fica para a spec NNN". O `@tela` segue a mesma regra,
+  "fica para a spec 010". Não há filtro no CI.
+- Proteção contra etiqueta esquecida: um teste falha se algum `.feature` tiver `@spec-NNN` de uma
+  spec entregue (todas as tarefas marcadas em `specs/NNN-*/tasks.md`). Ao entregar uma spec, a
+  etiqueta sai dos `.feature` dela.
+- A fábrica do host de teste e o `ValidadorDeContrato` ficam em `tests/ComumHost/`, ligados
+  por link aos projetos de integração e de aceitação.
 - Testes de integração usam `WebApplicationFactory`.
 - Os cenários que consultam transação usam um **manipulador de teste** registrado só no host de
   teste para a operação de transações de contas. Ele monta dado com os serviços reais de

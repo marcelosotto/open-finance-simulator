@@ -2,7 +2,7 @@
 
 Simula instituições financeiras do Open Finance Brasil para que os times testem situações reais sem depender de um banco de verdade: consentimentos, recursos, dados cadastrais e transacionais, limites, lentidão, timeout, instabilidade e dados ruins.
 
-> **Situação:** documentação em rascunho, para discussão. Ainda não há código. Depois de aprovados os casos de uso, as specs do Spec Kit geram o projeto.
+> **Situação:** código iniciado com a spec [001 — Fundação e catálogo](specs/001-fundacao-e-catalogo/spec.md): catálogo das APIs a partir das specs oficiais, rotas geradas (respondem 501 até cada spec entregar o comportamento), tabela oficial de endpoints e marcação de ambiente.
 
 O projeto nasce da POC `src/OpenFinance.FakeProxy` do repositório [OpenToken](https://github.com/marcelosotto/OpenToken). A POC provou a ideia; este repositório especifica a versão para desenvolvimento e homologação.
 
@@ -11,6 +11,29 @@ O projeto nasce da POC `src/OpenFinance.FakeProxy` do repositório [OpenToken](h
 - Back-end: .NET 10 ([ADR-001](docs/05-adr/ADR-001-backend-dotnet-10.md))
 - Dados: MongoDB para o que tem estado e Redis para os contadores, decididos ([ADR-003](docs/05-adr/ADR-003-mongodb-e-redis.md))
 - Specs oficiais: repositório [open-finance-specs](https://github.com/marcelosotto/open-finance-specs), fixado por commit ([ADR-002](docs/05-adr/ADR-002-specs-fixadas-por-commit.md))
+
+## Como rodar
+
+Pré-requisitos: SDK do .NET 10 e Docker. As specs vêm do repositório público `open-finance-specs`, no commit de `specs.lock.json`.
+
+```bash
+# Ambiente completo (APIs Open Finance em :8080, administração em 127.0.0.1:8081)
+docker compose up --build
+
+# Sem Docker: baixar e conferir as specs, testar e subir
+dotnet run --project tools/Simulador.Ferramentas -- specs baixar
+dotnet run --project tools/Simulador.Ferramentas -- specs verificar
+dotnet test Simulador.slnx
+dotnet run --project src/Simulador.Host -- --Simulador:PastaDasSpecs .specs/<commit>
+```
+
+| Configuração | Para quê |
+|---|---|
+| `Simulador__MarcaDoAmbiente` | Marca concatenada nos dados (`hml`, `dev`, `stage`…). Vazia em produção ([RN60](docs/01-requisitos/regras-de-negocio.md#rn60)). |
+| `Simulador__PastaDasSpecs` | Pasta com as specs baixadas. Na imagem, `/app/specs`. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Coletor OpenTelemetry, só para a saúde do simulador. |
+
+Comandos da ferramenta: `specs baixar`, `specs verificar`, `specs diferencas --base <lock> --novo <lock>` e `cobertura conferir`. Detalhes em [ferramenta-specs.md](specs/001-fundacao-e-catalogo/contracts/ferramenta-specs.md).
 
 ## Fluxo de trabalho
 1. Discutir e aprovar a documentação em `docs/`, caso de uso por caso de uso.
@@ -31,6 +54,11 @@ O projeto nasce da POC `src/OpenFinance.FakeProxy` do repositório [OpenToken](h
 
 ## Estrutura
 ```
+src/                  Host e módulos (Catálogo, Marcação), monólito modular (ADR-007)
+tools/                Ferramenta de linha de comando: specs e cobertura
+tests/                Unidade, integração e aceitação (Reqnroll com os .feature de docs/)
+config/               Tabela oficial de endpoints em JSON
+specs/                Specs do Spec Kit (spec, plano, tarefas)
 docs/
   00-visao-geral/     Termo de abertura, premissas, personas, referências
   01-requisitos/      Regras, requisitos, casos de uso, Gherkin, glossário, confronto com a POC

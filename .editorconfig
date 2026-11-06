@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{json,yml,yaml,props,csproj,slnx,xml,md,feature}]
+indent_size = 2
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_prefer_braces = true:warning
+dotnet_sort_system_directives_first = true
+dotnet_style_readonly_field = true:warning
+csharp_style_expression_bodied_methods = when_on_single_line:silent
+
+# Testes usam nomes longos e descritivos.
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA2007.severity = none

@@ -1,6 +1,8 @@
 # language: pt
 # Caso de uso: UC17 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 005: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-005
 Funcionalidade: Paginar como o Open Finance
   Como receptora
   Quero a paginação oficial
