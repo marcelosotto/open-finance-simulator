@@ -113,7 +113,7 @@ A [tabela de endpoints](tabela-de-endpoints.md) traz todos os valores oficiais.
 | Instituição chamada | Cabeçalho `x-of-institution` | Endereço da instituição | ❌ Exige mudar o cliente | [RN07](regras-de-negocio.md#rn07) |
 | Consentimento e cliente na chamada | Cabeçalhos `x-of-consent-id` e `x-of-client-id` | Vêm do token | ❌ | [RN122](regras-de-negocio.md#rn122) |
 | Segurança | Nenhuma: sem token, mTLS ou DCR | Modos simples e FAPI | ➖ | [RN120](regras-de-negocio.md#rn120) |
-| APIs de administração | Abertas, sem usuário | Separadas, com usuário e histórico | ➖ | [RN71](regras-de-negocio.md#rn71) |
+| APIs de administração | Abertas, sem usuário | Separadas, sem login, com histórico | ➖ | [RN71](regras-de-negocio.md#rn71) |
 | Marcação | Só o prefixo `v` em IDs virtuais | Ambiente e natureza em três lugares | ⚠️ | [RN60](regras-de-negocio.md#rn60) |
 | Sorteio | `Random.Shared`, não repete | Semente fixa quando o cenário pedir | ⚠️ | [RN54](regras-de-negocio.md#rn54) |
 

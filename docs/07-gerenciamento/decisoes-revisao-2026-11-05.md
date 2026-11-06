@@ -34,6 +34,10 @@ O projeto usa só **simulado** para o que é fictício: instituição, cliente e
 
 Revisão dos casos de uso. Blocos de configuração, massa de dados e consentimento aprovados.
 
+## Front-end (2026-11-06)
+
+Back-office em React com Webpack e Clean Architecture, sem login ([ADR-010](../05-adr/ADR-010-front-end-react.md) e [guia](../08-front-end/README.md)). O exemplo de padrão é o cadastro de bancos, e o commitlint vale só para `front/`.
+
 ## Mundo virtual
 
 Existe um mundo virtual por ambiente, e um pedido se divide entre os bancos pela distribuição. O coletor pede o token normalmente, sem token na lista.

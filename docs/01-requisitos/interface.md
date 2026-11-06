@@ -1,6 +1,6 @@
 # Comportamento de tela
 
-Detalhes de interface que **não são regra de negócio**. Ao mudar um botão, atualize só este documento.
+Detalhes de interface que **não são regra de negócio**. Ao mudar um botão, atualize só este documento. Como construir as telas está no [guia de front-end](../08-front-end/README.md).
 
 ## Back-office
 | ID | Tela | Comportamento | Regra |
