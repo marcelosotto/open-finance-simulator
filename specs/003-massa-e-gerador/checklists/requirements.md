@@ -13,8 +13,8 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
-- [ ] Requirements are testable and unambiguous
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
 - [x] All acceptance scenarios are defined
@@ -24,12 +24,12 @@
 
 ## Feature Readiness
 
-- [ ] All functional requirements have clear acceptance criteria
+- [x] All functional requirements have clear acceptance criteria
 - [x] User scenarios cover primary flows
 - [x] Feature meets measurable outcomes defined in Success Criteria
 - [x] No implementation details leak into specification
 
 ## Notes
 
-- Os itens abertos dependem das perguntas Q1 a Q8 da seção Clarifications de `spec.md`, marcadas com `(Q#)` nos requisitos.
+- As perguntas Q1 a Q8 foram respondidas em 2026-11-09 e estão na seção Clarifications de `spec.md`. As decisões ainda precisam entrar em `docs/` antes do plano.
 - "API de administração" aparece em FR-018 e FR-025 porque é o termo de UC08 e da constituição (princípio VIII), não uma escolha de tecnologia.
