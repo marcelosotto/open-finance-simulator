@@ -58,6 +58,7 @@ public sealed record Recurso(
     string Marca,
     string Natureza,
     string? LoteId = null,
+    IReadOnlyList<EstadoAnterior>? EstadosAnteriores = null,
     int Versao = 0);
 
 /// <summary>Consentimento gerado, sempre <c>AUTHORISED</c> e sem receptora fixa (RN80).</summary>
@@ -136,6 +137,27 @@ public sealed record Lote(
 /// <summary>Definição do mundo virtual; os itens são calculados (RN52).</summary>
 public sealed record MundoVirtual(int Total, long Semente, Distribuicao Distribuicao);
 
+/// <summary>Valor que um ajuste teve no intervalo, para a chave de paginação (RN37).</summary>
+public sealed record ValorAnterior(decimal Valor, DateTimeOffset De, DateTimeOffset Ate);
+
+/// <summary>Estado que um recurso teve até o instante (RN37).</summary>
+public sealed record EstadoAnterior(string Estado, DateTimeOffset Ate);
+
+/// <summary>O que valia em um instante passado (RN37).</summary>
+public static class NoInstante
+{
+    public static decimal? Valor(Ajuste ajuste, DateTimeOffset instante)
+    {
+        ArgumentNullException.ThrowIfNull(ajuste);
+        return ajuste.AtualizadoEm is null || ajuste.AtualizadoEm <= instante
+            ? ajuste.Valor
+            : ajuste.ValoresAnteriores?.FirstOrDefault(v => v.De <= instante && instante < v.Ate)?.Valor;
+    }
+
+    public static string Estado(string atual, IReadOnlyList<EstadoAnterior>? anteriores, DateTimeOffset instante) =>
+        anteriores?.FirstOrDefault(e => instante < e.Ate)?.Estado ?? atual;
+}
+
 /// <summary>Alteração persistida sobre um dado calculado (RN53).</summary>
 public sealed record Ajuste(
     string Alvo,
@@ -151,6 +173,8 @@ public sealed record Ajuste(
     DateTimeOffset? ExpiraEm = null,
     DateTimeOffset? AtualizadoEm = null,
     IReadOnlyList<Extensao>? Extensoes = null,
+    IReadOnlyList<ValorAnterior>? ValoresAnteriores = null,
+    IReadOnlyList<EstadoAnterior>? EstadosAnteriores = null,
     int Versao = 0);
 
 /// <summary>Quantidades de massa.</summary>

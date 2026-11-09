@@ -15,6 +15,7 @@ internal sealed record Preenchimento(IReadOnlyDictionary<string, string> Valores
 internal static class GeradorPorSchema
 {
     private const int MaximoDeProfundidade = 12;
+    private const int MaximoDoId = 100;
     private static readonly ConcurrentDictionary<string, Regex> Padroes = new(StringComparer.Ordinal);
 
     public static JsonNode? Gerar(JsonNode? schema, Preenchimento item) => No(schema as JsonObject, string.Empty, null, item);
@@ -33,7 +34,7 @@ internal static class GeradorPorSchema
         {
             "object" => Objeto(schema, nome, item),
             "array" => Lista(schema, nome, pai, item),
-            "integer" or "number" => Numero(schema),
+            "integer" or "number" => Numero(schema, nome, item),
             "boolean" => JsonValue.Create(schema["example"]?.GetValue<bool>() ?? false),
             _ => JsonValue.Create(Texto(schema, nome, pai, item)),
         };
@@ -77,9 +78,9 @@ internal static class GeradorPorSchema
         return saida;
     }
 
-    private static JsonValue Numero(JsonObject schema)
+    private static JsonValue Numero(JsonObject schema, string nome, Preenchimento item)
     {
-        var texto = (schema["example"] ?? schema["minimum"])?.ToString() ?? "1";
+        var texto = item.Valores.GetValueOrDefault(nome) ?? (schema["example"] ?? schema["minimum"])?.ToString() ?? "1";
         var valor = decimal.Parse(texto, NumberStyles.Float, CultureInfo.InvariantCulture);
         return TipoDe(schema) == "integer" ? JsonValue.Create((long)valor) : JsonValue.Create(valor);
     }
@@ -127,8 +128,9 @@ internal static class GeradorPorSchema
 
         if (nome.EndsWith("Id", StringComparison.Ordinal))
         {
-            var id = $"{item.BaseDosIds}-{nome}";
-            yield return id.Length > 100 ? id[^100..].TrimStart('-') : id;
+            var espaco = Math.Max(MaximoDoId - nome.Length - 1, 0);
+            var prefixo = item.BaseDosIds.Length > espaco ? item.BaseDosIds[..espaco] : item.BaseDosIds;
+            yield return $"{prefixo}-{nome}";
         }
     }
 

@@ -272,7 +272,12 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
             return recusa;
         }
 
-        var (pagina, tamanho, totalPaginas, foraDaFaixa) = Paginar(contexto, consentimento!.Extensoes.Count);
+        var (pagina, tamanho, totalPaginas, foraDaFaixa, invalida) = Paginar(contexto, consentimento!.Extensoes.Count);
+        if (invalida)
+        {
+            return Erro422("PARAMETRO_INVALIDO");
+        }
+
         if (foraDaFaixa)
         {
             return Erro422("PAGE_NOT_FOUND");
@@ -323,7 +328,12 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
             }
         }
 
-        var (pagina, tamanho, totalPaginas, foraDaFaixa) = Paginar(contexto, itens.Count);
+        var (pagina, tamanho, totalPaginas, foraDaFaixa, invalida) = Paginar(contexto, itens.Count);
+        if (invalida)
+        {
+            return Erro422("PARAMETRO_INVALIDO");
+        }
+
         if (foraDaFaixa)
         {
             return Erro422("PAGE_NOT_FOUND");
@@ -354,14 +364,25 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
     }
 
     /// <summary>Página pedida e tamanho aplicado, de 25 a 1.000 (RN31, RN33).</summary>
-    private static (int Pagina, int Tamanho, int TotalPaginas, bool ForaDaFaixa) Paginar(HttpContext contexto, int total)
+    private static (int Pagina, int Tamanho, int TotalPaginas, bool ForaDaFaixa, bool Invalida) Paginar(HttpContext contexto, int total)
     {
         const int Padrao = 25;
         const int Maximo = 1000;
-        var pagina = int.TryParse(contexto.Request.Query["page"], NumberStyles.None, CultureInfo.InvariantCulture, out var pedida) && pedida >= 1 ? pedida : 1;
-        var tamanho = int.TryParse(contexto.Request.Query["page-size"], NumberStyles.None, CultureInfo.InvariantCulture, out var valor) ? Math.Clamp(valor, Padrao, Maximo) : Padrao;
+        var (paginaValida, pagina) = Inteiro(contexto.Request.Query["page"], 1);
+        var (tamanhoValido, valor) = Inteiro(contexto.Request.Query["page-size"], Padrao);
+        var tamanho = Math.Clamp(valor, Padrao, Maximo);
         var totalPaginas = total == 0 ? 0 : ((total - 1) / tamanho) + 1;
-        return (pagina, tamanho, totalPaginas, pagina > Math.Max(totalPaginas, 1));
+        return (pagina, tamanho, totalPaginas, pagina > Math.Max(totalPaginas, 1), !paginaValida || !tamanhoValido);
+    }
+
+    private static (bool Valido, int Numero) Inteiro(string? texto, int padrao)
+    {
+        if (string.IsNullOrEmpty(texto))
+        {
+            return (true, padrao);
+        }
+
+        return int.TryParse(texto, NumberStyles.None, CultureInfo.InvariantCulture, out var numero) && numero >= 1 ? (true, numero) : (false, padrao);
     }
 
     private static bool CorpoValido(DadosDoPedido? dados, out DateTimeOffset? data)

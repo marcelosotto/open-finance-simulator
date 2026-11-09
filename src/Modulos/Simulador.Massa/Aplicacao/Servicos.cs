@@ -586,7 +586,7 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         foreach (var recurso in item.Recursos)
         {
             var ajuste = await repositorio.ObterAjuste(AlvoDoRecurso(recurso.ResourceId), cancelamento).ConfigureAwait(false);
-            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado, Versao = ajuste.Versao } : recurso);
+            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado, Versao = ajuste.Versao, EstadosAnteriores = ajuste.EstadosAnteriores } : recurso);
         }
 
         return item with { Consentimentos = consentimentos, Recursos = recursos };
@@ -604,7 +604,8 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
 
     private async Task<IReadOnlyDictionary<string, decimal>> Ajustes(string resourceId, CancellationToken cancelamento, DateTimeOffset? ate = null) =>
         (await repositorio.ListarAjustesDoRecurso(resourceId, cancelamento).ConfigureAwait(false))
-            .Where(a => ate is null || a.AtualizadoEm is null || a.AtualizadoEm <= ate)
+            .Select(a => (a.Alvo, Valor: ate is { } instante ? NoInstante.Valor(a, instante) : a.Valor))
+            .Where(a => a.Valor is not null)
             .ToDictionary(a => a.Alvo, a => a.Valor!.Value, StringComparer.Ordinal);
 }
 
@@ -721,7 +722,12 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
         }
 
         var chave = CalculoDeTransacoes.Chave(recurso.ResourceId, dia, posicao);
-        return Resultados.Ok(new Ajuste(chave, pedido.Tipo, recurso.Natureza == Naturezas.Virtual, Valor: pedido.Valor, RecursoId: recurso.ResourceId, Banco: recurso.Banco, LoteId: recurso.LoteId, AtualizadoEm: relogio.GetUtcNow()));
+        var agora = relogio.GetUtcNow();
+        var anterior = await repositorio.ObterAjuste(chave, cancelamento).ConfigureAwait(false);
+        var historico = anterior is { Valor: { } valor, AtualizadoEm: { } desde }
+            ? [.. anterior.ValoresAnteriores ?? [], new ValorAnterior(valor, desde, agora)]
+            : anterior?.ValoresAnteriores;
+        return Resultados.Ok(new Ajuste(chave, pedido.Tipo, recurso.Natureza == Naturezas.Virtual, Valor: pedido.Valor, RecursoId: recurso.ResourceId, Banco: recurso.Banco, LoteId: recurso.LoteId, AtualizadoEm: agora, ValoresAnteriores: historico));
     }
 
     private async Task<Resultado<Ajuste>> DeConsentimento(PedidoDeAjuste pedido, CancellationToken cancelamento)
@@ -780,10 +786,13 @@ internal sealed class EscritaDeMassa(
                 cancelamento)
             : repositorio.SalvarConsentimentoSeVersao(consentimento with { Versao = consentimento.Versao + 1 }, consentimento.Versao, cancelamento);
 
-    public Task<bool> MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento) =>
-        recurso.Natureza == Naturezas.Virtual
-            ? repositorio.SalvarAjusteSeVersao(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco, Versao: recurso.Versao + 1), recurso.Versao, cancelamento)
-            : repositorio.SalvarRecursoSeVersao(recurso with { Estado = estado, Versao = recurso.Versao + 1 }, recurso.Versao, cancelamento);
+    public Task<bool> MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento)
+    {
+        IReadOnlyList<EstadoAnterior> anteriores = [.. recurso.EstadosAnteriores ?? [], new EstadoAnterior(recurso.Estado, relogio.GetUtcNow())];
+        return recurso.Natureza == Naturezas.Virtual
+            ? repositorio.SalvarAjusteSeVersao(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco, EstadosAnteriores: anteriores, Versao: recurso.Versao + 1), recurso.Versao, cancelamento)
+            : repositorio.SalvarRecursoSeVersao(recurso with { Estado = estado, EstadosAnteriores = anteriores, Versao = recurso.Versao + 1 }, recurso.Versao, cancelamento);
+    }
 
     public async Task<Recurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento)
     {

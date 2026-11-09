@@ -33,6 +33,18 @@ internal static class Familias
     public static Familia? De(string contrato) => Todas.GetValueOrDefault(contrato);
 }
 
+/// <summary>Filtros opcionais do contrato e o campo da resposta que cada um compara (RN42).</summary>
+internal static class FiltrosOficiais
+{
+    public static IReadOnlyDictionary<string, string> Campos { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["creditDebitIndicator"] = "creditDebitType",
+        ["accountType"] = "type",
+        ["transactionType"] = "transactionType",
+        ["payeeMCC"] = "payeeMCC",
+    };
+}
+
 /// <summary>O que uma operação entrega, deduzido do caminho oficial.</summary>
 internal enum TipoDeOperacao
 {
@@ -144,11 +156,11 @@ internal static class JanelaDeDatas
         return par.De < minimo || par.Ate > maximo ? Periodo.Falha(ErroDeData.Invalido) : par;
     }
 
-    /// <summary><c>/bills</c>: datas isoladas e, sem datas, 12 meses.</summary>
+    /// <summary><c>/bills</c>: datas isoladas; sem datas, 12 meses, inclusive a fatura fechada que ainda vai vencer.</summary>
     public static Periodo Faturas(string? de, string? ate, DateOnly hoje)
     {
         var inicio = hoje.AddMonths(-MesesDeHistorico);
-        if (!Data(de, inicio, out var primeira) || !Data(ate, hoje, out var ultima) || primeira > ultima)
+        if (!Data(de, inicio, out var primeira) || !Data(ate, hoje.AddMonths(1), out var ultima) || primeira > ultima)
         {
             return Periodo.Falha(ErroDeData.Invalido);
         }
@@ -238,6 +250,9 @@ internal static class IdsDerivados
         && DateOnly.TryParseExact(billId[(recursoId.Length + Fatura.Length)..], "yyyyMM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var mes)
             ? mes
             : null;
+
+    /// <summary>Base dos IDs de Dados Cadastrais, no padrão oficial de prefixo (RN62).</summary>
+    public static string BaseDoConsentimento(string consentId) => consentId.Replace("urn:", string.Empty, StringComparison.Ordinal).Replace(':', '-');
 
     public static string? RecursoDaNota(string notaId) => notaId.EndsWith(Nota, StringComparison.Ordinal) ? notaId[..^Nota.Length] : null;
 }
