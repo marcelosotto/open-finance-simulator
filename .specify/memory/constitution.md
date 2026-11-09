@@ -100,7 +100,8 @@
 - Todo plano MUST passar pelo Constitution Check.
 - **Portões de CI:** formatação, análise estática, testes, cobertura, conformidade com as specs
   e teste da tabela oficial de endpoints.
-- As alterações MUST ser mostradas a Marcelo, com aprovação dele, antes de cada commit.
+- Commits são livres na branch de cada spec. As alterações MUST ser mostradas a Marcelo, com
+  aprovação dele, antes de cada merge na `main`.
 
 ## Governance
 
@@ -111,4 +112,4 @@
 - Toda revisão de plano e de código MUST verificar a conformidade com esta constituição.
   Qualquer exceção MUST ser justificada no plano.
 
-**Version**: 2.0.0 | **Ratified**: 2026-11-05 | **Last Amended**: 2026-11-05
+**Version**: 2.1.0 | **Ratified**: 2026-11-05 | **Last Amended**: 2026-11-09
