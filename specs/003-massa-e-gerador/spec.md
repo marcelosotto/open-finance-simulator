@@ -14,7 +14,7 @@
 
 ### Session 2026-11-09
 
-Decisões aprovadas por Marcelo em 2026-11-09. As respostas de Q1, Q3 a Q8 e a parte de ajustes de Q2 ainda precisam entrar em `docs/` antes do plano (princípio I).
+Decisões aprovadas por Marcelo em 2026-11-09 e registradas em `docs/` (RN53, RN55, RN56, RN80, UC06, UC07, UC08, UC27, campos obrigatórios, modelos de domínio e de dados, e `massa-e-semente.feature`).
 
 - Q1: A quem pertence um consentimento gerado por lote ou pelo mundo virtual? → A: Nasce sem receptora fixa; a spec 004 faz a ligação pelo token.
 - Q2: Como ficam os cenários que dependem das specs 004 e 005, e quem cria ajustes nesta spec? → A: A 003 entrega uma API de administração para ajustes e confere o estado calculado. Os passos que chamam as APIs oficiais ficam pendentes e são ligados na 004 e na 005.

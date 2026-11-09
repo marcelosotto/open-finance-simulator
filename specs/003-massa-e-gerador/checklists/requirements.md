@@ -31,5 +31,5 @@
 
 ## Notes
 
-- As perguntas Q1 a Q8 foram respondidas em 2026-11-09 e estão na seção Clarifications de `spec.md`. As decisões ainda precisam entrar em `docs/` antes do plano.
+- As perguntas Q1 a Q8 foram respondidas em 2026-11-09 e estão na seção Clarifications de `spec.md`. As decisões já estão registradas em `docs/`.
 - "API de administração" aparece em FR-018 e FR-025 porque é o termo de UC08 e da constituição (princípio VIII), não uma escolha de tecnologia.

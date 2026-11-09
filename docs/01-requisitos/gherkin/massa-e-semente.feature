@@ -2,6 +2,8 @@
 # Casos de uso: UC05, UC06, UC07, UC08, UC27 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
 # Spec 003: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+# Na spec 003, os ajustes e o estado calculado são conferidos pela administração.
+# Os passos que chamam as APIs oficiais ficam pendentes até as specs 004 e 005.
 @spec-003
 Funcionalidade: Gerar massa de dados
   Como operador
