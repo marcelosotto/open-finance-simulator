@@ -431,6 +431,53 @@ public sealed class TodasAsFamiliasTests : IDisposable
         Assert.DoesNotContain("123.45", await segunda.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task Chave_de_recurso_virtual_atravessa_a_meia_noite()
+    {
+        _fabrica.Relogio.SetUtcNow(new DateTimeOffset(2026, 11, 5, 23, 50, 0, TimeSpan.Zero));
+        (_usuario, _senha, _) = await AtalhosDeConsentimento.CriarReceptora(_admin);
+        await _massa.Enviar<MundoVirtual>(HttpMethod.Put, "/mundo-virtual", new { total = 10, semente = 1, distribuicao = new { bancos = new Dictionary<string, decimal> { [Banco] = 100 }, perfis = new Dictionary<string, decimal> { ["cliente-comum"] = 100 } }, confirmar = true });
+        var item = (await _massa.Ler<IReadOnlyList<MassaGerada>>("/mundo-virtual/itens?inicio=0&quantidade=10")).First(i => i.Recursos.Any(r => r.Tipo == "ACCOUNT"));
+        var escopo = $"consent:{item.Consentimentos[0].ConsentId}";
+        var primeira = await Ler(Endereco(Operacao("accountsGetAccounts"), item), await Token(escopo));
+        var total = primeira.GetProperty("meta").GetProperty("totalRecords").GetInt32();
+        Assert.True(total > 0);
+        var comChave = new Uri(new Uri(primeira.GetProperty("links").GetProperty("self").GetString()!, UriKind.Absolute).PathAndQuery, UriKind.Relative);
+        Assert.Contains("pagination-key=", comChave.ToString(), StringComparison.Ordinal);
+        _fabrica.Relogio.Advance(TimeSpan.FromMinutes(20));
+
+        var depois = await Ler(comChave, await Token(escopo));
+
+        Assert.Equal(total, depois.GetProperty("meta").GetProperty("totalRecords").GetInt32());
+    }
+
+    [Fact]
+    public async Task Hora_da_transacao_nao_muda_entre_consultas_do_dia()
+    {
+        var (massa, _) = await Preparar("PF");
+        var endereco = Endereco(Operacao("accountsGetAccountsAccountIdTransactions"), massa);
+        var token = await Token($"consent:{_consentId}");
+        var antes = await Ler(endereco, token);
+        _fabrica.Relogio.Advance(TimeSpan.FromHours(3));
+
+        var depois = await Ler(endereco, await Token($"consent:{_consentId}"));
+
+        Assert.Equal(antes.GetProperty("data").GetRawText(), depois.GetProperty("data").GetRawText());
+    }
+
+    [Fact]
+    public async Task Na_primeira_hora_do_dia_a_hora_nao_passa_do_instante()
+    {
+        _fabrica.Relogio.SetUtcNow(new DateTimeOffset(2026, 11, 6, 0, 10, 0, TimeSpan.Zero));
+        var (massa, token) = await Preparar("PF");
+        var agora = _fabrica.Relogio.GetUtcNow();
+
+        var dados = (await Ler(Endereco(Operacao("accountsGetAccountsAccountIdTransactions"), massa), token)).GetProperty("data");
+
+        Assert.NotEqual(0, dados.GetArrayLength());
+        Assert.All(dados.EnumerateArray(), t => Assert.True(t.GetProperty("transactionDateTime").GetDateTimeOffset() <= agora));
+    }
+
     public void Dispose()
     {
         _api.Dispose();

@@ -20,6 +20,18 @@ internal static class GeradorPorSchema
 
     public static JsonNode? Gerar(JsonNode? schema, Preenchimento item) => No(schema as JsonObject, string.Empty, null, item);
 
+    /// <summary>O valor de um campo do item, igual ao de <see cref="Gerar"/>, sem gerar os demais; nulo se o campo não sai.</summary>
+    public static string? Campo(JsonNode? schema, string campo, Preenchimento item)
+    {
+        if (schema?["properties"]?[campo] is not JsonObject filho)
+        {
+            return null;
+        }
+
+        var obrigatorio = schema["required"]?.AsArray().Any(n => n!.GetValue<string>() == campo) == true;
+        return obrigatorio || TemValor(filho, campo, string.Empty, item, 0) ? No(filho, campo, string.Empty, item)?.ToString() : null;
+    }
+
     private static string TipoDe(JsonObject schema) =>
         schema["type"]?.GetValue<string>() ?? (schema["properties"] is not null ? "object" : "string");
 
