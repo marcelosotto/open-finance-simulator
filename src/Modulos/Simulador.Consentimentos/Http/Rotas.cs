@@ -475,7 +475,7 @@ internal static class Rotas
     private const string CabecalhoDoAutor = "x-sim-autor";
     private const int TentativasDeEscrita = 5;
 
-    private static readonly string[] ProdutosValidos = ["contas", "cartoes", "emprestimos", "financiamentos", "adiantamentos", "direitos-creditorios", "investimentos", "cambio", "fundos", "renda-variavel"];
+    private static readonly string[] ProdutosValidos = ["contas", "cartoes", "emprestimos", "financiamentos", "adiantamentos", "direitos-creditorios", "investimentos", "cambio", "fundos", "renda-variavel", "renda-fixa-credito", "tesouro-direto"];
 
     public static void MapearToken(IEndpointRouteBuilder openFinance) =>
         openFinance.MapPost("/{banco}/token", Emitir);
@@ -603,23 +603,31 @@ internal static class Rotas
 
     private static async Task<IResult> MudarEstado(string resourceId, PedidoDeEstado pedido, HttpContext contexto, IAmbienteDosConsentimentos ambiente)
     {
-        if (await ambiente.Recurso(resourceId, contexto.RequestAborted).ConfigureAwait(false) is not { } recurso)
+        for (var tentativa = 0; tentativa < TentativasDeEscrita; tentativa++)
         {
-            return Results.NotFound();
+            if (await ambiente.Recurso(resourceId, contexto.RequestAborted).ConfigureAwait(false) is not { } recurso)
+            {
+                return Results.NotFound();
+            }
+
+            if (pedido.Estado is not { } estado || !EstadosDeRecurso.Existe(estado) || !EstadosDeRecurso.Permitida(recurso.Tipo, recurso.Estado, estado))
+            {
+                return ErroAdmin(StatusCodes.Status422UnprocessableEntity, "transição proibida");
+            }
+
+            if (recurso.Estado == estado)
+            {
+                return Saidas.Json(recurso);
+            }
+
+            if (await ambiente.MudarEstado(recurso, estado, contexto.RequestAborted).ConfigureAwait(false))
+            {
+                await ambiente.RegistrarHistorico(Autor(contexto), "recurso-alterado", "estado", recurso.Estado, estado, contexto.RequestAborted).ConfigureAwait(false);
+                return Saidas.Json(recurso with { Estado = estado, Versao = recurso.Versao + 1 });
+            }
         }
 
-        if (pedido.Estado is not { } estado || !EstadosDeRecurso.Existe(estado) || !EstadosDeRecurso.Permitida(recurso.Tipo, recurso.Estado, estado))
-        {
-            return ErroAdmin(StatusCodes.Status422UnprocessableEntity, "transição proibida");
-        }
-
-        if (recurso.Estado != estado)
-        {
-            await ambiente.MudarEstado(recurso, estado, contexto.RequestAborted).ConfigureAwait(false);
-            await ambiente.RegistrarHistorico(Autor(contexto), "recurso-alterado", "estado", recurso.Estado, estado, contexto.RequestAborted).ConfigureAwait(false);
-        }
-
-        return Saidas.Json(recurso with { Estado = estado });
+        return ErroAdmin(StatusCodes.Status409Conflict, "recurso em alteração");
     }
 
     /// <summary>Liga o recurso ao consentimento vigente, sem desfazer o que outra chamada gravou.</summary>

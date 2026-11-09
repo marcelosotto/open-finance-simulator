@@ -412,6 +412,7 @@ public class GeradorTests
         {
             Marca = marca,
             InicioDoHistorico = Hoje.AddDays(-30),
+            Tipo = "ACCOUNT",
         };
 
     private static readonly PerfilDeDados Fixo = new("f", 3, 3, 100m, 100m, 1_000m, ["PIX"], ["contas"]);
@@ -424,14 +425,57 @@ public class GeradorTests
 
         var todas = CalculoDeTransacoes.Transacoes(recurso, Fixo, Hoje.AddDays(-90), Hoje.AddDays(90), Hoje, vazio);
 
-        Assert.Equal(31 * 3, todas.Count);
+        Assert.Equal((31 + 30) * 3, todas.Count);
         Assert.Equal(Hoje.AddDays(-30), todas[0].Dia);
-        Assert.Equal(Hoje, todas[^1].Dia);
+        Assert.Equal(Hoje.AddDays(30), todas[^1].Dia);
         Assert.Equal(Texto(todas), Texto(CalculoDeTransacoes.Transacoes(recurso, Fixo, Hoje.AddDays(-90), Hoje.AddDays(90), Hoje, vazio)));
         Assert.Equal(6, CalculoDeTransacoes.Transacoes(recurso, Fixo, Hoje.AddDays(-5), Hoje.AddDays(-4), Hoje, vazio).Count);
         Assert.Contains(todas, t => t.Direcao == "CREDITO");
         Assert.Contains(todas, t => t.Direcao == "DEBITO");
         Assert.All(todas, t => Assert.StartsWith("[HML] PIX", t.Nome, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Estado_sai_do_relogio_e_futuro_nao_entra_no_saldo()
+    {
+        var perfil = Fixo with { TiposDeLancamento = ["BOLETO"] };
+        var recurso = RecursoDe();
+        var vazio = new Dictionary<string, decimal>(StringComparer.Ordinal);
+
+        var todas = CalculoDeTransacoes.Transacoes(recurso, perfil, Hoje.AddDays(-1), Hoje.AddDays(1), Hoje, vazio);
+
+        Assert.All(todas.Where(t => t.Dia < Hoje), t => Assert.Equal(EstadosDeTransacao.Efetivada, t.Estado));
+        Assert.All(todas.Where(t => t.Dia == Hoje), t =>
+        {
+            Assert.Equal(EstadosDeTransacao.Processando, t.Estado);
+            Assert.Contains("-p2", t.Id, StringComparison.Ordinal);
+        });
+        Assert.All(todas.Where(t => t.Dia > Hoje), t => Assert.Equal(EstadosDeTransacao.Futuro, t.Estado));
+
+        var ateOntem = CalculoDeTransacoes.Transacoes(recurso, perfil, recurso.InicioDoHistorico, Hoje.AddDays(-1), Hoje, vazio);
+        var esperado = recurso.SaldoInicial + ateOntem.Sum(t => t.Direcao == "CREDITO" ? t.Valor : -t.Valor);
+        Assert.Equal(esperado, CalculoDeTransacoes.Saldo(recurso, perfil, Hoje, vazio));
+    }
+
+    [Fact]
+    public void So_contas_tem_futuro_e_estado()
+    {
+        var perfil = Fixo with { TiposDeLancamento = ["BOLETO"] };
+        var recurso = RecursoDe() with { Tipo = "CREDIT_CARD_ACCOUNT" };
+        var vazio = new Dictionary<string, decimal>(StringComparer.Ordinal);
+
+        var todas = CalculoDeTransacoes.Transacoes(recurso, perfil, Hoje, Hoje.AddDays(30), Hoje, vazio);
+
+        Assert.All(todas, t => Assert.Equal(Hoje, t.Dia));
+        Assert.All(todas, t => Assert.Equal(EstadosDeTransacao.Efetivada, t.Estado));
+    }
+
+    [Fact]
+    public void Depois_de_30_dias_vem_vazio()
+    {
+        var vazio = new Dictionary<string, decimal>(StringComparer.Ordinal);
+
+        Assert.Empty(CalculoDeTransacoes.Transacoes(RecursoDe(), Fixo, Hoje.AddDays(31), Hoje.AddDays(60), Hoje, vazio));
     }
 
     [Fact]

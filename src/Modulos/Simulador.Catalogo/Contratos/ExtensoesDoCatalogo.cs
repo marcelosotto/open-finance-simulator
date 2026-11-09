@@ -38,7 +38,6 @@ public static class ExtensoesDoCatalogo
 
         administracao.MapGet("/admin/catalogo", (ICatalogo c, HttpContext contexto) =>
         {
-            var implementadas = Despachante.Implementadas(contexto.RequestServices);
             return Results.Ok(new
             {
                 commit = c.Commit,
@@ -58,7 +57,7 @@ public static class ExtensoesDoCatalogo
                         tpm = classe.TpmPorFaixaQca ? (object?)"faixa-qca" : classe.Tpm,
                         limiteMensal = classe.LimiteMensal,
                     } : null,
-                    implementada = implementadas.Contains(o.OperationId),
+                    implementada = Despachante.Implementada(contexto.RequestServices, o),
                 }),
             });
         });

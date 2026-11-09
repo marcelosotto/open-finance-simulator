@@ -71,7 +71,7 @@ public sealed record DadosDoConsentimento(
     int Versao = 0);
 
 /// <summary>Recurso como este módulo o enxerga.</summary>
-public sealed record DadosDoRecurso(string ResourceId, string Cliente, string Banco, string Tipo, string Estado, string Natureza);
+public sealed record DadosDoRecurso(string ResourceId, string Cliente, string Banco, string Tipo, string Estado, string Natureza, int Versao = 0);
 
 /// <summary>Cliente simulado com o que tem.</summary>
 public sealed record DadosDoCliente(
@@ -99,7 +99,8 @@ public interface IAmbienteDosConsentimentos
     /// <summary>Falso se outra chamada gravou desde a leitura (RN82).</summary>
     Task<bool> Atualizar(DadosDoConsentimento consentimento, CancellationToken cancelamento);
 
-    Task MudarEstado(DadosDoRecurso recurso, string estado, CancellationToken cancelamento);
+    /// <summary>Falso se outra chamada gravou desde a leitura (RN108).</summary>
+    Task<bool> MudarEstado(DadosDoRecurso recurso, string estado, CancellationToken cancelamento);
 
     Task<DadosDoRecurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento);
 

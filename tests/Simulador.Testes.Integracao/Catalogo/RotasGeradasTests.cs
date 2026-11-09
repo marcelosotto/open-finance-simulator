@@ -55,7 +55,7 @@ public sealed partial class RotasGeradasTests(FabricaCompartilhada compartilhada
 public sealed class FabricaCompartilhada : IDisposable
 {
     /// <summary>Sem o portão, para conferir a rota em si (spec 001).</summary>
-    public FabricaDoSimulador Fabrica { get; } = new FabricaDoSimulador().ComServicos(s => s.RemoveAll<IPortaoDeOperacao>());
+    public FabricaDoSimulador Fabrica { get; } = new FabricaDoSimulador().SemPortao();
 
     public void Dispose() => Fabrica.Dispose();
 }

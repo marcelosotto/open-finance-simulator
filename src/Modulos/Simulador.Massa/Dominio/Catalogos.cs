@@ -34,6 +34,8 @@ internal static class Produtos
         ["cambio"] = ("EXCHANGE", "EXCHANGES_"),
         ["fundos"] = ("FUND", "FUNDS_"),
         ["renda-variavel"] = ("VARIABLE_INCOME", "VARIABLE_INCOMES_"),
+        ["renda-fixa-credito"] = ("CREDIT_FIXED_INCOME", "CREDIT_FIXED_INCOMES_"),
+        ["tesouro-direto"] = ("TREASURE_TITLE", "TREASURE_TITLES_"),
     };
 
     public static bool Existe(string produto) => Mapa.ContainsKey(produto);

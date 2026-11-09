@@ -75,6 +75,14 @@ public interface IPortaoDeOperacao
     Task<Microsoft.AspNetCore.Http.IResult?> Avaliar(Microsoft.AspNetCore.Http.HttpContext contexto, OperacaoDoCatalogo operacao);
 }
 
+/// <summary>Atende uma família inteira de operações, a partir do que o contrato declara.</summary>
+public interface IManipuladorDeFamilia
+{
+    bool Atende(OperacaoDoCatalogo operacao);
+
+    Task<Microsoft.AspNetCore.Http.IResult> Manipular(Microsoft.AspNetCore.Http.HttpContext contexto, OperacaoDoCatalogo operacao);
+}
+
 /// <summary>Comportamento de uma operação do catálogo, entregue pela spec que cuida dela.</summary>
 public interface IManipuladorDeOperacao
 {

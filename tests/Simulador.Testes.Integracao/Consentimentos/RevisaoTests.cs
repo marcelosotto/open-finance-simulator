@@ -177,6 +177,31 @@ public sealed class RevisaoTests : IDisposable
     }
 
     [Fact]
+    public async Task Corrida_na_mudanca_de_estado_do_recurso_nao_sobrescreve_as_cegas()
+    {
+        var massa = await new AdminDaMassa(_admin).Enviar<MassaGerada>(HttpMethod.Post, "/clientes", new { tipo = "PF", bancos = new[] { Banco } });
+        var id = massa.Recursos[0].ResourceId;
+        var primeira = true;
+        _fabrica.Massa.AntesDaEscritaCondicional = async () =>
+        {
+            if (primeira)
+            {
+                primeira = false;
+                using var concorrente = await _admin.PutAsJsonAsync(new Uri($"/admin/recursos/{id}/estado", UriKind.Relative), new { estado = "UNAVAILABLE" }, Cancelamento);
+                Assert.Equal(HttpStatusCode.OK, concorrente.StatusCode);
+            }
+        };
+
+        using var resposta = await _admin.PutAsJsonAsync(new Uri($"/admin/recursos/{id}/estado", UriKind.Relative), new { estado = "TEMPORARILY_UNAVAILABLE" }, Cancelamento);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, resposta.StatusCode);
+        _fabrica.Massa.AntesDaEscritaCondicional = null;
+        var atual = await new AdminDaMassa(_admin).Ler<JsonElement>($"/recursos/{id}/transacoes");
+        Assert.Equal(JsonValueKind.Object, atual.ValueKind);
+        Assert.Equal("UNAVAILABLE", (await _fabrica.Massa.ObterRecurso(id, Cancelamento))!.Estado);
+    }
+
+    [Fact]
     public async Task Corrida_em_consentimento_virtual_tambem_respeita_a_revogacao()
     {
         await Receptora();

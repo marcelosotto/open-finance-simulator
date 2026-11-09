@@ -59,8 +59,12 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         return this;
     }
 
-    /// <summary>Sem o portão de segurança, para os testes de rota e marcação.</summary>
-    public FabricaDoSimulador SemPortao() => ComServicos(s => s.RemoveAll<Simulador.Catalogo.Contratos.IPortaoDeOperacao>());
+    /// <summary>Sem o portão de segurança e sem as APIs de dados, para os testes de rota e marcação.</summary>
+    public FabricaDoSimulador SemPortao() => ComServicos(s =>
+    {
+        s.RemoveAll<Simulador.Catalogo.Contratos.IPortaoDeOperacao>();
+        s.RemoveAll<Simulador.Catalogo.Contratos.IManipuladorDeFamilia>();
+    });
 
     public HttpClient ClienteOpenFinance() => Cliente(PortaOpenFinance);
 

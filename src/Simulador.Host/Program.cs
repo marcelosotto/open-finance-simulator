@@ -1,6 +1,7 @@
 using Simulador.Catalogo.Contratos;
 using Simulador.Comum.Aleatorio;
 using Simulador.Consentimentos.Contratos;
+using Simulador.Dados.Contratos;
 using Simulador.Host;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Marcacao.Contratos;
@@ -24,6 +25,7 @@ builder.Services.AddMarcacao(builder.Configuration);
 builder.Services.AddInstituicoes(builder.Configuration).AddAdaptadoresDeInstituicoes();
 builder.Services.AddMassa(builder.Configuration).AddAdaptadoresDaMassa();
 builder.Services.AddConsentimentos(builder.Configuration).AddAdaptadoresDeConsentimentos();
+builder.Services.AddDados(builder.Configuration).AddAdaptadoresDeDados();
 
 var app = builder.Build();
 

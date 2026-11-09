@@ -39,8 +39,10 @@ internal sealed class AmbienteDosConsentimentos(
 
     public Task<bool> Atualizar(DadosDoConsentimento consentimento, CancellationToken cancelamento) => escrita.AtualizarConsentimento(Mapear(consentimento), cancelamento);
 
-    public async Task MudarEstado(DadosDoRecurso recurso, string estado, CancellationToken cancelamento) =>
-        await escrita.MudarEstadoDoRecurso((await consulta.ObterRecurso(recurso.ResourceId, cancelamento).ConfigureAwait(false))!, estado, cancelamento).ConfigureAwait(false);
+    public async Task<bool> MudarEstado(DadosDoRecurso recurso, string estado, CancellationToken cancelamento) =>
+        await consulta.ObterRecurso(recurso.ResourceId, cancelamento).ConfigureAwait(false) is { } atual
+        && atual.Versao == recurso.Versao
+        && await escrita.MudarEstadoDoRecurso(atual, estado, cancelamento).ConfigureAwait(false);
 
     public async Task<DadosDoRecurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento) =>
         await escrita.AdicionarProduto(documento, banco, produto, estado, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) : null;
@@ -53,7 +55,7 @@ internal sealed class AmbienteDosConsentimentos(
     public Task RegistrarHistorico(string? autor, string acao, string campo, string? antes, string? depois, CancellationToken cancelamento) =>
         ambiente.RegistrarHistorico(new EventoDaMassa(relogio.GetUtcNow(), string.IsNullOrWhiteSpace(autor) ? "operador" : autor, acao, [new MudancaDaMassa(campo, antes, depois)]), cancelamento);
 
-    private static DadosDoRecurso Mapear(Recurso r) => new(r.ResourceId, r.Cliente, r.Banco, r.Tipo, r.Estado, r.Natureza);
+    private static DadosDoRecurso Mapear(Recurso r) => new(r.ResourceId, r.Cliente, r.Banco, r.Tipo, r.Estado, r.Natureza, r.Versao);
 
     private static DadosDoConsentimento Mapear(Consentimento c) => new(
         c.ConsentId, c.Cliente, c.Banco, c.Estado, c.Permissoes, c.Recursos, c.CriadoEm, c.Marca, c.Natureza, c.LoteId, c.ExpiraEm, c.Receptora, c.RejeitadoPor, c.Razao, c.AtualizadoEm, c.UsuarioLogado, c.AprovacoesPendentes,

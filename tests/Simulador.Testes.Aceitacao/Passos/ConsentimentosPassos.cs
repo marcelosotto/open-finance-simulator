@@ -522,6 +522,58 @@ public sealed class ConsentimentosPassos : IDisposable
         Assert.Contains(ItensDeRecursos(), r => r.GetProperty("resourceId").GetString() == _resourceId);
     }
 
+    [Given(@"^que a conta está em ""(.*)""$")]
+    public async Task AContaEm(string estado)
+    {
+        if (estado == "PENDING_AUTHORISATION")
+        {
+            _resourceId = await AdicionarProduto(_documento, "contas", estado);
+            await Autorizado(Contas);
+            return;
+        }
+
+        Assert.Equal(HttpStatusCode.OK, await MudarEstado(_resourceId, estado));
+    }
+
+    [When(@"^Ana lista contas$")]
+    public Task ListaContas() => ConsultarApi("contas");
+
+    [Then(@"^a conta ""(aparece|não aparece)""$")]
+    public void ContaNaLista(string lista)
+    {
+        var presente = ItensDeRecursos().Any(r => r.GetProperty("accountId").GetString() == _resourceId);
+        Assert.Equal(lista == "aparece", presente);
+    }
+
+    private async Task ConsultarConta(string resourceId, string token)
+    {
+        var endereco = AtalhosDeConsentimento.Caminho(_banco, "accounts", "/accounts/{accountId}").ToString().Replace("{accountId}", resourceId, StringComparison.Ordinal);
+        await Guardar(await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, new Uri(endereco, UriKind.Relative), token));
+    }
+
+    [When(@"^Ana consulta a conta$")]
+    public Task ConsultaConta() => ConsultarConta(_resourceId, _tokenDoConsentimento);
+
+    [When(@"^Ana consulta uma conta que não é de Rafael$")]
+    public async Task ContaDeOutro()
+    {
+        var outro = await CriarCliente();
+        await ConsultarConta(await AdicionarProduto(outro, "contas"), _tokenDoConsentimento);
+    }
+
+    [Given(@"^que Mariana tem a conta A em um consentimento e a conta B em outro$")]
+    public async Task ContasEmConsentimentos()
+    {
+        _documento = await CriarCliente();
+        await TokenDaReceptora();
+        await AdicionarProduto(_documento, "contas");
+        await Autorizado(Contas);
+        _resourceId = await AdicionarProduto(_documento, "contas");
+    }
+
+    [When(@"^Ana consulta a conta B com o primeiro consentimento$")]
+    public Task ContaB() => ConsultarConta(_resourceId, _tokenDoConsentimento);
+
     [Given(@"^um consentimento com uma conta ""(.*)"" e outra ""(.*)""$")]
     public async Task ContasComEstados(string primeiro, string segundo)
     {

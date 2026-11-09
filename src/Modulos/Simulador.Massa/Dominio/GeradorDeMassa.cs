@@ -137,6 +137,29 @@ internal readonly record struct Lancamento(int Posicao, long Centavos, bool Cred
 /// <summary>Transações saem de recurso, dia e semente, com ajustes por cima (RN46, RN51, RN53).</summary>
 internal static class CalculoDeTransacoes
 {
+    /// <summary>Lançamentos futuros existem só em Contas e só nesta janela (RN44, RN59).</summary>
+    public const int DiasDeFuturo = 30;
+
+    private const string Conta = "ACCOUNT";
+
+    /// <summary>Tipos imutáveis em D0; os demais só em D+1 (<c>accounts-2.5.1</c>).</summary>
+    private static readonly HashSet<string> ImutaveisEmD0 = new(StringComparer.Ordinal) { "TED", "PIX", "TRANSFERENCIA_MESMA_INSTITUICAO", "TARIFA_SERVICOS_AVULSOS", "FOLHA_PAGAMENTO" };
+
+    private static string EstadoDe(Recurso recurso, string tipo, DateOnly dia, DateOnly hoje)
+    {
+        if (recurso.Tipo != Conta || dia < hoje)
+        {
+            return EstadosDeTransacao.Efetivada;
+        }
+
+        if (dia > hoje)
+        {
+            return EstadosDeTransacao.Futuro;
+        }
+
+        return ImutaveisEmD0.Contains(tipo) ? EstadosDeTransacao.Efetivada : EstadosDeTransacao.Processando;
+    }
+
     public static string Chave(string recursoId, DateOnly dia, int posicao) =>
         string.Create(CultureInfo.InvariantCulture, $"transacao:{recursoId}:{dia:yyyy-MM-dd}:{posicao}");
 
@@ -162,20 +185,23 @@ internal static class CalculoDeTransacoes
     {
         var transacoes = new List<Transacao>();
         var inicio = Maior(de, recurso.InicioDoHistorico);
-        var fim = Menor(ate, hoje);
+        var fim = Menor(ate, recurso.Tipo == Conta ? hoje.AddDays(DiasDeFuturo) : hoje);
         for (var dia = inicio; dia <= fim; dia = dia.AddDays(1))
         {
             foreach (var l in DoDia(recurso, perfil, dia))
             {
                 var tipo = perfil.TiposDeLancamento[l.Tipo];
+                var estado = EstadoDe(recurso, tipo, dia, hoje);
+                var marca = estado == EstadosDeTransacao.Processando ? 'p' : 't';
                 transacoes.Add(new Transacao(
-                    string.Create(CultureInfo.InvariantCulture, $"{recurso.ResourceId}-t{dia:yyyyMMdd}x{l.Posicao}"),
+                    string.Create(CultureInfo.InvariantCulture, $"{recurso.ResourceId}-{marca}{dia:yyyyMMdd}x{l.Posicao}"),
                     dia,
                     l.Posicao,
                     Valor(recurso, dia, l, ajustes),
                     l.Credito ? "CREDITO" : "DEBITO",
                     tipo,
-                    Marcar(recurso.Marca, l.Credito ? $"{tipo} recebido" : $"{tipo} enviado")));
+                    Marcar(recurso.Marca, l.Credito ? $"{tipo} recebido" : $"{tipo} enviado"),
+                    estado));
             }
         }
 
@@ -189,7 +215,10 @@ internal static class CalculoDeTransacoes
         {
             foreach (var l in DoDia(recurso, perfil, dia))
             {
-                saldo += l.Credito ? Valor(recurso, dia, l, ajustes) : -Valor(recurso, dia, l, ajustes);
+                if (EstadoDe(recurso, perfil.TiposDeLancamento[l.Tipo], dia, hoje) == EstadosDeTransacao.Efetivada)
+                {
+                    saldo += l.Credito ? Valor(recurso, dia, l, ajustes) : -Valor(recurso, dia, l, ajustes);
+                }
             }
         }
 
