@@ -52,10 +52,18 @@ public interface ICatalogo
     ClasseDoEndpoint? ClasseDe(OperacaoDoCatalogo operacao);
 }
 
+/// <summary>Situação do banco chamado pelo endereço.</summary>
+public enum SituacaoDoBanco
+{
+    Inexistente,
+    Ativo,
+    Inativo,
+}
+
 /// <summary>Resolve o primeiro segmento <c>{banco}</c> do endereço (ADR-007).</summary>
 public interface IResolvedorDeInstituicao
 {
-    bool Existe(string banco);
+    ValueTask<SituacaoDoBanco> Situacao(string banco, CancellationToken cancelamento);
 }
 
 /// <summary>Comportamento de uma operação do catálogo, entregue pela spec que cuida dela.</summary>

@@ -7,11 +7,11 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 ## MongoDB
 | Coleção | Conteúdo | Observação |
 |---|---|---|
-| `instituicoes` | Nome, `organisationId`, público, produtos, comportamento e limites | Nasce com os 5 bancos de perfil e os 11 de nome real |
+| `instituicoes` | Nome, endereço, `organisationId`, público, produtos, comportamento, limites e QCA sobrescrito por receptora | Nasce com os 5 bancos de perfil e os 11 de nome real |
 | `perfis_comportamento` | Modelos de comportamento | Prontos não são apagados |
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
 | `distribuicoes` | Divisão da massa entre bancos, perfis e produtos | Bancos e perfis somam 100%; produtos têm porcentagem própria |
-| `receptoras` | `organisationId` e QCA sobrescrito por instituição | [PA10](../01-requisitos/regras-de-negocio.md#pa10) |
+| `receptoras` | `organisationId` e credenciais de teste | O QCA sobrescrito fica em `instituicoes`, por `organisationId` da receptora ([PA10](../01-requisitos/regras-de-negocio.md#pa10)) |
 | `clientes` | Documento, nome, tipo, marca e natureza | Índice por documento; o cliente não pertence a um banco |
 | `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações | Mudança de estado atômica; índice para expirar |
 | `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e por cliente e banco |
