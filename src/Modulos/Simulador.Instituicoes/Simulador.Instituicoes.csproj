@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="MongoDB.Driver" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Simulador.Testes.Unidade" />
+    <InternalsVisibleTo Include="Simulador.Testes.Integracao" />
+    <InternalsVisibleTo Include="Simulador.Testes.Aceitacao" />
+  </ItemGroup>
+</Project>

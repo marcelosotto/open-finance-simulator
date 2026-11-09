@@ -25,9 +25,9 @@
 **Decisão:** tabela explícita de letras acentuadas do português.
 **Por quê:** o projeto usa `InvariantGlobalization`, e não dependemos do comportamento de `Normalize` nesse modo.
 
-## R07 — Persistência em BSON via JSON
-**Decisão:** os registros viram JSON com `System.Text.Json` e depois `BsonDocument`.
-**Por quê:** dicionários com chave inteira (pesos por status) não têm serialização direta no BSON, e o JSON é o mesmo da API.
+## R07 — Persistência como texto JSON
+**Decisão:** os registros são gravados como texto JSON de `System.Text.Json`, no campo `doc`. Consultas usam só `_id` e `instituicao`.
+**Por quê:** dicionários com chave inteira (pesos por status) não têm serialização direta no BSON. Converter o JSON para documento BSON transforma `decimal` em `double` e alterava 0.2 para 0.20000000000000001, o teste de aceitação com MongoDB real pegou isso.
 
 ## R08 — Testes
 **Decisão:** a aceitação e os testes do repositório usam MongoDB em contêiner (ADR-009). Os demais testes de host usam `RepositorioEmMemoria`, que já contém `banco-teste`.

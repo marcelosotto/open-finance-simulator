@@ -8,13 +8,30 @@ services:
       - "8080:8080"            # APIs Open Finance
       - "127.0.0.1:8081:8081"  # Administração: só na própria máquina (FR-025)
     environment:
+      Simulador__Mongo__Conexao: mongodb://mongo:27017
       Simulador__MarcaDoAmbiente: ${Simulador__MarcaDoAmbiente-hml}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     depends_on:
-      - otel-collector
+      otel-collector:
+        condition: service_started
+      mongo:
+        condition: service_healthy
 
   otel-collector:
     image: otel/opentelemetry-collector:0.115.0
     command: ["--config=/etc/otelcol/config.yaml"]
     volumes:
       - ./deploy/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+
+  mongo:
+    image: mongo:8.0
+    volumes:
+      - dados-mongo:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  dados-mongo:

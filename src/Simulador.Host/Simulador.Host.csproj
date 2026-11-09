@@ -8,6 +8,7 @@
     <ProjectReference Include="..\Simulador.Comum\Simulador.Comum.csproj" />
     <ProjectReference Include="..\Modulos\Simulador.Catalogo\Simulador.Catalogo.csproj" />
     <ProjectReference Include="..\Modulos\Simulador.Marcacao\Simulador.Marcacao.csproj" />
+    <ProjectReference Include="..\Modulos\Simulador.Instituicoes\Simulador.Instituicoes.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\config\tabela-de-endpoints.json" Link="config\tabela-de-endpoints.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
