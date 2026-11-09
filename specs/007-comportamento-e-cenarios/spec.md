@@ -35,6 +35,12 @@ Marcelo aprovou a opção A de Q1 a Q18, repassada pela sessão controladora. De
 - Q17: relógio que volta → nada é corrigido; decorrido negativo conta como zero.
 - Q18: fora → defeitos e RN115 na 009; tela na 010.
 
+Depois da implementação, Marcelo manteve as recomendações:
+
+- Regra de estado só com frequência de 100% e em disputa só com outras regras de estado (RN108): mantida.
+- RNF03 (SC-004): aceita sem medição nesta spec; a medição fica para um teste de carga futuro.
+- Histórico da branch: mantido como está.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Perfis que se comportam como descritos (Priority: P1)
