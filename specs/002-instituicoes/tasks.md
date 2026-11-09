@@ -1,4 +1,4 @@
-﻿# Tasks: Instituições simuladas
+# Tasks: Instituições simuladas
 
 **Input**: documentos em `specs/002-instituicoes/`
 
@@ -58,8 +58,8 @@
 
 ## Phase 8: Polish
 
-- [ ] T022 Rodar `dotnet format`, build com `-warnaserror`, `specs verificar`, testes com cobertura e `cobertura conferir`
-- [ ] T023 Conferir os passos de `specs/002-instituicoes/quickstart.md` no Docker Compose
+- [X] T022 Rodar `dotnet format`, build com `-warnaserror`, `specs verificar`, testes com cobertura e `cobertura conferir`
+- [X] T023 Conferir os passos de `specs/002-instituicoes/quickstart.md` no Docker Compose
 
 ## Dependencies
 

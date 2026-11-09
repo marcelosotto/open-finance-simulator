@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Nodes;
+using System.Text.Json.Nodes;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Instituicoes.Dominio;
 
@@ -7,10 +7,10 @@ namespace Simulador.Testes.Unidade.Instituicoes;
 public class EnderecoTests
 {
     [Theory]
-    [InlineData("Banco EstÃ¡vel", "banco-estavel")]
-    [InlineData("ItaÃº", "itau")]
+    [InlineData("Banco Estável", "banco-estavel")]
+    [InlineData("Itaú", "itau")]
     [InlineData("  C6  Bank! ", "c6-bank")]
-    [InlineData("Ã¡Ã Ã¢Ã£Ã¤ Ã©Ã¨ÃªÃ« Ã­Ã¬Ã®Ã¯ Ã³Ã²Ã´ÃµÃ¶ ÃºÃ¹Ã»Ã¼ Ã§Ã±", "aaaaa-eeee-iiii-ooooo-uuuu-cn")]
+    [InlineData("áàâãä éèêë íìîï óòôõö úùûü çñ", "aaaaa-eeee-iiii-ooooo-uuuu-cn")]
     public void Gera_sem_acento_e_em_minusculas(string nome, string esperado) => Assert.Equal(esperado, Endereco.Gerar(nome));
 
     [Theory]
@@ -29,9 +29,9 @@ public class EnderecoTests
 public class NomeDoBancoTests
 {
     [Theory]
-    [InlineData("ItaÃº", "hml", true, "HML-ItaÃº")]
-    [InlineData("ItaÃº", "dev", true, "DEV-ItaÃº")]
-    [InlineData("ItaÃº", "", true, "ItaÃº")]
+    [InlineData("Itaú", "hml", true, "HML-Itaú")]
+    [InlineData("Itaú", "dev", true, "DEV-Itaú")]
+    [InlineData("Itaú", "", true, "Itaú")]
     [InlineData("Banco Azul", "hml", false, "Banco Azul")]
     public void Aplica_o_prefixo_so_no_nome_real(string nome, string marca, bool real, string esperado) =>
         Assert.Equal(esperado, NomeDoBanco.Aplicar(nome, marca, real));
