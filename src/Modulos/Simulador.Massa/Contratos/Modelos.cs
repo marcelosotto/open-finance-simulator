@@ -73,7 +73,23 @@ public sealed record Consentimento(
     string? LoteId = null,
     DateTimeOffset? ExpiraEm = null,
     string? Receptora = null,
-    string? RejeitadoPor = null);
+    string? RejeitadoPor = null,
+    string? Razao = null,
+    DateTimeOffset? AtualizadoEm = null,
+    string? UsuarioLogado = null,
+    int AprovacoesPendentes = 0,
+    IReadOnlyList<Extensao>? Extensoes = null,
+    int Versao = 0);
+
+/// <summary>Uma renovação do consentimento (RN87).</summary>
+public sealed record Extensao(
+    DateTimeOffset? NovaValidade,
+    DateTimeOffset? ValidadeAnterior,
+    string Documento,
+    string Rel,
+    DateTimeOffset SolicitadaEm,
+    string? Ip = null,
+    string? UserAgent = null);
 
 /// <summary>Um cliente com o que foi gerado para ele.</summary>
 public sealed record MassaGerada(ClienteSimulado Cliente, IReadOnlyList<Consentimento> Consentimentos, IReadOnlyList<Recurso> Recursos);
@@ -121,7 +137,12 @@ public sealed record Ajuste(
     string? RejeitadoPor = null,
     string? RecursoId = null,
     string? Banco = null,
-    string? LoteId = null);
+    string? LoteId = null,
+    string? Razao = null,
+    DateTimeOffset? ExpiraEm = null,
+    DateTimeOffset? AtualizadoEm = null,
+    IReadOnlyList<Extensao>? Extensoes = null,
+    int Versao = 0);
 
 /// <summary>Quantidades de massa.</summary>
 public sealed record ResumoDeMassa(long Clientes, long Consentimentos, long Recursos, long Ajustes);
@@ -172,6 +193,13 @@ public interface IRepositorioDeMassa
 
     Task GravarMassa(IReadOnlyList<MassaGerada> massa, CancellationToken cancelamento);
 
+    Task SalvarConsentimento(Consentimento consentimento, CancellationToken cancelamento);
+
+    /// <summary>Grava só se a versão guardada for a esperada; ausente vale 0 (RN82).</summary>
+    Task<bool> SalvarConsentimentoSeVersao(Consentimento consentimento, int versaoEsperada, CancellationToken cancelamento);
+
+    Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento);
+
     Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento);
 
     Task<Consentimento?> ObterConsentimento(string consentId, CancellationToken cancelamento);
@@ -202,6 +230,9 @@ public interface IRepositorioDeMassa
 
     Task SalvarAjuste(Ajuste ajuste, CancellationToken cancelamento);
 
+    /// <summary>Grava só se a versão guardada for a esperada; ausente vale 0 (RN82).</summary>
+    Task<bool> SalvarAjusteSeVersao(Ajuste ajuste, int versaoEsperada, CancellationToken cancelamento);
+
     Task<Ajuste?> ObterAjuste(string alvo, CancellationToken cancelamento);
 
     Task<IReadOnlyList<Ajuste>> ListarAjustesDoRecurso(string recursoId, CancellationToken cancelamento);
@@ -231,6 +262,22 @@ public interface IConsultaDeMassa
     Task<decimal?> Saldo(string resourceId, CancellationToken cancelamento);
 
     Task<bool> BancoTemClientes(string banco, CancellationToken cancelamento);
+}
+
+/// <summary>Mudanças da spec 004 na massa; em dado virtual, viram ajuste (RN53).</summary>
+public interface IEscritaDeMassa
+{
+    Task<string?> NovoConsentId(CancellationToken cancelamento);
+
+    Task InserirConsentimento(Consentimento consentimento, CancellationToken cancelamento);
+
+    /// <summary>Falso se outra chamada gravou desde a leitura (RN82).</summary>
+    Task<bool> AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento);
+
+    Task MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento);
+
+    /// <summary>Nulo se o cliente não existe, é virtual ou acabou o saldo de documentos.</summary>
+    Task<Recurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento);
 }
 
 /// <summary>O que o módulo precisa do ambiente; o host implementa (ADR-007).</summary>

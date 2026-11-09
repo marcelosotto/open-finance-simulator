@@ -16,6 +16,7 @@
     <ProjectReference Include="..\..\src\Modulos\Simulador.Marcacao\Simulador.Marcacao.csproj" />
     <ProjectReference Include="..\..\src\Modulos\Simulador.Instituicoes\Simulador.Instituicoes.csproj" />
     <ProjectReference Include="..\..\src\Modulos\Simulador.Massa\Simulador.Massa.csproj" />
+    <ProjectReference Include="..\..\src\Modulos\Simulador.Consentimentos\Simulador.Consentimentos.csproj" />
     <ProjectReference Include="..\..\tools\Simulador.Ferramentas\Simulador.Ferramentas.csproj" />
   </ItemGroup>
 </Project>

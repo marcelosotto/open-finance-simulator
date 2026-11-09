@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Reader;
 using Simulador.Catalogo.Contratos;
@@ -9,7 +10,7 @@ namespace Simulador.Catalogo.Leitura;
 /// Lê uma spec OpenAPI travada. O YAML é interpretado pelo Microsoft.OpenApi e convertido para
 /// JSON; operações, parâmetros e schemas saem desse JSON, com os <c>$ref</c> resolvidos.
 /// </summary>
-internal static class LeitorDeSpecs
+internal static partial class LeitorDeSpecs
 {
     private static readonly string[] Metodos = ["get", "put", "post", "delete", "options", "head", "patch", "trace"];
 
@@ -30,6 +31,7 @@ internal static class LeitorDeSpecs
         var url = documento["servers"]?[0]?["url"]?.GetValue<string>()
             ?? throw new InvalidOperationException($"Spec {contrato} sem servers[0].url.");
         var caminhoBase = new Uri(url).AbsolutePath.TrimEnd('/');
+        var permissoes = LerPermissoes(documento["info"]?["description"]?.GetValue<string>());
 
         foreach (var (caminho, item) in documento["paths"]?.AsObject() ?? [])
         {
@@ -60,10 +62,56 @@ internal static class LeitorDeSpecs
                     operacao["operationId"]?.GetValue<string>() ?? $"{contrato}:{metodo}:{caminho}",
                     parametros,
                     [.. parametros.Where(p => p is { Local: "header", Obrigatorio: true }).Select(p => p.Nome)],
-                    LerRespostas(operacao["responses"]?.AsObject()));
+                    LerRespostas(operacao["responses"]?.AsObject()),
+                    LerEscopos(operacao["security"]?.AsArray()),
+                    permissoes.GetValueOrDefault(Normalizar(caminho), []));
             }
         }
     }
+
+    /// <summary>Escopos OAuth declarados no <c>security</c> da operação.</summary>
+    internal static List<string> LerEscopos(JsonArray? seguranca) =>
+        [.. (seguranca ?? []).SelectMany(requisito => requisito!.AsObject())
+            .SelectMany(esquema => esquema.Value!.AsArray())
+            .Select(escopo => escopo!.GetValue<string>())];
+
+    /// <summary>Lê a seção "Permissions necessárias" da descrição da spec, por caminho.</summary>
+    internal static Dictionary<string, List<string>> LerPermissoes(string? descricao)
+    {
+        var resultado = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        var inicio = descricao?.IndexOf("Permissions necess", StringComparison.Ordinal) ?? -1;
+        if (inicio < 0)
+        {
+            return resultado;
+        }
+
+        List<string>? atual = null;
+        foreach (var linha in descricao![inicio..].Split('\n'))
+        {
+            if (TituloDeCaminho().Match(linha) is { Success: true } titulo)
+            {
+                atual = [];
+                resultado[Normalizar(titulo.Groups[1].Value)] = atual;
+            }
+            else if (atual is not null && NomeDePermissao().Match(linha) is { Success: true } permissao)
+            {
+                atual.Add(permissao.Groups[1].Value);
+            }
+        }
+
+        return resultado;
+    }
+
+    private static string Normalizar(string caminho) => ParametroDeCaminho().Replace(caminho.TrimEnd('/'), "{}");
+
+    [GeneratedRegex(@"^\s*#+\s+`?(/[^`\s]*)`?\s*$")]
+    private static partial Regex TituloDeCaminho();
+
+    [GeneratedRegex(@"\*\*([A-Z_]+_READ)\*\*")]
+    private static partial Regex NomeDePermissao();
+
+    [GeneratedRegex(@"\{[^}]+\}")]
+    private static partial Regex ParametroDeCaminho();
 
     private static Dictionary<string, string> LerRespostas(JsonObject? respostas)
     {

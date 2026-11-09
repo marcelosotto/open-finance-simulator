@@ -27,7 +27,10 @@ classDiagram
     pageSizeMaximo
   }
   class Receptora {
+    nome
     organisationId
+    usuario
+    senha
   }
   class ClienteSimulado {
     documento

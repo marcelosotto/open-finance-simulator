@@ -18,7 +18,7 @@ public sealed class AdminInstituicoesTests : IDisposable
 
     public AdminInstituicoesTests()
     {
-        _fabrica = new FabricaDoSimulador().ComServicos(s => s.AddSingleton<IConsultaDeClientes>(_clientes));
+        _fabrica = new FabricaDoSimulador().SemPortao().ComServicos(s => s.AddSingleton<IConsultaDeClientes>(_clientes));
         _admin = _fabrica.ClienteAdministracao();
     }
 

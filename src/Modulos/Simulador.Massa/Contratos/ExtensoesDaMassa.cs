@@ -24,6 +24,7 @@ public static class ExtensoesDaMassa
         servicos.AddSingleton<ServicoDoMundo>();
         servicos.AddSingleton<ServicoDeAjustes>();
         servicos.AddSingleton<ServicoDeLimpeza>();
+        servicos.AddSingleton<IEscritaDeMassa, EscritaDeMassa>();
         servicos.AddHostedService<InicioDaMassa>();
         servicos.AddHostedService<ExecutorDeLotes>();
         return servicos;

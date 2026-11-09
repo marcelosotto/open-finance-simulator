@@ -66,8 +66,7 @@ Funcionalidade: Cadastrar instituições simuladas
     Quando Diego abre o "Banco Azul"
     Então deve ver público, produtos, marca e organisationId
 
-  # RN08: depende da criação de consentimento (ADR-009).
-  @spec-004
+  # RN08
   Cenário: Instituição sem conta de depósito
     Dado que o "Banco Azul" não oferece contas
     Quando Ana cria um consentimento de contas e cartões nesse banco

@@ -1,7 +1,10 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Simulador.Catalogo.Contratos;
+using Simulador.Consentimentos.Contratos;
 using Simulador.Testes.Host;
 using Simulador.Testes.Infra;
 
@@ -27,8 +30,13 @@ public sealed partial class RotasGeradasTests(FabricaCompartilhada compartilhada
 
     [Theory]
     [MemberData(nameof(TodasAsOperacoes))]
-    public async Task Toda_operacao_do_catalogo_responde_501(string operationId, string metodo, string caminhoPublicado)
+    public async Task Toda_operacao_sem_manipulador_responde_501_depois_do_portao(string operationId, string metodo, string caminhoPublicado)
     {
+        if (ExtensoesDosConsentimentos.Operacoes.ContainsKey(operationId))
+        {
+            return;
+        }
+
         using var requisicao = new HttpRequestMessage(new HttpMethod(metodo), Preencher(caminhoPublicado));
 
         using var resposta = await compartilhada.Fabrica.ClienteOpenFinance().SendAsync(requisicao, TestContext.Current.CancellationToken);
@@ -46,7 +54,8 @@ public sealed partial class RotasGeradasTests(FabricaCompartilhada compartilhada
 /// <summary>Um host compartilhado pelos testes de uma classe.</summary>
 public sealed class FabricaCompartilhada : IDisposable
 {
-    public FabricaDoSimulador Fabrica { get; } = new();
+    /// <summary>Sem o portão, para conferir a rota em si (spec 001).</summary>
+    public FabricaDoSimulador Fabrica { get; } = new FabricaDoSimulador().ComServicos(s => s.RemoveAll<IPortaoDeOperacao>());
 
     public void Dispose() => Fabrica.Dispose();
 }

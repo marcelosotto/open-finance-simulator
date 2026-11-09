@@ -23,6 +23,12 @@ internal sealed class Despachante(IResolvedorDeInstituicao resolvedor, TimeProvi
             return situacao == SituacaoDoBanco.Inativo ? Respostas.ForaDoAr(relogio) : Respostas.NaoEncontrado(relogio);
         }
 
+        if (contexto.RequestServices.GetService<IPortaoDeOperacao>() is { } portao
+            && await portao.Avaliar(contexto, operacao).ConfigureAwait(false) is { } recusa)
+        {
+            return recusa;
+        }
+
         var manipulador = contexto.RequestServices.GetServices<IManipuladorDeOperacao>()
             .FirstOrDefault(m => string.Equals(m.OperationId, operacao.OperationId, StringComparison.Ordinal));
         return manipulador is null

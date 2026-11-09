@@ -19,7 +19,9 @@ public sealed record OperacaoDoCatalogo(
     string OperationId,
     IReadOnlyList<ParametroDaOperacao> Parametros,
     IReadOnlyList<string> CabecalhosExigidos,
-    IReadOnlyDictionary<string, string> Respostas)
+    IReadOnlyDictionary<string, string> Respostas,
+    IReadOnlyList<string>? Escopos = null,
+    IReadOnlyList<string>? Permissoes = null)
 {
     /// <summary>Segmento da API no caminho base (ex.: <c>accounts</c>).</summary>
     public string Api => CaminhoBase.Split('/', StringSplitOptions.RemoveEmptyEntries)[^2];
@@ -64,6 +66,13 @@ public enum SituacaoDoBanco
 public interface IResolvedorDeInstituicao
 {
     ValueTask<SituacaoDoBanco> Situacao(string banco, CancellationToken cancelamento);
+}
+
+/// <summary>Primeira etapa da avaliação da chamada: cabeçalhos e segurança (RN39, ADR-008).</summary>
+public interface IPortaoDeOperacao
+{
+    /// <summary>A recusa, ou nulo para seguir.</summary>
+    Task<Microsoft.AspNetCore.Http.IResult?> Avaliar(Microsoft.AspNetCore.Http.HttpContext contexto, OperacaoDoCatalogo operacao);
 }
 
 /// <summary>Comportamento de uma operação do catálogo, entregue pela spec que cuida dela.</summary>

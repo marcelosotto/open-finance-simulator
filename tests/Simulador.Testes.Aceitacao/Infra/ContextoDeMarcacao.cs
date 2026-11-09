@@ -33,7 +33,7 @@ public sealed class ContextoDeMarcacao : IDisposable
     /// <summary>Sobe outro host com outra marca (por exemplo, para simular a cópia da massa).</summary>
     public FabricaDoSimulador NovaFabrica(string marca)
     {
-        var fabrica = new FabricaDoSimulador(marca).ComServicos(servicos =>
+        var fabrica = new FabricaDoSimulador(marca).SemPortao().ComServicos(servicos =>
         {
             servicos.AddSingleton(Dados);
             servicos.AddScoped<IManipuladorDeOperacao, ManipuladorDeTransacoesDeTeste>();
