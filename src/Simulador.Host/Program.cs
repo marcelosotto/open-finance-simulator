@@ -3,6 +3,7 @@ using Simulador.Comum.Aleatorio;
 using Simulador.Host;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Marcacao.Contratos;
+using Simulador.Massa.Contratos;
 
 var builder = WebApplication.CreateBuilder(args);
 var portas = Portas.Ler(builder.Configuration);
@@ -20,6 +21,7 @@ builder.AdicionarObservabilidade();
 builder.Services.AddCatalogo(builder.Configuration);
 builder.Services.AddMarcacao(builder.Configuration);
 builder.Services.AddInstituicoes(builder.Configuration).AddAdaptadoresDeInstituicoes();
+builder.Services.AddMassa(builder.Configuration).AddAdaptadoresDaMassa();
 
 var app = builder.Build();
 
@@ -28,6 +30,7 @@ var administracao = app.MapGroup(string.Empty).RequireHost($"*:{portas.Administr
 administracao.MapGet("/saude/vivo", () => Results.Ok());
 openFinance.MapearCatalogo(administracao);
 administracao.MapearInstituicoes();
+administracao.MapearMassa();
 
 await app.RunAsync().ConfigureAwait(false);
 

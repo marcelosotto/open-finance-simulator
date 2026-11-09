@@ -7,6 +7,7 @@
     <Project Path="src/Modulos/Simulador.Catalogo/Simulador.Catalogo.csproj" />
     <Project Path="src/Modulos/Simulador.Instituicoes/Simulador.Instituicoes.csproj" />
     <Project Path="src/Modulos/Simulador.Marcacao/Simulador.Marcacao.csproj" />
+    <Project Path="src/Modulos/Simulador.Massa/Simulador.Massa.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/Simulador.Ferramentas/Simulador.Ferramentas.csproj" />

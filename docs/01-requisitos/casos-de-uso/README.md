@@ -151,7 +151,7 @@ Todos começam como **Rascunho**.
 - **Status:** Aprovado
 - **Ator:** QA ou Desenvolvedor
 - **Objetivo:** ter um cliente específico para um teste.
-- **Fluxo principal:** 1. Escolhe o tipo (PF ou PJ), o perfil de dados e os bancos onde o cliente tem produtos. 2. O sistema gera documento válido, nome e produtos em cada banco. 3. Mostra o cliente criado.
+- **Fluxo principal:** 1. Escolhe o tipo (PF ou PJ), o perfil de dados e os bancos onde o cliente tem produtos. 2. O sistema gera documento válido, nome e produtos em cada banco. O nome pode ser informado; o documento é sempre gerado. 3. Mostra o cliente criado.
 - **Fluxo alternativo — consentimento:** segue para o [UC10](#uc10). O mesmo cliente pode ter outro consentimento no mesmo banco ou em outro ([RN49](../regras-de-negocio.md#rn49)).
 - **Regras:** [RN49](../regras-de-negocio.md#rn49), [RN51](../regras-de-negocio.md#rn51), [RN54](../regras-de-negocio.md#rn54), [RN57](../regras-de-negocio.md#rn57), [RN60](../regras-de-negocio.md#rn60).
 
@@ -159,7 +159,7 @@ Todos começam como **Rascunho**.
 - **Status:** Aprovado
 - **Ator:** Operador
 - **Objetivo:** criar N clientes com consentimentos e recursos, para testes e demonstrações.
-- **Fluxo principal:** 1. Informa quantidade, distribuição, consentimentos por cliente, permissões e semente. 2. Acompanha o progresso em segundo plano. 3. Recebe o resumo.
+- **Fluxo principal:** 1. Informa quantidade, distribuição (com a porcentagem de PJ), consentimentos por cliente, permissões e semente. 2. Acompanha o progresso em segundo plano. 3. Recebe o resumo.
 - **Fluxo alternativo — cancelar:** para e mantém o que já foi criado, marcado como parcial.
 - **Fluxo alternativo — semente repetida:** gera normalmente, com outros documentos e IDs ([RN54](../regras-de-negocio.md#rn54)).
 - **Pós-condição:** consentimentos nascem `AUTHORISED` ([RN80](../regras-de-negocio.md#rn80)).
@@ -171,13 +171,17 @@ Todos começam como **Rascunho**.
 - **Objetivo:** testar carga com milhões de itens, sem gravar os itens.
 - **Fluxo principal:** 1. Define total, semente e distribuição entre os bancos, que ficam gravados. 2. Pede uma faixa de itens por uma API de administração. 3. Usa os IDs nas APIs.
 - **Fluxo alternativo — ajuste:** revoga um consentimento virtual, e o ajuste passa a valer ([RN53](../regras-de-negocio.md#rn53)).
-- **Fluxo alternativo — trocar a semente:** o sistema avisa e, confirmado, apaga os ajustes do mundo virtual.
+- **Fluxo alternativo — ajustar transação:** muda um valor por uma API de administração, e o ajuste passa a valer ([RN53](../regras-de-negocio.md#rn53)).
+- **Fluxo alternativo — trocar a semente ou a distribuição:** o sistema avisa e, confirmado, apaga os ajustes do mundo virtual.
+- **Fluxo alternativo — mudar o total:** os ajustes ficam, e os de itens fora do novo total deixam de ter efeito.
 - **Regras:** [RN52](../regras-de-negocio.md#rn52) a [RN54](../regras-de-negocio.md#rn54), [RN62](../regras-de-negocio.md#rn62).
 
 ### <a id="uc27"></a>UC27 — Limpar massa
 - **Status:** Aprovado
 - **Ator:** Operador
 - **Fluxo principal:** 1. Escolhe um lote, uma instituição, os ajustes do mundo virtual ou tudo. 2. Vê o que será apagado. 3. Confirma.
+- **Alcance por instituição:** apaga consentimentos e recursos daquele banco, e o cliente só se ele não tiver produto em outro banco. A instituição continua existindo.
+- **Alcance de "tudo":** apaga massa, lotes, ajustes e as instituições e perfis criados pelo operador, exceto os que o mundo virtual usa. A definição do mundo virtual fica.
 - **Exceções:** instituições e perfis prontos não são apagados.
 - **Regras:** [RN53](../regras-de-negocio.md#rn53), [RN58](../regras-de-negocio.md#rn58), [RN71](../regras-de-negocio.md#rn71).
 

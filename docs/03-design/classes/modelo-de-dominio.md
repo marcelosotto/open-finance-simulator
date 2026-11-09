@@ -83,7 +83,7 @@ classDiagram
   Instituicao "1" --> "1" ConfiguracaoDeLimites
   Instituicao "1" --> "*" Consentimento
   Instituicao "1" --> "*" Recurso
-  Receptora "1" --> "*" Consentimento
+  Receptora "0..1" --> "*" Consentimento
   ClienteSimulado "1" --> "*" Consentimento
   ClienteSimulado "1" --> "*" Recurso
   Consentimento "*" --> "*" Recurso
