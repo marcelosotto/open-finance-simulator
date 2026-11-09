@@ -145,6 +145,44 @@ public sealed class DominioDosCenariosTests
         Assert.Equal(500, decisao.Status);
     }
 
+    [Theory]
+    [InlineData(0.1, 422)]
+    [InlineData(0.6, 500)]
+    [InlineData(0.99, 504)]
+    public void Peso_zero_fica_fora_e_o_sorteio_percorre_os_pesos(double ponto, int esperado)
+    {
+        var pesos = new Dictionary<int, decimal> { [403] = 0m, [422] = 1m, [500] = 1m, [504] = 1m };
+        Assert.Equal(esperado, AvaliacaoDoPerfil.Decidir(Perfil(taxa: 100m, pesos: pesos), null, Agora, Declarados, Sequencia(0.99, 0.5, 0.01, ponto)).Status);
+    }
+
+    [Fact]
+    public void Instituicao_igual_casa_e_inicio_sem_fim_vale()
+    {
+        Assert.NotNull(SelecaoDeRegras.Vencedora([Regra(instituicao: "banco", inicio: Agora.AddDays(-1))], Chamada, Agora, Declarados));
+        Assert.Empty(Validar(Regra(instituicao: "banco", inicio: Agora)));
+        Assert.Empty(Validar(Regra(instituicao: "banco", fim: Agora)));
+    }
+
+    [Theory]
+    [InlineData("banco", "saldos", "cli", "conta", true)]
+    [InlineData("x", "saldos", "cli", "conta", false)]
+    [InlineData("banco", "x", "cli", "conta", false)]
+    [InlineData("banco", "saldos", "x", "conta", false)]
+    [InlineData("banco", "saldos", "cli", "x", false)]
+    public void Todos_os_filtros_precisam_casar(string instituicao, string endpoint, string cliente, string recurso, bool casa)
+    {
+        var regra = Regra(instituicao, endpoint, cliente, recurso, inicio: Agora.AddHours(-1), fim: Agora.AddHours(1));
+        Assert.Equal(casa, SelecaoDeRegras.Vencedora([regra], Chamada, Agora, Declarados) is not null);
+        Assert.Equal(casa, SelecaoDeRegras.VencedoraDeEstado([regra with { Efeito = new EfeitoDaRegra(Efeitos.Estado, Estado: "UNAVAILABLE") }], Chamada, Agora) is not null);
+    }
+
+    [Theory]
+    [InlineData(null, null, null, "conta")]
+    [InlineData(null, null, "cli", null)]
+    [InlineData(null, "saldos", null, null)]
+    public void Basta_um_filtro(string? instituicao, string? endpoint, string? cliente, string? recurso) =>
+        Assert.Empty(Validar(Regra(instituicao, endpoint, cliente, recurso)));
+
     [Fact]
     public void Sem_peso_declarado_nao_ha_erro() =>
         Assert.Null(AvaliacaoDoPerfil.Decidir(Perfil(taxa: 100m, pesos: new Dictionary<int, decimal> { [400] = 1m }), null, Agora, Declarados, Sequencia(0.99, 0.5, 0.01)).Status);
@@ -253,8 +291,11 @@ public sealed class DominioDosCenariosTests
         new EfeitoDaRegra(Efeitos.Latencia, LatenciaMs: -1),
         new EfeitoDaRegra(Efeitos.Timeout, EsperaMs: 0),
         new EfeitoDaRegra(Efeitos.Indisponibilidade, Resultado: "500"),
+        new EfeitoDaRegra(Efeitos.Indisponibilidade),
         new EfeitoDaRegra(Efeitos.Transporte, Falha: "x"),
+        new EfeitoDaRegra(Efeitos.Transporte),
         new EfeitoDaRegra(Efeitos.Estado, Estado: "x"),
+        new EfeitoDaRegra(Efeitos.Estado),
     };
 
     [Theory]

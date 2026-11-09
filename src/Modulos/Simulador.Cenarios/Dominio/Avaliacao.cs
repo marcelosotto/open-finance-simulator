@@ -49,8 +49,8 @@ internal static class SelecaoDeRegras
         && (regra.Endpoint is null || regra.Endpoint == chamada.Endpoint)
         && (regra.Cliente is null || regra.Cliente == chamada.Cliente)
         && (regra.Recurso is null || regra.Recurso == chamada.Recurso)
-        && (regra.Inicio is null || instante >= regra.Inicio)
-        && (regra.Fim is null || instante < regra.Fim);
+        && (regra.Inicio is not { } inicio || instante >= inicio)
+        && (regra.Fim is not { } fim || instante < fim);
 
     private static bool Age(EfeitoDaRegra efeito, IReadOnlySet<int> declarados) =>
         efeito.Status is not { } status || status is StatusNormal or StatusForaDoAr || declarados.Contains(status);
@@ -166,16 +166,13 @@ internal static class AvaliacaoDoPerfil
         }
 
         var ponto = (decimal)sorteio() * validos.Sum(p => p.Value);
-        foreach (var (status, peso) in validos)
+        var indice = 0;
+        while (indice < validos.Count - 1 && (ponto -= validos[indice].Value) >= 0)
         {
-            ponto -= peso;
-            if (ponto < 0)
-            {
-                return status;
-            }
+            indice++;
         }
 
-        return validos[^1].Key;
+        return validos[indice].Key;
     }
 }
 
@@ -235,7 +232,7 @@ internal static class ValidacaoDeRegra
         Exigir(regra.Instituicao is not null || regra.Endpoint is not null || regra.Cliente is not null || regra.Recurso is not null, "informe ao menos um filtro de alcance");
         Exigir(regra.Endpoint is null || operacaoExiste(regra.Endpoint), "endpoint desconhecido");
         Exigir(regra.FrequenciaPct is >= 0 and <= 100, "frequenciaPct deve ser de 0 a 100");
-        Exigir(regra.Inicio is null || regra.Fim is null || regra.Inicio < regra.Fim, "início deve vir antes do fim");
+        Exigir(regra is not { Inicio: { } inicio, Fim: { } fim } || inicio < fim, "início deve vir antes do fim");
         Exigir(regra.Efeito.Tipo != Efeitos.Estado || regra.FrequenciaPct == 100, "regra de estado exige frequência de 100%");
         Exigir(regra.Efeito.EsperaMs is null or > 0, "esperaMs deve ser positivo");
         Exigir(EfeitoValido(regra.Efeito, statusDeclarados), "efeito inválido");

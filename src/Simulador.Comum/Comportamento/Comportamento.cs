@@ -31,12 +31,12 @@ public static class EtapaDeComportamento
     public static Task<IResult?> Aplicar(HttpContext contexto)
     {
         ArgumentNullException.ThrowIfNull(contexto);
-        return contexto.RequestServices.GetService<IComportamentoDaChamada>()?.Aplicar(contexto) ?? Task.FromResult<IResult?>(null);
+        return contexto.RequestServices?.GetService<IComportamentoDaChamada>()?.Aplicar(contexto) ?? Task.FromResult<IResult?>(null);
     }
 
     public static Task<bool> RecursoIndisponivel(HttpContext contexto)
     {
         ArgumentNullException.ThrowIfNull(contexto);
-        return contexto.RequestServices.GetService<IComportamentoDaChamada>()?.RecursoIndisponivel(contexto) ?? Task.FromResult(false);
+        return contexto.RequestServices?.GetService<IComportamentoDaChamada>()?.RecursoIndisponivel(contexto) ?? Task.FromResult(false);
     }
 }
