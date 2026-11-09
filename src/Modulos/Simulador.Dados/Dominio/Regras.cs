@@ -33,6 +33,39 @@ internal static class Familias
     public static Familia? De(string contrato) => Todas.GetValueOrDefault(contrato);
 }
 
+/// <summary>Tipo da transação de cartão, coerente com o sentido, e os campos que o contrato exige por condição (RN42).</summary>
+internal static class TiposDoCartao
+{
+    private const string Pagamento = "PAGAMENTO";
+    private const string Tarifa = "TARIFA";
+    private const string Operacoes = "OPERACOES_CREDITO_CONTRATADAS_CARTAO";
+    private const string Outros = "OUTROS";
+
+    private static readonly string[] DeCredito = ["PAGAMENTO_FATURA", "ESTORNO", "CASHBACK", Outros];
+    private static readonly string[] DeDebito = [Pagamento, Tarifa, Operacoes, Outros];
+    private static readonly string[] Tarifas = ["ANUIDADE", "SAQUE_CARTAO_BRASIL", "SAQUE_CARTAO_EXTERIOR"];
+    private static readonly string[] OutrosCreditos = ["CREDITO_ROTATIVO", "PARCELAMENTO_FATURA", "EMPRESTIMO"];
+
+    public static void Preencher(IDictionary<string, string> valores, bool credito, uint semente)
+    {
+        var opcoes = credito ? DeCredito : DeDebito;
+        var tipo = opcoes[semente % (uint)opcoes.Length];
+        valores["transactionType"] = tipo;
+        switch (tipo)
+        {
+            case Tarifa:
+                valores["feeType"] = Tarifas[semente % (uint)Tarifas.Length];
+                break;
+            case Operacoes:
+                valores["otherCreditsType"] = OutrosCreditos[semente % (uint)OutrosCreditos.Length];
+                break;
+            case Outros:
+                valores["transactionalAdditionalInfo"] = "Outra transação";
+                break;
+        }
+    }
+}
+
 /// <summary>Filtros opcionais do contrato e o campo da resposta que cada um compara (RN42).</summary>
 internal static class FiltrosOficiais
 {

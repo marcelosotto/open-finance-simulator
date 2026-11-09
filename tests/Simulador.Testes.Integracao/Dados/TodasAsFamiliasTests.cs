@@ -530,6 +530,70 @@ public sealed class TodasAsFamiliasTests : IDisposable
         Assert.All(dados.EnumerateArray(), t => Assert.True(t.GetProperty("transactionDateTime").GetDateTimeOffset() <= agora));
     }
 
+    private async Task<List<JsonElement>> TransacoesDoCartao(MassaGerada massa, string token)
+    {
+        var fatura = await Ler(ComConsulta(Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBillsBillIdTransactions"), massa), "?page-size=1000"), token);
+        var extrato = await Ler(ComConsulta(Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdTransactions"), massa), "?fromTransactionDate=2026-10-01&toTransactionDate=2026-10-31&page-size=1000"), token);
+        return [.. fatura.GetProperty("data").EnumerateArray(), .. extrato.GetProperty("data").EnumerateArray()];
+    }
+
+    [Fact]
+    public async Task Transacao_do_cartao_traz_os_campos_que_o_tipo_exige()
+    {
+        var (massa, token) = await Preparar("PF");
+        var transacoes = await TransacoesDoCartao(massa, token);
+        string Tipo(JsonElement t) => t.GetProperty("transactionType").GetString()!;
+
+        foreach (var tipo in new[] { "TARIFA", "OPERACOES_CREDITO_CONTRATADAS_CARTAO", "PAGAMENTO", "OUTROS" })
+        {
+            Assert.Contains(transacoes, t => Tipo(t) == tipo);
+        }
+
+        Assert.All(transacoes, t =>
+        {
+            Assert.Equal(Tipo(t) == "TARIFA", t.TryGetProperty("feeType", out _));
+            Assert.Equal(Tipo(t) == "OPERACOES_CREDITO_CONTRATADAS_CARTAO", t.TryGetProperty("otherCreditsType", out _));
+            Assert.Equal(Tipo(t) == "OUTROS", t.TryGetProperty("transactionalAdditionalInfo", out _));
+            Assert.False(t.TryGetProperty("feeTypeAdditionalInfo", out _));
+            Assert.False(t.TryGetProperty("otherCreditsAdditionalInfo", out _));
+            Assert.True(Tipo(t) != "PAGAMENTO" || t.TryGetProperty("payeeMCC", out _));
+        });
+    }
+
+    [Fact]
+    public async Task Tipo_do_cartao_e_coerente_com_credito_ou_debito()
+    {
+        var (massa, token) = await Preparar("PF");
+
+        Assert.All(await TransacoesDoCartao(massa, token), t =>
+        {
+            var sentido = t.GetProperty("creditDebitType").GetString();
+            switch (t.GetProperty("transactionType").GetString())
+            {
+                case "PAGAMENTO_FATURA" or "ESTORNO" or "CASHBACK":
+                    Assert.Equal("CREDITO", sentido);
+                    break;
+                case "PAGAMENTO" or "TARIFA" or "OPERACOES_CREDITO_CONTRATADAS_CARTAO":
+                    Assert.Equal("DEBITO", sentido);
+                    break;
+            }
+        });
+    }
+
+    [Fact]
+    public async Task Conta_traz_agencia_e_digito()
+    {
+        var (massa, token) = await Preparar("PF");
+        var lista = (await Ler(Endereco(Operacao("accountsGetAccounts"), massa), token)).GetProperty("data")[0];
+        var detalhe = (await Ler(Endereco(Operacao("accountsGetAccountsAccountId"), massa), token)).GetProperty("data");
+
+        foreach (var conta in new[] { lista, detalhe })
+        {
+            Assert.Matches(@"^\d{4}$", conta.GetProperty("branchCode").GetString()!);
+            Assert.Matches(@"^\d$", conta.GetProperty("checkDigit").GetString()!);
+        }
+    }
+
     public void Dispose()
     {
         _api.Dispose();

@@ -90,6 +90,24 @@ public class DominioDosDadosTests
     [Fact]
     public void Sem_datas_vale_hoje() => Assert.Equal(new Periodo(Hoje, Hoje), JanelaDeDatas.Transacoes(null, null, Hoje, false, false));
 
+    [Theory]
+    [InlineData(false, 0u, "PAGAMENTO", null)]
+    [InlineData(false, 1u, "TARIFA", "feeType")]
+    [InlineData(false, 2u, "OPERACOES_CREDITO_CONTRATADAS_CARTAO", "otherCreditsType")]
+    [InlineData(false, 3u, "OUTROS", "transactionalAdditionalInfo")]
+    [InlineData(true, 0u, "PAGAMENTO_FATURA", null)]
+    [InlineData(true, 3u, "OUTROS", "transactionalAdditionalInfo")]
+    public void Tipo_do_cartao_traz_o_campo_condicional(bool credito, uint semente, string tipo, string? campo)
+    {
+        var valores = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        TiposDoCartao.Preencher(valores, credito, semente);
+
+        Assert.Equal(tipo, valores["transactionType"]);
+        Assert.Equal(campo is null ? 1 : 2, valores.Count);
+        Assert.True(campo is null || valores.ContainsKey(campo));
+    }
+
     [Fact]
     public void Faturas_aceitam_datas_isoladas_e_12_meses()
     {
