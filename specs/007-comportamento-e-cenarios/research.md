@@ -34,5 +34,5 @@
 - **Decision**: lista de regras ativas em memória por 5 s (RNF12), invalidada por escrita na mesma instância.
 
 ## R09. Latência
-- **Decision**: curva por partes: 0–50% vai de metade do típico ao típico; 50–95% do típico ao típico + variação; 95–100% até típico + 2 × variação.
+- **Decision**: curva por partes: 0–50% vai de típico − variação (mínimo 0) ao típico; 50–95% do típico ao típico + variação; 95–100% até típico + 2 × variação.
 - **Rationale**: dá p50 e p95 configurados, sem biblioteca.
