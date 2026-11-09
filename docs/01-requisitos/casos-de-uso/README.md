@@ -181,7 +181,7 @@ Todos começam como **Rascunho**.
 - **Ator:** Operador
 - **Fluxo principal:** 1. Escolhe um lote, uma instituição, os ajustes do mundo virtual ou tudo. 2. Vê o que será apagado. 3. Confirma.
 - **Alcance por instituição:** apaga consentimentos e recursos daquele banco, e o cliente só se ele não tiver produto em outro banco. A instituição continua existindo.
-- **Alcance de "tudo":** apaga massa, lotes, ajustes e as instituições e perfis criados pelo operador. A definição do mundo virtual fica.
+- **Alcance de "tudo":** apaga massa, lotes, ajustes e as instituições e perfis criados pelo operador, exceto os que o mundo virtual usa. A definição do mundo virtual fica.
 - **Exceções:** instituições e perfis prontos não são apagados.
 - **Regras:** [RN53](../regras-de-negocio.md#rn53), [RN58](../regras-de-negocio.md#rn58), [RN71](../regras-de-negocio.md#rn71).
 
