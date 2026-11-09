@@ -18,6 +18,7 @@
     <ProjectReference Include="..\..\src\Modulos\Simulador.Massa\Simulador.Massa.csproj" />
     <ProjectReference Include="..\..\src\Modulos\Simulador.Consentimentos\Simulador.Consentimentos.csproj" />
     <ProjectReference Include="..\..\src\Modulos\Simulador.Dados\Simulador.Dados.csproj" />
+    <ProjectReference Include="..\..\src\Modulos\Simulador.Limites\Simulador.Limites.csproj" />
     <ProjectReference Include="..\..\tools\Simulador.Ferramentas\Simulador.Ferramentas.csproj" />
   </ItemGroup>
 </Project>

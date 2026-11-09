@@ -54,6 +54,13 @@ public interface ICatalogo
     ClasseDoEndpoint? ClasseDe(OperacaoDoCatalogo operacao);
 }
 
+/// <summary>Capacidade e tráfego, logo após o portão (RN39); o host implementa (ADR-007).</summary>
+public interface IEtapaDeEntrada
+{
+    /// <summary>A recusa, ou nulo quando a chamada pode seguir.</summary>
+    Task<Microsoft.AspNetCore.Http.IResult?> Avaliar(Microsoft.AspNetCore.Http.HttpContext contexto, OperacaoDoCatalogo operacao);
+}
+
 /// <summary>Situação do banco chamado pelo endereço.</summary>
 public enum SituacaoDoBanco
 {

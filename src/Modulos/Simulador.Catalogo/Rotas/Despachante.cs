@@ -33,6 +33,12 @@ internal sealed class Despachante(IResolvedorDeInstituicao resolvedor, TimeProvi
             return recusa;
         }
 
+        if (contexto.RequestServices.GetService<IEtapaDeEntrada>() is { } etapa
+            && await etapa.Avaliar(contexto, operacao).ConfigureAwait(false) is { } excesso)
+        {
+            return excesso;
+        }
+
         var manipulador = contexto.RequestServices.GetServices<IManipuladorDeOperacao>()
             .FirstOrDefault(m => string.Equals(m.OperationId, operacao.OperationId, StringComparison.Ordinal));
         if (manipulador is not null)

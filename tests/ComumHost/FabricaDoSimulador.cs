@@ -7,6 +7,7 @@ using Microsoft.Extensions.Time.Testing;
 using Simulador.Comum.Aleatorio;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Instituicoes.Contratos;
+using Simulador.Limites.Contratos;
 using Simulador.Massa.Contratos;
 using Simulador.Testes.Infra;
 
@@ -52,6 +53,16 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         return Com("Simulador:Mongo:Conexao", MongoDeTeste.Conexao).Com("Simulador:Mongo:Base", MongoDeTeste.NovaBase());
     }
 
+    /// <summary>Liga contadores reais em memória; por padrão, nenhum limite é aplicado nos testes de outras specs.</summary>
+    public FabricaDoSimulador ComContadoresEmMemoria(ContadoresEmMemoria? compartilhados = null)
+    {
+        Contadores = compartilhados ?? new ContadoresEmMemoria();
+        return this;
+    }
+
+    /// <summary>Contadores desta fábrica.</summary>
+    public IContadores Contadores { get; private set; } = new ContadoresNulos();
+
     /// <summary>Registra serviços extras (por exemplo, manipuladores de teste).</summary>
     public FabricaDoSimulador ComServicos(Action<IServiceCollection> registrar)
     {
@@ -87,6 +98,8 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
             servicos.AddSingleton<TimeProvider>(Relogio);
             servicos.RemoveAll<IGeradorAleatorio>();
             servicos.AddSingleton<IGeradorAleatorio>(new GeradorAleatorioComSemente(Semente));
+            servicos.RemoveAll<IContadores>();
+            servicos.AddSingleton(Contadores);
             if (!_usarMongo)
             {
                 servicos.RemoveAll<IRepositorioDeInstituicoes>();

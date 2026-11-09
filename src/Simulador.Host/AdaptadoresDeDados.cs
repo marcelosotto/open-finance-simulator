@@ -3,14 +3,27 @@ using Simulador.Catalogo.Contratos;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Dados.Contratos;
 using Simulador.Instituicoes.Contratos;
+using Simulador.Limites.Contratos;
 using Simulador.Marcacao.Contratos;
 using Simulador.Massa.Contratos;
 
 namespace Simulador.Host;
 
 /// <summary>Liga Dados a Consentimentos, Massa, Instituições e Marcação, sem referência entre os módulos (ADR-007).</summary>
-internal sealed class AmbienteDosDados(IConsultaDeInstituicoes instituicoes, IConsultaDeMassa consulta) : IAmbienteDosDados
+internal sealed class AmbienteDosDados(IConsultaDeInstituicoes instituicoes, IConsultaDeMassa consulta, ICatalogo catalogo, ILimites limites) : IAmbienteDosDados
 {
+    private readonly Lazy<Dictionary<string, OperacaoDoCatalogo>> _operacoes = new(() => catalogo.Operacoes.ToDictionary(o => o.OperationId, StringComparer.Ordinal));
+
+    public async Task<ICotaDeDados?> Cota(HttpContext contexto, OperacaoDeDados operacao, ConsentimentoDaChamada consentimento, CancellationToken cancelamento)
+    {
+        var banco = contexto.Request.RouteValues["banco"] as string ?? string.Empty;
+        var valores = (await instituicoes.Obter(banco, cancelamento).ConfigureAwait(false))!.Limites;
+        var limite = RegrasDaCotaDoHost.Limite(valores, catalogo.ClasseDe(_operacoes.Value[operacao.OperationId]));
+        return limite is { } teto && ExtensoesDosConsentimentos.ReceptoraDaChamada(contexto) is { } receptora
+            ? new CotaPelosLimites(limites, new CotaDaChamada(banco, operacao.OperationId, RegrasDaCotaDoHost.Objeto(contexto, operacao.Caminho, consentimento.ConsentId), consentimento.Cliente, receptora, teto))
+            : null;
+    }
+
     public ConsentimentoDaChamada? Consentimento(HttpContext contexto) =>
         ExtensoesDosConsentimentos.ConsentimentoDaChamada(contexto) is { } c ? new ConsentimentoDaChamada(c.ConsentId, c.Cliente, c.Recursos, c.Natureza) : null;
 

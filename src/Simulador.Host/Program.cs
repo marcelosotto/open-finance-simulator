@@ -4,6 +4,7 @@ using Simulador.Consentimentos.Contratos;
 using Simulador.Dados.Contratos;
 using Simulador.Host;
 using Simulador.Instituicoes.Contratos;
+using Simulador.Limites.Contratos;
 using Simulador.Marcacao.Contratos;
 using Simulador.Massa.Contratos;
 
@@ -26,6 +27,7 @@ builder.Services.AddInstituicoes(builder.Configuration).AddAdaptadoresDeInstitui
 builder.Services.AddMassa(builder.Configuration).AddAdaptadoresDaMassa();
 builder.Services.AddConsentimentos(builder.Configuration).AddAdaptadoresDeConsentimentos();
 builder.Services.AddDados(builder.Configuration).AddAdaptadoresDeDados();
+builder.Services.AddLimites(builder.Configuration).AddAdaptadoresDeLimites();
 
 var app = builder.Build();
 

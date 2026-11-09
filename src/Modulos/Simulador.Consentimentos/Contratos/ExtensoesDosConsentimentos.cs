@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Simulador.Consentimentos.Dominio;
 using Simulador.Consentimentos.Http;
 using Simulador.Consentimentos.Persistencia;
 
@@ -28,6 +29,10 @@ public static class ExtensoesDosConsentimentos
     /// <summary>Consentimento validado pelo portão nesta chamada; nulo sem portão.</summary>
     public static DadosDoConsentimento? ConsentimentoDaChamada(HttpContext contexto) =>
         contexto.Items[PortaoDeSeguranca.ItemDoConsentimento] as DadosDoConsentimento;
+
+    /// <summary>Receptora do token validado nesta chamada; nula sem portão.</summary>
+    public static string? ReceptoraDaChamada(HttpContext contexto) =>
+        (contexto.Items[PortaoDeSeguranca.ItemDoToken] as TokenDeAcesso)?.OrganisationId;
 
     public static IServiceCollection AddConsentimentos(this IServiceCollection servicos, IConfiguration configuracao)
     {

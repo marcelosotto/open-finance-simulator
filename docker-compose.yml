@@ -9,6 +9,7 @@ services:
       - "127.0.0.1:8081:8081"  # Administração: só na própria máquina (FR-025)
     environment:
       Simulador__Mongo__Conexao: mongodb://mongo:27017
+      Simulador__Redis__Conexao: redis:6379
       Simulador__MarcaDoAmbiente: ${Simulador__MarcaDoAmbiente-hml}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     depends_on:
@@ -16,6 +17,16 @@ services:
         condition: service_started
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   otel-collector:
     image: otel/opentelemetry-collector:0.115.0

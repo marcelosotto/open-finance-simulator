@@ -84,7 +84,9 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             return itens.Recusa;
         }
 
-        return Saida(contexto, operacao, itens.Lista, pedido, chave, consentimento, recurso);
+        // Chave válida é página seguinte: não confere nem conta a cota (RN27, UC19).
+        var cota = emissao is null ? await ambiente.Cota(contexto, operacao, consentimento, cancelamento).ConfigureAwait(false) : null;
+        return await Saida(contexto, operacao, itens.Lista, pedido, chave, consentimento, recurso, cota).ConfigureAwait(false);
     }
 
     private async Task<(RecursoDeDados? Recurso, IResult? Recusa)> Acessar(string? id, Familia familia, ConsentimentoDaChamada consentimento, CancellationToken cancelamento)
@@ -299,14 +301,15 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         _ => null,
     };
 
-    private IResult Saida(
+    private async Task<IResult> Saida(
         HttpContext contexto,
         OperacaoDeDados operacao,
         IReadOnlyList<Preenchimento> itens,
         PedidoDePagina pedido,
         string? chave,
         ConsentimentoDaChamada consentimento,
-        RecursoDeDados? recurso)
+        RecursoDeDados? recurso,
+        ICotaDeDados? cota)
     {
         var schema = Schemas.GetOrAdd(operacao.OperationId, _ => JsonNode.Parse(operacao.SchemaDaResposta)!.AsObject());
         var propriedades = schema["properties"]!.AsObject();
@@ -317,6 +320,14 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         if (paginada && pedido.ForaDaFaixa(total))
         {
             return Erro422("PAGE_NOT_FOUND");
+        }
+
+        if (cota is not null && await cota.Esgotada(contexto.RequestAborted).ConfigureAwait(false))
+        {
+            return Results.Json(
+                EnvelopeDeErro.Criar("LOCKED", "Recurso bloqueado", "A operação foi recusada porque o limite de consultas foi atingido.", relogio),
+                EnvelopeDeErro.OpcoesJson,
+                statusCode: StatusCodes.Status423Locked);
         }
 
         JsonNode? dados;
@@ -344,7 +355,13 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         }
 
         raiz["meta"] = Meta(propriedades["meta"] as JsonObject, total, pedido.TotalDePaginas(total));
-        return Results.Text(raiz.ToJsonString(EnvelopeDeErro.OpcoesJson), "application/json", Encoding.UTF8);
+        var resposta = Results.Text(raiz.ToJsonString(EnvelopeDeErro.OpcoesJson), "application/json", Encoding.UTF8);
+        if (cota is not null)
+        {
+            await cota.Contar(contexto.RequestAborted).ConfigureAwait(false);
+        }
+
+        return resposta;
     }
 
     private JsonObject Meta(JsonObject? schema, int total, int paginas)
