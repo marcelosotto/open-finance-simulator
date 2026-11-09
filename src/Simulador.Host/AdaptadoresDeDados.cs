@@ -33,7 +33,7 @@ internal sealed class AmbienteDosDados(IConsultaDeInstituicoes instituicoes, ICo
             : null;
 
     public async Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) =>
-        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r && r.CriadoEm <= instante
+        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r && (r.Natureza == Naturezas.Virtual || r.CriadoEm <= instante)
             ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, NoInstante.Estado(r.Estado, r.EstadosAnteriores, instante), r.Natureza, r.InicioDoHistorico)
             : null;
 

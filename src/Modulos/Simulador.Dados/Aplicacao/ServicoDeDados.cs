@@ -26,6 +26,8 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
     private const string Debito = "DEBITO";
     private const string Valor = ".amount";
     private const int ItensDaSublista = 2;
+    private const int SegundosDaPrimeiraHora = 3_599;
+    private static readonly TimeOnly UltimoSegundoDaPrimeiraHora = new(0, 59, 59);
     private const decimal LimiteDoCartao = 50_000m;
     private static readonly ConcurrentDictionary<string, JsonObject> Schemas = new(StringComparer.Ordinal);
 
@@ -313,10 +315,9 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
     /// <summary>Nunca depois do instante da consulta, exceto lançamento futuro (RN44).</summary>
     private static DateTime Momento(TransacaoDeDados t, DateTimeOffset instante)
     {
+        var fixo = t.Dia.ToDateTime(UltimoSegundoDaPrimeiraHora).AddSeconds(-Math.Min(t.Posicao, SegundosDaPrimeiraHora));
         var agora = instante.UtcDateTime;
-        var topo = DateOnly.FromDateTime(agora) == t.Dia ? agora : t.Dia.ToDateTime(new TimeOnly(23, 59, 59));
-        var momento = topo.AddSeconds(-Math.Min(t.Posicao, 86_000));
-        return DateOnly.FromDateTime(momento) == t.Dia ? momento : t.Dia.ToDateTime(TimeOnly.MinValue);
+        return DateOnly.FromDateTime(agora) == t.Dia && fixo > agora ? agora : fixo;
     }
 
     private IResult? RecusaDeData(Periodo periodo) => periodo.Erro switch
@@ -397,8 +398,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
 
     private static bool Corresponde(JsonNode? schema, Preenchimento item, List<(string Campo, string Valor)> filtros)
     {
-        var gerado = GeradorPorSchema.Gerar(schema, item);
-        return filtros.All(f => gerado?[f.Campo]?.ToString() == f.Valor);
+        return filtros.All(f => GeradorPorSchema.Campo(schema, f.Campo, item) == f.Valor);
     }
 
     private JsonObject Meta(JsonObject? schema, int total, int paginas)
