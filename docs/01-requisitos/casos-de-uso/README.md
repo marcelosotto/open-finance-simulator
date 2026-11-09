@@ -192,8 +192,9 @@ Todos começam como **Rascunho**.
 - **Ator:** Receptora
 - **Objetivo:** identificar quem chama o simulador, porque cada receptora tem seus limites.
 - **Pré-condição:** o operador cadastrou a receptora com nome e `organisationId`, e o simulador gerou usuário e senha de teste.
-- **Fluxo principal:** 1. A receptora envia usuário, senha e `consentId`. 2. O simulador devolve um token ligado à receptora e ao consentimento. 3. A receptora usa o token nas APIs.
-- **Exceções:** credencial inválida ou consentimento que não esteja `AUTHORISED` → recusado.
+- **Fluxo principal:** 1. A receptora envia usuário, senha e `scope=consent:{consentId}`. 2. O simulador devolve um token ligado à receptora e ao consentimento. 3. A receptora usa o token em Recursos, nas APIs de produto e na renovação.
+- **Fluxo alternativo — token da receptora:** com `scope=consents`, recebe um token sem consentimento, usado para criar, consultar e revogar consentimentos.
+- **Exceções:** credencial inválida, ou token de consentimento pedido para um que não esteja `AUTHORISED` ou que seja de outra receptora → recusado.
 - **Regras:** [RN120](../regras-de-negocio.md#rn120), [RN122](../regras-de-negocio.md#rn122), [RN123](../regras-de-negocio.md#rn123).
 
 ### <a id="uc09"></a>UC09 — Criar consentimento por API
@@ -224,7 +225,7 @@ Todos começam como **Rascunho**.
 ### <a id="uc12"></a>UC12 — Consultar e revogar consentimento
 - **Status:** Aprovado
 - **Ator:** Receptora, QA ou Desenvolvedor
-- **Fluxo principal:** 1. A receptora consulta `GET /consents/{consentId}`. 2. Revoga por `DELETE`, ou alguém revoga no painel. 3. Vai para `REJECTED`, com quem rejeitou.
+- **Fluxo principal:** 1. A receptora consulta `GET /consents/{consentId}`. 2. Revoga por `DELETE`, ou alguém revoga no painel ou pela API de administração, que chega antes do painel. 3. Vai para `REJECTED`, com quem rejeitou.
 - **Pós-condição:** as APIs passam a responder 401 para esse consentimento ([RN88](../regras-de-negocio.md#rn88)). Os outros consentimentos do cliente seguem valendo ([RN49](../regras-de-negocio.md#rn49)).
 - **Regras:** [RN82](../regras-de-negocio.md#rn82), [RN86](../regras-de-negocio.md#rn86), [RN88](../regras-de-negocio.md#rn88).
 

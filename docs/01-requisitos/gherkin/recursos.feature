@@ -30,6 +30,7 @@ Funcionalidade: API de Recursos
     Então a resposta deve ter status 504
 
   # RN104
+  @spec-005
   Esquema do Cenário: Comportamento por estado
     Dado que a conta está em "<estado>"
     Quando Ana lista contas
@@ -45,11 +46,13 @@ Funcionalidade: API de Recursos
       | PENDING_AUTHORISATION   | não aparece | 403    |
 
   # RN105
+  @spec-005
   Cenário: Conta de outro cliente
     Quando Ana consulta uma conta que não é de Rafael
     Então a resposta deve ter status 403 com "RESOURCE_FORBIDDEN"
 
   # RN105
+  @spec-005
   Cenário: Conta fora do consentimento
     Dado que Mariana tem a conta A em um consentimento e a conta B em outro
     Quando Ana consulta a conta B com o primeiro consentimento
@@ -87,6 +90,7 @@ Funcionalidade: API de Recursos
     Então cada conta deve aparecer com o próprio estado
 
   # RN108
+  @spec-007
   Cenário: Bloqueio programado
     Dado uma regra que bloqueia a conta às 10h
     Quando Ana consulta a conta às 10h01

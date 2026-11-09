@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -32,4 +32,4 @@
 ## Notes
 
 - As rotas e os códigos oficiais aparecem porque são o próprio contrato do produto, como nas specs anteriores.
-- Três marcadores (FR-003, FR-008 e FR-027) e os itens `[Qn]` aguardam o lote de perguntas Q1 a Q9.
+- As perguntas Q1 a Q9 foram respondidas em 2026-11-09 e registradas na spec e em `docs/`.

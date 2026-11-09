@@ -14,7 +14,17 @@
 
 ### Session 2026-11-09
 
-Perguntas Q1 a Q9 enviadas a Marcelo em um único lote, aguardando resposta. Enquanto isso, os requisitos marcados com `[Qn]` trazem a recomendação, sem valor de decisão. Três deles têm marcador `[NEEDS CLARIFICATION]`, porque mudam o escopo.
+Decisões aprovadas por Marcelo em 2026-11-09 e registradas em `docs/` (RN53, RN80, RN82, RN87, RN120, RN122, UC12, UC25, ADR-006, campos obrigatórios, modelo de domínio, `recursos.feature` e `consentimento-api.feature`).
+
+- Q1: Como a receptora se autentica nas chamadas sem consentimento? → A: Um único `POST /token` no endereço do banco, no formato OAuth: `scope=consents` dá o token da receptora; `scope=consent:{consentId}` dá o token do consentimento. Diferença intencional: a renovação usa o token do consentimento, sem `authorization_code`, e "só `AUTHORISED` recebe token" vale só para o token do consentimento.
+- Q2: Qual a validade do token? → A: 900 segundos, pelo relógio injetado, sem refresh.
+- Q3: O que o cadastro da receptora tem? → A: Administração com criar, listar e consultar; nome obrigatório; `organisationId` gerado se omitido; nenhuma pronta; usuário com prefixo de teste.
+- Q4: A quem o consentimento fica ligado? → A: Criado por API, só à receptora criadora. Gerado por lote ou mundo virtual, a qualquer receptora cadastrada, sem gravar vínculo. Token em outro banco responde 401.
+- Q5: Quais `rejectedBy` e razão cada rejeição grava? → A: `DELETE`: `TPP` e `CUSTOMER_MANUALLY_REVOKED`. Painel ou administração: `USER` e `CUSTOMER_MANUALLY_REVOKED`. Vencimento: `ASPSP` e `CONSENT_MAX_DATE_REACHED`. Fraude: `ASPSP` e `INTERNAL_SECURITY_REASON`.
+- Q6: Como identificar o cliente e quem pode renovar? → A: Em PJ, o cliente é o CNPJ, e `loggedUser` deve ser CPF de cliente simulado. Renovação: PF, só o CPF criador; PJ, qualquer CPF simulado com o mesmo CNPJ; documento diferente responde 422 `ERRO_NAO_MAPEADO`.
+- Q7: O que fica na 004? → A: O portão (400, 401, 403) vale em todas as rotas de produto. Os cenários de RN104 e RN105 vão para `@spec-005`, e "Bloqueio programado" (RN108) vai para `@spec-007`.
+- Q8: Como ficam painel e alçadas? → A: Revogação por API de administração agora. `DEPENDE_MULTIPLA_ALCADA` fica no domínio, com teste de unidade, e o cenário vai para `@spec-008`.
+- Q9: O que as APIs oficiais fazem sobre massa virtual? → A: `DELETE` e `/extends` gravam ajuste; `POST /consents` para cliente virtual cria consentimento persistido sobre recursos virtuais; adicionar produto a cliente virtual é recusado.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -106,7 +116,7 @@ Como receptora, quero renovar um consentimento sem nova jornada e consultar o hi
 1. **Given** um consentimento que vence em 30 dias, **When** a receptora renova por mais 12 meses, **Then** a validade muda e a extensão aparece em `/extensions`.
 2. **Given** uma data menor que a validade atual, **When** a receptora renova, **Then** responde 422 `DATA_EXPIRACAO_INVALIDA`.
 3. **Given** um consentimento em `REJECTED`, **When** a receptora renova, **Then** responde 422 `ESTADO_CONSENTIMENTO_INVALIDO`.
-4. **Given** um consentimento com múltiplas alçadas, **When** a receptora renova, **Then** responde 422 `DEPENDE_MULTIPLA_ALCADA`.
+4. **Given** um consentimento com múltiplas alçadas, **When** a regra de renovação é avaliada, **Then** o resultado é 422 `DEPENDE_MULTIPLA_ALCADA` (teste de unidade; o cenário fica na 008).
 
 ---
 
@@ -145,28 +155,28 @@ Como operador ou QA, quero mudar o estado de um recurso ou adicionar um produto,
 
 **Receptora e token (modo simples)**
 
-- **FR-001**: O operador MUST poder cadastrar uma receptora pela administração, e o simulador MUST gerar usuário e senha de teste (RN120). `[Q3]` Nome obrigatório; `organisationId` gerado se não for informado; sem receptora pronta ao subir o ambiente.
+- **FR-001**: O operador MUST poder cadastrar uma receptora pela administração, e o simulador MUST gerar usuário e senha de teste (RN120). Nome obrigatório; `organisationId` gerado se não for informado; sem receptora pronta ao subir o ambiente. A administração MUST permitir listar e consultar receptoras.
 - **FR-002**: Toda credencial emitida MUST estar identificada como de teste e não servir fora do simulador (RN123).
-- **FR-003**: A receptora MUST obter o token informando usuário, senha e `consentId`; só consentimento `AUTHORISED` recebe token, e credencial inválida é recusada (UC25, RN120). [NEEDS CLARIFICATION: Q1 — `POST /consents` e as demais chamadas sem consentimento pedem um token `client_credentials` no contrato oficial, e UC25 só prevê token por consentimento. Como a receptora se autentica nessas chamadas?]
+- **FR-003**: A receptora MUST obter o token por um único `POST /token` no endereço do banco, no formato OAuth: `scope=consents` dá o token da receptora, e `scope=consent:{consentId}` dá o token do consentimento (UC25, RN120). Credencial inválida é recusada. Só consentimento `AUTHORISED` recebe token do consentimento.
 - **FR-004**: O token MUST ligar a receptora, o consentimento, o cliente e os escopos das permissões concedidas; a identidade MUST vir do token, nunca de cabeçalho próprio (RN122, princípio VIII).
-- **FR-005**: O token MUST deixar de valer quando o consentimento deixa de estar `AUTHORISED`, efeito verificado na própria chamada (RN88, RN122). `[Q2]` Validade de 900 segundos, pelo relógio injetado.
-- **FR-006**: `[Q4]` Consentimento criado por uma receptora só aceita token, consulta e revogação dela; gerado por lote ou mundo virtual, aceita qualquer receptora cadastrada. Token usado em outro banco responde 401.
+- **FR-005**: O token MUST deixar de valer quando o consentimento deixa de estar `AUTHORISED`, efeito verificado na própria chamada em Recursos e nas APIs de produto (RN88, RN122); a renovação responde pela regra de RN87. A validade é de 900 segundos, pelo relógio injetado.
+- **FR-006**: Consentimento criado por uma receptora só aceita token, consulta e revogação dela; gerado por lote ou mundo virtual, aceita qualquer receptora cadastrada. Token usado em outro banco responde 401.
 
 **Portão das APIs protegidas**
 
 - **FR-007**: Toda rota oficial protegida MUST avaliar `x-fapi-interaction-id`, token e permissão antes de qualquer efeito de negócio, na ordem de RN39: 400 (RN38), 401 sem token ou com consentimento sem validade (RN88), 403 quando falta permissão (RN122). As etapas de capacidade, tráfego, limite operacional e cenário entram nas specs 006 e 007.
-- **FR-008**: [NEEDS CLARIFICATION: Q7 — o portão vale já para as rotas de produto, que seguem em 501 até a spec 005, e quais cenários de `recursos.feature` e `consentimento-api.feature` passam para as specs 005, 007 e 008?]
+- **FR-008**: O portão MUST valer para as rotas de produto, que seguem em 501 depois dele até a spec 005. Os cenários de RN104 e RN105 ficam na spec 005, "Bloqueio programado" na 007 e "Renovação com múltiplas alçadas" na 008.
 
 **Consentimentos**
 
 - **FR-009**: `POST /consents` MUST criar o consentimento em `AUTHORISED` e responder 201, com todos os produtos do cliente naquele banco cobertos pelas permissões (RN80, UC09).
-- **FR-010**: Documento que não é de cliente simulado MUST responder 422 `ERRO_NAO_MAPEADO` (RN80, RNF10). `[Q6]` Em pedido PJ, o cliente é o CNPJ de `businessEntity`, e `loggedUser` MUST ser o CPF de um cliente simulado PF.
+- **FR-010**: Documento que não é de cliente simulado MUST responder 422 `ERRO_NAO_MAPEADO` (RN80, RNF10). Em pedido PJ, o cliente é o CNPJ de `businessEntity`, e `loggedUser` MUST ser o CPF de um cliente simulado PF.
 - **FR-011**: O sistema MUST validar os agrupamentos da tabela do contrato oficial, removendo produto individual não oferecido e mantendo os agrupados (Operações de Crédito, Investimentos e Câmbio), com os erros 422 de RN83, e MUST aplicar os erros de RN84.
 - **FR-012**: Sem `expirationDateTime`, o prazo MUST ser indeterminado (RN85). Com a data, MUST ser futura.
 - **FR-013**: `GET /consents/{consentId}` MUST devolver o consentimento, inclusive `REJECTED`, com o objeto `rejection` oficial.
 - **FR-014**: `DELETE /consents/{consentId}` MUST levar o consentimento a `REJECTED` e responder 204; em `REJECTED`, 422 (RN86, contrato oficial).
 - **FR-015**: A administração MUST permitir revogar qualquer consentimento, registrando o autor (RN71, RN82, RN86).
-- **FR-016**: `REJECTED` MUST ser final e registrar quem rejeitou e a razão (RN82). `[Q5]` `DELETE` → `TPP` com `CUSTOMER_MANUALLY_REVOKED`; administração → `USER` com `CUSTOMER_MANUALLY_REVOKED`; vencimento → `ASPSP` com `CONSENT_MAX_DATE_REACHED`; fraude → `ASPSP` com `INTERNAL_SECURITY_REASON`.
+- **FR-016**: `REJECTED` MUST ser final e registrar quem rejeitou e a razão (RN82): `DELETE` → `TPP` com `CUSTOMER_MANUALLY_REVOKED`; administração → `USER` com `CUSTOMER_MANUALLY_REVOKED`; vencimento → `ASPSP` com `CONSENT_MAX_DATE_REACHED`; fraude → `ASPSP` com `INTERNAL_SECURITY_REASON`.
 - **FR-017**: Ao vencer, o consentimento MUST ser tratado como `REJECTED` em toda leitura, usando o relógio injetado (RN73, RN82).
 - **FR-018**: Revogar um consentimento MUST NOT afetar outro do mesmo cliente (RN49).
 
@@ -174,16 +184,16 @@ Como operador ou QA, quero mudar o estado de um recurso ou adicionar um produto,
 
 - **FR-019**: `POST /consents/{consentId}/extends` MUST aceitar só `AUTHORISED`, mudar só validade e finalidade, e aplicar os erros 422 de RN87. A mudança MUST aparecer em `GET /consents/{consentId}`.
 - **FR-020**: `GET /consents/{consentId}/extensions` MUST listar as renovações feitas.
-- **FR-021**: `[Q6]` Em PF, só o CPF criador renova; em PJ, qualquer CPF de cliente simulado com o CNPJ do consentimento. Documento diferente responde 422 `ERRO_NAO_MAPEADO`.
-- **FR-022**: `[Q8]` Consentimento que exija múltiplas alçadas MUST responder 422 `DEPENDE_MULTIPLA_ALCADA` na renovação; o valor nasce na spec 008 (UC11).
+- **FR-021**: Em PF, só o CPF criador renova; em PJ, qualquer CPF de cliente simulado com o CNPJ do consentimento. Documento diferente responde 422 `ERRO_NAO_MAPEADO`.
+- **FR-022**: Consentimento que exija múltiplas alçadas MUST responder 422 `DEPENDE_MULTIPLA_ALCADA` na renovação; o valor nasce na spec 008 (UC11), e a regra tem teste de unidade.
 
 **Recursos**
 
 - **FR-023**: `GET /resources` MUST listar todo recurso selecionado, em qualquer estado, com tipo e estado, e sem Dados Cadastrais; sem recursos, 200 com lista vazia (RN47, RN100, RN102, RN107).
 - **FR-024**: Enquanto a instituição prepara, a resposta MUST ser 202 sem corpo, até a duração configurada na instituição, limitada a 5 minutos depois da criação do consentimento; passado o limite, 504 (RN103).
 - **FR-025**: A administração MUST permitir mudar o estado de um recurso, recusando as transições proibidas por RN101, e a mudança MUST valer na próxima chamada (RN108). Em recurso virtual, a mudança MUST virar ajuste (RN53).
-- **FR-026**: A administração MUST permitir adicionar um produto ao cliente em um banco, com estado inicial opcional, padrão `AVAILABLE`. Em seleção agrupada, o produto MUST entrar nos consentimentos vigentes (RN106). `[Q9]` Adicionar produto a cliente virtual é recusado.
-- **FR-027**: [NEEDS CLARIFICATION: Q9 — `DELETE` e `/extends` em consentimento virtual gravam ajuste, embora RN53 diga que ajustes nascem na administração? `POST /consents` para um cliente virtual é aceito?]
+- **FR-026**: A administração MUST permitir adicionar um produto ao cliente em um banco, com estado inicial opcional, padrão `AVAILABLE`. Em seleção agrupada, o produto MUST entrar nos consentimentos vigentes (RN106). Adicionar produto a cliente virtual MUST ser recusado.
+- **FR-027**: `DELETE` e `/extends` em consentimento virtual MUST gravar ajuste (RN53). `POST /consents` para cliente virtual MUST criar consentimento persistido sobre os recursos virtuais (RN80, RN65).
 
 **Transversais**
 
@@ -204,7 +214,7 @@ Como operador ou QA, quero mudar o estado de um recurso ou adicionar um produto,
 
 ### Measurable Outcomes
 
-- **SC-001**: Todos os cenários `@spec-004` passam no CI, exceto os que forem movidos para outra spec com aprovação (Q7).
+- **SC-001**: Todos os cenários `@spec-004` passam no CI, exceto os movidos para as specs 005, 007 e 008 (Q7, Q8).
 - **SC-002**: 100% das respostas de Consentimentos e Recursos, com perfil `estavel`, validam contra os contratos oficiais fixados.
 - **SC-003**: Um consentimento revogado passa a responder 401 já na chamada seguinte, em 100% das tentativas.
 - **SC-004**: Uma mudança de estado de recurso aparece na chamada seguinte em 100% das tentativas, persistido ou virtual.

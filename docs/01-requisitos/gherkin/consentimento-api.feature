@@ -102,6 +102,7 @@ Funcionalidade: API de Consentimentos
     Então a resposta deve ter status 422 com "DATA_EXPIRACAO_INVALIDA"
 
   # RN87
+  @spec-008
   Cenário: Renovação com múltiplas alçadas
     Dado um consentimento da Indústria Aurora com duas aprovadoras
     Quando Ana tenta renovar
