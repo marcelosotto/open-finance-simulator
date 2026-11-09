@@ -1,113 +1,66 @@
-# Implementation Plan: [FEATURE]
+# Implementation Plan: APIs de dados
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
+**Branch**: `claude/005-apis-de-dados-874b2a` | **Date**: 2026-11-09 | **Spec**: [spec.md](spec.md)
 
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
-
-**Note**: This template is filled in by the `/speckit-plan` command; its definition describes the execution workflow.
+**Input**: [spec.md](spec.md), com as decisões Q1 a Q10.
 
 ## Summary
 
-[Extract from feature spec: primary requirement + technical approach from research]
+Os 69 endpoints de dados deixam de responder 501. Um módulo novo, `Simulador.Dados`, atende as 13 famílias com um único manipulador: lê a forma da resposta do contrato travado, preenche com a massa (identificadores, transações, saldo, faturas) e aplica a paginação oficial. Contas e cartão têm dados coerentes; nas demais famílias o dado sai do schema, sem regra por campo (Q5). A massa ganha o estado da transação (RN44), lançamentos futuros em Contas (até 30 dias) e congelamento de ajustes pelo instante da chave (RN37).
 
 ## Technical Context
 
-<!--
-  ACTION REQUIRED: Replace the content in this section with the technical details
-  for the project. The structure here is presented in advisory capacity to guide
-  the iteration process.
--->
+**Language/Version**: C# / .NET 10 (Minimal API)
 
-**Language/Version**: [e.g., Python 3.11, Swift 5.9, Rust 1.75 or NEEDS CLARIFICATION]
+**Primary Dependencies**: as já existentes; nenhuma nova
 
-**Primary Dependencies**: [e.g., FastAPI, UIKit, LLVM or NEEDS CLARIFICATION]
+**Storage**: MongoDB, via massa; nada novo é gravado
 
-**Storage**: [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
+**Testing**: xUnit, Reqnroll, Testcontainers
 
-**Testing**: [e.g., pytest, XCTest, cargo test or NEEDS CLARIFICATION]
+**Target Platform**: Docker Compose
 
-**Target Platform**: [e.g., Linux server, iOS 15+, WASM or NEEDS CLARIFICATION]
+**Project Type**: serviço web, monólito modular
 
-**Project Type**: [e.g., library/cli/web-service/mobile-app/compiler/desktop-app or NEEDS CLARIFICATION]
+**Performance Goals**: RNF01 a RNF12; consultas sem data futura mantêm o custo atual (Q7)
 
-**Performance Goals**: [domain-specific, e.g., 1000 req/s, 10k lines/sec, 60 fps or NEEDS CLARIFICATION]
+**Constraints**: chave de paginação não gravada; dado virtual não gravado; relógio e semente injetados
 
-**Constraints**: [domain-specific, e.g., <200ms p95, <100MB memory, offline-capable or NEEDS CLARIFICATION]
-
-**Scale/Scope**: [domain-specific, e.g., 10k users, 1M LOC, 50 screens or NEEDS CLARIFICATION]
+**Scale/Scope**: 69 operações, 13 contratos
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+| Princípio | Situação |
+|---|---|
+| I. `docs/` é a fonte | Decisões registradas antes do plano (`61e0205`) |
+| II. Regra oficial | Mínimo, janelas e `meta` seguem o contrato |
+| III. Desvio explícito | Anomalia RN113 fica em `@spec-009` |
+| IV. Marcação | IDs com o prefixo do recurso; `transactionName` e nome marcados |
+| V. Só responde | Nenhuma chamada é registrada |
+| VI. Repetível | Sem sorteio próprio; tudo deriva de recurso, dia e semente |
+| VII. Specs como fonte | Formato e mínimo lidos do contrato; rota nenhuma à mão |
+| VIII. Cliente sem mudança | Mesmos caminhos; identidade do token |
+| IX. Testes primeiro | Cenários aprovados; validação dos 69 endpoints contra o schema |
+| X. Simplicidade | Um manipulador e um gerador, em vez de 69 rotas |
 
-[Gates determined based on constitution file]
+Sem exceções a justificar.
 
 ## Project Structure
 
-### Documentation (this feature)
-
 ```text
-specs/[###-feature]/
-├── plan.md              # This file (/speckit-plan command output)
-├── research.md          # Phase 0 output (/speckit-plan command)
-├── data-model.md        # Phase 1 output (/speckit-plan command)
-├── quickstart.md        # Phase 1 output (/speckit-plan command)
-├── contracts/           # Phase 1 output (/speckit-plan command)
-└── tasks.md             # Phase 2 output (/speckit-tasks command - NOT created by /speckit-plan)
+src/Modulos/Simulador.Dados/
+├── Contratos/    # IAmbienteDosDados, registro do módulo
+├── Dominio/      # Paginação, janelas de data, chave, famílias
+└── Aplicacao/    # Manipulador e gerador por schema
+src/Simulador.Host/AdaptadoresDeDados.cs
+src/Modulos/Simulador.Catalogo/  # manipulador por família
+src/Modulos/Simulador.Massa/     # estado, futuros, saldo, ajustes até o instante
+src/Modulos/Simulador.Consentimentos/  # escrita condicional do estado do recurso
+tests/  # unidade, integração e passos Gherkin
 ```
 
-### Source Code (repository root)
-<!--
-  ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
-  for this feature. Delete unused options and expand the chosen structure with
-  real paths (e.g., apps/admin, packages/something). The delivered plan must
-  not include Option labels.
--->
+**Structure Decision**: módulo próprio, ligado aos demais pelo host (ADR-007).
 
-```text
-# [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)
-src/
-├── models/
-├── services/
-├── cli/
-└── lib/
+## Artefatos
 
-tests/
-├── contract/
-├── integration/
-└── unit/
-
-# [REMOVE IF UNUSED] Option 2: Web application (when "frontend" + "backend" detected)
-backend/
-├── src/
-│   ├── models/
-│   ├── services/
-│   └── api/
-└── tests/
-
-frontend/
-├── src/
-│   ├── components/
-│   ├── pages/
-│   └── services/
-└── tests/
-
-# [REMOVE IF UNUSED] Option 3: Mobile + API (when "iOS/Android" detected)
-api/
-└── [same as backend above]
-
-ios/ or android/
-└── [platform-specific structure: feature modules, UI flows, platform tests]
-```
-
-**Structure Decision**: [Document the selected structure and reference the real
-directories captured above]
-
-## Complexity Tracking
-
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+[research.md](research.md), [data-model.md](data-model.md), [contracts/comportamento-dos-dados.md](contracts/comportamento-dos-dados.md), [quickstart.md](quickstart.md).

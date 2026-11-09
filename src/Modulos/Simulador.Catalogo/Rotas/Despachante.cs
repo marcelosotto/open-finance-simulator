@@ -14,6 +14,10 @@ internal sealed class Despachante(IResolvedorDeInstituicao resolvedor, TimeProvi
     public static HashSet<string> Implementadas(IServiceProvider servicos) =>
         servicos.GetServices<IManipuladorDeOperacao>().Select(m => m.OperationId).ToHashSet(StringComparer.Ordinal);
 
+    /// <summary>Se a operação tem manipulador próprio ou de família.</summary>
+    public static bool Implementada(IServiceProvider servicos, OperacaoDoCatalogo operacao) =>
+        Implementadas(servicos).Contains(operacao.OperationId) || servicos.GetServices<IManipuladorDeFamilia>().Any(m => m.Atende(operacao));
+
     public async Task<IResult> Despachar(HttpContext contexto, OperacaoDoCatalogo operacao)
     {
         var banco = contexto.Request.RouteValues["banco"] as string ?? string.Empty;
@@ -31,9 +35,13 @@ internal sealed class Despachante(IResolvedorDeInstituicao resolvedor, TimeProvi
 
         var manipulador = contexto.RequestServices.GetServices<IManipuladorDeOperacao>()
             .FirstOrDefault(m => string.Equals(m.OperationId, operacao.OperationId, StringComparison.Ordinal));
-        return manipulador is null
-            ? Respostas.NaoImplementado(relogio)
-            : await manipulador.Manipular(contexto).ConfigureAwait(false);
+        if (manipulador is not null)
+        {
+            return await manipulador.Manipular(contexto).ConfigureAwait(false);
+        }
+
+        var familia = contexto.RequestServices.GetServices<IManipuladorDeFamilia>().FirstOrDefault(m => m.Atende(operacao));
+        return familia is null ? Respostas.NaoImplementado(relogio) : await familia.Manipular(contexto, operacao).ConfigureAwait(false);
     }
 }
 

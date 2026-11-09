@@ -60,7 +60,9 @@ internal sealed class BaseDaMassa(IRepositorioDeMassa repositorio, IAmbienteDaMa
         new Dictionary<string, decimal>(StringComparer.Ordinal) { [BancoPadrao] = 100m },
         new Dictionary<string, decimal>(StringComparer.Ordinal) { [PerfisProntos.Padrao] = 100m });
 
-    public DateOnly Hoje => DateOnly.FromDateTime(relogio.GetUtcNow().UtcDateTime);
+    public DateTimeOffset Agora => relogio.GetUtcNow();
+
+    public DateOnly Hoje => DateOnly.FromDateTime(Agora.UtcDateTime);
 
     public async Task<IReadOnlyDictionary<string, PerfilDeDados>> Perfis(CancellationToken cancelamento)
     {
@@ -507,7 +509,10 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         return item?.Recursos.FirstOrDefault(r => r.ResourceId == resourceId);
     }
 
-    public async Task<IReadOnlyList<Transacao>?> Transacoes(string resourceId, DateOnly de, DateOnly ate, CancellationToken cancelamento)
+    public Task<IReadOnlyList<Transacao>?> Transacoes(string resourceId, DateOnly de, DateOnly ate, CancellationToken cancelamento) =>
+        TransacoesEm(resourceId, de, ate, baseDaMassa.Agora, cancelamento);
+
+    public async Task<IReadOnlyList<Transacao>?> TransacoesEm(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento)
     {
         if (await ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is not { } recurso)
         {
@@ -515,7 +520,7 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         }
 
         var perfis = await baseDaMassa.Perfis(cancelamento).ConfigureAwait(false);
-        return CalculoDeTransacoes.Transacoes(recurso, perfis[recurso.Perfil], de, ate, baseDaMassa.Hoje, await Ajustes(resourceId, cancelamento).ConfigureAwait(false));
+        return CalculoDeTransacoes.Transacoes(recurso, perfis[recurso.Perfil], de, ate, DateOnly.FromDateTime(instante.UtcDateTime), await Ajustes(resourceId, cancelamento, instante).ConfigureAwait(false));
     }
 
     public async Task<decimal?> Saldo(string resourceId, CancellationToken cancelamento)
@@ -581,7 +586,7 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         foreach (var recurso in item.Recursos)
         {
             var ajuste = await repositorio.ObterAjuste(AlvoDoRecurso(recurso.ResourceId), cancelamento).ConfigureAwait(false);
-            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado } : recurso);
+            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado, Versao = ajuste.Versao } : recurso);
         }
 
         return item with { Consentimentos = consentimentos, Recursos = recursos };
@@ -597,8 +602,9 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         return await ComAjustes(atual.Gerador.Gerar(indice, indice), cancelamento).ConfigureAwait(false);
     }
 
-    private async Task<IReadOnlyDictionary<string, decimal>> Ajustes(string resourceId, CancellationToken cancelamento) =>
+    private async Task<IReadOnlyDictionary<string, decimal>> Ajustes(string resourceId, CancellationToken cancelamento, DateTimeOffset? ate = null) =>
         (await repositorio.ListarAjustesDoRecurso(resourceId, cancelamento).ConfigureAwait(false))
+            .Where(a => ate is null || a.AtualizadoEm is null || a.AtualizadoEm <= ate)
             .ToDictionary(a => a.Alvo, a => a.Valor!.Value, StringComparer.Ordinal);
 }
 
@@ -715,7 +721,7 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
         }
 
         var chave = CalculoDeTransacoes.Chave(recurso.ResourceId, dia, posicao);
-        return Resultados.Ok(new Ajuste(chave, pedido.Tipo, recurso.Natureza == Naturezas.Virtual, Valor: pedido.Valor, RecursoId: recurso.ResourceId, Banco: recurso.Banco, LoteId: recurso.LoteId));
+        return Resultados.Ok(new Ajuste(chave, pedido.Tipo, recurso.Natureza == Naturezas.Virtual, Valor: pedido.Valor, RecursoId: recurso.ResourceId, Banco: recurso.Banco, LoteId: recurso.LoteId, AtualizadoEm: relogio.GetUtcNow()));
     }
 
     private async Task<Resultado<Ajuste>> DeConsentimento(PedidoDeAjuste pedido, CancellationToken cancelamento)
@@ -774,10 +780,10 @@ internal sealed class EscritaDeMassa(
                 cancelamento)
             : repositorio.SalvarConsentimentoSeVersao(consentimento with { Versao = consentimento.Versao + 1 }, consentimento.Versao, cancelamento);
 
-    public Task MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento) =>
+    public Task<bool> MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento) =>
         recurso.Natureza == Naturezas.Virtual
-            ? repositorio.SalvarAjuste(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco), cancelamento)
-            : repositorio.SalvarRecurso(recurso with { Estado = estado }, cancelamento);
+            ? repositorio.SalvarAjusteSeVersao(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco, Versao: recurso.Versao + 1), recurso.Versao, cancelamento)
+            : repositorio.SalvarRecursoSeVersao(recurso with { Estado = estado, Versao = recurso.Versao + 1 }, recurso.Versao, cancelamento);
 
     public async Task<Recurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento)
     {

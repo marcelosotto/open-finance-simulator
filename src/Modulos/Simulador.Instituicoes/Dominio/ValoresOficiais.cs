@@ -18,7 +18,7 @@ internal static class ValoresOficiais
     ];
 
     public static IReadOnlyList<string> Produtos { get; } =
-        ["contas", "cartoes", "emprestimos", "financiamentos", "adiantamentos", "direitos-creditorios", "investimentos", "cambio"];
+        ["contas", "cartoes", "emprestimos", "financiamentos", "adiantamentos", "direitos-creditorios", "investimentos", "cambio", "fundos", "renda-variavel", "renda-fixa-credito", "tesouro-direto"];
 
     /// <summary>Status que só aparecem por limite ou por regra de cenário (RN13).</summary>
     public static IReadOnlySet<int> StatusExclusivos { get; } = new HashSet<int> { 429, 423, 529 };

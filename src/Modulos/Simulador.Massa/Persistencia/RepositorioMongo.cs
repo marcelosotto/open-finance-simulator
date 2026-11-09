@@ -140,6 +140,15 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
         return resultado.MatchedCount == 1;
     }
 
+    public async Task<bool> SalvarRecursoSeVersao(Recurso recurso, int versaoEsperada, CancellationToken cancelamento)
+    {
+        var resultado = await _recursos.ReplaceOneAsync(
+            NaVersao(recurso.ResourceId, versaoEsperada),
+            Documento(recurso.ResourceId, recurso, (CampoLote, recurso.LoteId), (CampoBanco, recurso.Banco), (CampoCliente, recurso.Cliente), (CampoPerfil, recurso.Perfil), (CampoVersao, recurso.Versao)),
+            cancellationToken: cancelamento).ConfigureAwait(false);
+        return resultado.MatchedCount == 1;
+    }
+
     public Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento) => _recursos.ReplaceOneAsync(
         PorId(recurso.ResourceId),
         Documento(recurso.ResourceId, recurso, (CampoLote, recurso.LoteId), (CampoBanco, recurso.Banco), (CampoCliente, recurso.Cliente), (CampoPerfil, recurso.Perfil)),

@@ -57,7 +57,8 @@ public sealed record Recurso(
     DateOnly InicioDoHistorico,
     string Marca,
     string Natureza,
-    string? LoteId = null);
+    string? LoteId = null,
+    int Versao = 0);
 
 /// <summary>Consentimento gerado, sempre <c>AUTHORISED</c> e sem receptora fixa (RN80).</summary>
 public sealed record Consentimento(
@@ -95,7 +96,15 @@ public sealed record Extensao(
 public sealed record MassaGerada(ClienteSimulado Cliente, IReadOnlyList<Consentimento> Consentimentos, IReadOnlyList<Recurso> Recursos);
 
 /// <summary>Transação calculada, nunca gravada (RN51).</summary>
-public sealed record Transacao(string Id, DateOnly Dia, int Posicao, decimal Valor, string Direcao, string Tipo, string Nome);
+public sealed record Transacao(string Id, DateOnly Dia, int Posicao, decimal Valor, string Direcao, string Tipo, string Nome, string Estado = EstadosDeTransacao.Efetivada);
+
+/// <summary>Estados oficiais de uma transação (RN44).</summary>
+public static class EstadosDeTransacao
+{
+    public const string Futuro = "LANCAMENTO_FUTURO";
+    public const string Processando = "TRANSACAO_PROCESSANDO";
+    public const string Efetivada = "TRANSACAO_EFETIVADA";
+}
 
 /// <summary>Situações de um lote.</summary>
 public static class SituacoesDeLote
@@ -200,6 +209,9 @@ public interface IRepositorioDeMassa
 
     Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento);
 
+    /// <summary>Falso se outra chamada gravou o recurso desde a leitura.</summary>
+    Task<bool> SalvarRecursoSeVersao(Recurso recurso, int versaoEsperada, CancellationToken cancelamento);
+
     Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento);
 
     Task<Consentimento?> ObterConsentimento(string consentId, CancellationToken cancelamento);
@@ -259,6 +271,9 @@ public interface IConsultaDeMassa
     Task<IReadOnlyList<Transacao>?> Transacoes(string resourceId, DateOnly de, DateOnly ate, CancellationToken cancelamento);
 
     /// <summary>Saldo calculado até hoje, ou nulo se o recurso não existe (RN46).</summary>
+    /// <summary>Como <c>Transacoes</c>, no instante pedido: ajustes posteriores não aparecem (RN37).</summary>
+    Task<IReadOnlyList<Transacao>?> TransacoesEm(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento);
+
     Task<decimal?> Saldo(string resourceId, CancellationToken cancelamento);
 
     Task<bool> BancoTemClientes(string banco, CancellationToken cancelamento);
@@ -274,7 +289,8 @@ public interface IEscritaDeMassa
     /// <summary>Falso se outra chamada gravou desde a leitura (RN82).</summary>
     Task<bool> AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento);
 
-    Task MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento);
+    /// <summary>Falso se outra chamada gravou desde a leitura.</summary>
+    Task<bool> MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento);
 
     /// <summary>Nulo se o cliente não existe, é virtual ou acabou o saldo de documentos.</summary>
     Task<Recurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento);

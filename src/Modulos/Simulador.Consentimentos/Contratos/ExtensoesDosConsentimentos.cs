@@ -25,6 +25,10 @@ public static class ExtensoesDosConsentimentos
             ["resourcesGetResources"] = c => c.RequestServices.GetRequiredService<ApiOficial>().Recursos(c),
         };
 
+    /// <summary>Consentimento validado pelo portão nesta chamada; nulo sem portão.</summary>
+    public static DadosDoConsentimento? ConsentimentoDaChamada(HttpContext contexto) =>
+        contexto.Items[PortaoDeSeguranca.ItemDoConsentimento] as DadosDoConsentimento;
+
     public static IServiceCollection AddConsentimentos(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AddSingleton<IRepositorioDeReceptoras>(_ => new RepositorioMongo(

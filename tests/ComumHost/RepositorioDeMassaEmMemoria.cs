@@ -120,6 +120,21 @@ public sealed class RepositorioDeMassaEmMemoria : IRepositorioDeMassa
         });
     }
 
+    public async Task<bool> SalvarRecursoSeVersao(Recurso recurso, int versaoEsperada, CancellationToken cancelamento)
+    {
+        await AntesDeGravar();
+        return Ler(() =>
+        {
+            if (!_recursos.TryGetValue(recurso.ResourceId, out var atual) || atual.Versao != versaoEsperada)
+            {
+                return false;
+            }
+
+            _recursos[recurso.ResourceId] = recurso;
+            return true;
+        });
+    }
+
     public Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento) => Faz(() => _recursos[recurso.ResourceId] = recurso);
 
     public Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento) => Task.FromResult(Ler(() => _clientes.GetValueOrDefault(documento)));
