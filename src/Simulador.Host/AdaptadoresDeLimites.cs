@@ -9,7 +9,7 @@ using LimitesDaInstituicao = Simulador.Instituicoes.Contratos.Limites;
 namespace Simulador.Host;
 
 /// <summary>Capacidade e tráfego depois do portão, com os valores da instituição e da tabela (RN39).</summary>
-internal sealed class EtapaPelosLimites(ILimites limites, IConsultaDeInstituicoes instituicoes, ICatalogo catalogo) : IEtapaDeEntrada
+internal sealed class EtapaPelosLimites(ILimites limites, InstituicoesDaChamada instituicoes, ICatalogo catalogo) : IEtapaDeEntrada
 {
     private const string StatusDeSobrecarga = "529";
 

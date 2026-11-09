@@ -165,7 +165,7 @@ internal static class JanelaDeDatas
             return Periodo.Falha(ErroDeData.Invalido);
         }
 
-        return new Periodo(primeira, ultima);
+        return new Periodo(primeira < inicio ? inicio : primeira, ultima);
     }
 
     /// <summary><c>/bills/{billId}/transactions</c>: exige o par e, sem datas, a fatura inteira.</summary>

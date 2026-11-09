@@ -8,7 +8,7 @@ namespace Simulador.Host;
 
 /// <summary>Liga Consentimentos a Massa, Instituições e Marcação, sem referência entre os módulos (ADR-007).</summary>
 internal sealed class AmbienteDosConsentimentos(
-    IConsultaDeInstituicoes instituicoes,
+    InstituicoesDaChamada instituicoes,
     IConsultaDeMassa consulta,
     IEscritaDeMassa escrita,
     IAmbienteDaMassa ambiente,

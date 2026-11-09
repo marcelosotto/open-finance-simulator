@@ -16,21 +16,28 @@ internal sealed partial class ContadoresRedis : IContadores, IAsyncDisposable
         return total
         """;
 
-    private readonly Lazy<Task<ConnectionMultiplexer>> _conexao;
+    private readonly Lazy<Task<ConnectionMultiplexer>>? _conexao;
+    private readonly Func<Task<IDatabase>> _banco;
     private readonly ILogger<ContadoresRedis> _log;
+    private readonly TimeProvider _relogio;
 
-    public ContadoresRedis(string conexao, ILogger<ContadoresRedis> log)
+    public ContadoresRedis(string conexao, ILogger<ContadoresRedis> log, TimeProvider relogio)
+        : this(log, relogio, Conectar(conexao, out var abertura), abertura)
+    {
+    }
+
+    /// <summary>Com o acesso ao banco substituído, para testar quem não responde.</summary>
+    internal ContadoresRedis(Func<Task<IDatabase>> banco, ILogger<ContadoresRedis> log, TimeProvider relogio)
+        : this(log, relogio, banco, null)
+    {
+    }
+
+    private ContadoresRedis(ILogger<ContadoresRedis> log, TimeProvider relogio, Func<Task<IDatabase>> banco, Lazy<Task<ConnectionMultiplexer>>? conexao)
     {
         _log = log;
-        _conexao = new Lazy<Task<ConnectionMultiplexer>>(() =>
-        {
-            var opcoes = ConfigurationOptions.Parse(conexao);
-            opcoes.AbortOnConnectFail = false;
-            opcoes.BacklogPolicy = BacklogPolicy.FailFast;
-            opcoes.AsyncTimeout = TempoMaximoMs;
-            opcoes.ConnectTimeout = TempoDeConexaoMs;
-            return ConnectionMultiplexer.ConnectAsync(opcoes);
-        });
+        _relogio = relogio;
+        _banco = banco;
+        _conexao = conexao;
     }
 
     public Task<long> Somar(string chave, TimeSpan validade, CancellationToken cancelamento) =>
@@ -41,18 +48,32 @@ internal sealed partial class ContadoresRedis : IContadores, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_conexao.IsValueCreated)
+        if (_conexao is { IsValueCreated: true })
         {
             await (await _conexao.Value.ConfigureAwait(false)).DisposeAsync().ConfigureAwait(false);
         }
+    }
+
+    private static Func<Task<IDatabase>> Conectar(string conexao, out Lazy<Task<ConnectionMultiplexer>> abertura)
+    {
+        var aberta = new Lazy<Task<ConnectionMultiplexer>>(() =>
+        {
+            var opcoes = ConfigurationOptions.Parse(conexao);
+            opcoes.AbortOnConnectFail = false;
+            opcoes.BacklogPolicy = BacklogPolicy.FailFast;
+            opcoes.AsyncTimeout = TempoMaximoMs;
+            opcoes.ConnectTimeout = TempoDeConexaoMs;
+            return ConnectionMultiplexer.ConnectAsync(opcoes);
+        });
+        abertura = aberta;
+        return async () => (await aberta.Value.ConfigureAwait(false)).GetDatabase();
     }
 
     private async Task<long> Executar(Func<IDatabase, Task<long>> operacao)
     {
         try
         {
-            var conexao = await _conexao.Value.ConfigureAwait(false);
-            return await operacao(conexao.GetDatabase()).ConfigureAwait(false);
+            return await Chamar(operacao).WaitAsync(TimeSpan.FromMilliseconds(TempoMaximoMs), _relogio).ConfigureAwait(false);
         }
         catch (Exception erro) when (erro is RedisException or TimeoutException)
         {
@@ -60,6 +81,9 @@ internal sealed partial class ContadoresRedis : IContadores, IAsyncDisposable
             return 0;
         }
     }
+
+    private async Task<long> Chamar(Func<IDatabase, Task<long>> operacao) =>
+        await operacao(await _banco().ConfigureAwait(false)).ConfigureAwait(false);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Contadores indisponíveis; a chamada segue sem limite.")]
     private static partial void Indisponivel(ILogger log, Exception erro);

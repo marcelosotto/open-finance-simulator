@@ -99,6 +99,8 @@ public class DominioDosDadosTests
         Assert.Equal(ErroDeData.Invalido, JanelaDeDatas.Faturas("x", null, Hoje).Erro);
         Assert.Equal(ErroDeData.Invalido, JanelaDeDatas.Faturas(null, "x", Hoje).Erro);
         Assert.Equal(ErroDeData.Invalido, JanelaDeDatas.Faturas("2026-02-01", "2026-01-01", Hoje).Erro);
+        Assert.Equal(Hoje.AddMonths(-12), JanelaDeDatas.Faturas("2020-01-01", null, Hoje).De);
+        Assert.Equal(ErroDeData.Nenhum, JanelaDeDatas.Faturas("2020-01-01", "2020-02-01", Hoje).Erro);
     }
 
     [Fact]

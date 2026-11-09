@@ -42,7 +42,8 @@ public static class ExtensoesDosLimites
     {
         servicos.AddSingleton<IContadores>(p => new ContadoresRedis(
             configuracao["Simulador:Redis:Conexao"] ?? "localhost:6379",
-            p.GetRequiredService<ILogger<ContadoresRedis>>()));
+            p.GetRequiredService<ILogger<ContadoresRedis>>(),
+            p.GetRequiredService<TimeProvider>()));
         servicos.AddSingleton<ILimites, ServicoDeLimites>();
         return servicos;
     }

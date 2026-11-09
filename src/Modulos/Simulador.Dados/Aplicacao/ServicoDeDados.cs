@@ -25,6 +25,8 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
     private const string Credito = "CREDITO";
     private const string Debito = "DEBITO";
     private const string Valor = ".amount";
+    private static readonly HashSet<string> TipoDaConta = new(StringComparer.Ordinal) { "type" };
+    private static readonly HashSet<string> TipoDaTransacaoDoCartao = new(StringComparer.Ordinal) { "transactionType" };
     private const int ItensDaSublista = 2;
     private const int SegundosDaPrimeiraHora = 3_599;
     private static readonly TimeOnly UltimoSegundoDaPrimeiraHora = new(0, 59, 59);
@@ -276,7 +278,12 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             valores[campo] = recurso.ResourceId;
         }
 
-        return new Preenchimento(valores, baseDosIds, Documentos.Semente(baseDosIds));
+        return new Preenchimento(valores, baseDosIds, Documentos.Semente(baseDosIds), recurso.Tipo switch
+        {
+            "ACCOUNT" => TipoDaConta,
+            "CREDIT_CARD_ACCOUNT" => TipoDaTransacaoDoCartao,
+            _ => null,
+        });
     }
 
     private static Preenchimento DeTransacao(RecursoDeDados recurso, TransacaoDeDados t, string? billId, DateTimeOffset instante)

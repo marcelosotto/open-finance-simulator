@@ -10,7 +10,7 @@ using Simulador.Massa.Contratos;
 namespace Simulador.Host;
 
 /// <summary>Liga Dados a Consentimentos, Massa, Instituições e Marcação, sem referência entre os módulos (ADR-007).</summary>
-internal sealed class AmbienteDosDados(IConsultaDeInstituicoes instituicoes, IConsultaDeMassa consulta, ICatalogo catalogo, ILimites limites) : IAmbienteDosDados
+internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, IConsultaDeMassa consulta, ICatalogo catalogo, ILimites limites) : IAmbienteDosDados
 {
     private readonly Lazy<Dictionary<string, OperacaoDoCatalogo>> _operacoes = new(() => catalogo.Operacoes.ToDictionary(o => o.OperationId, StringComparer.Ordinal));
 
