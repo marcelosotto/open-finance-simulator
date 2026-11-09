@@ -122,7 +122,7 @@ Toda alteração fica no histórico, com data, antes e depois. Um banco com clie
 - Todos os pesos zerados com taxa de erro acima de zero: recusado, porque não haveria status a sortear.
 - Valor negativo ou zero em limite, `page-size` ou validade da chave: recusado.
 - Duas edições simultâneas do mesmo banco: a última vence, e as duas entram no histórico.
-- Endereço do banco colidindo com um caminho reservado: recusado.
+- Nome sem letra ou número, ou que gere um endereço acima de 64 caracteres: recusado.
 
 ## Requirements *(mandatory)*
 
