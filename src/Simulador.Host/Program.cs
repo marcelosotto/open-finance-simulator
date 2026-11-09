@@ -1,5 +1,5 @@
-using Simulador.Cenarios.Contratos;
 using Simulador.Catalogo.Contratos;
+using Simulador.Cenarios.Contratos;
 using Simulador.Comum.Aleatorio;
 using Simulador.Comum.Comportamento;
 using Simulador.Consentimentos.Contratos;
