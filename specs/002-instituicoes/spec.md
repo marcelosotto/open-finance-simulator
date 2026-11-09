@@ -4,11 +4,25 @@
 
 **Created**: 2026-11-09
 
-**Status**: Draft — aguardando as respostas do clarify
+**Status**: Clarified
 
 **Input**: User description: "Instituições simuladas: UC01, UC02 e UC03, com os bancos prontos, endereço por banco e histórico. Usar docs/ e instituicoes.feature. Nome curto: instituicoes"
 
 **Origem**: UC01, UC02, UC03 · RN01 a RN13, RN20 a RN37 (valores de configuração), RN60 a RN66, RN71 · RF01, RF02, RF03 · UI02 a UI05 (dados que as telas vão usar) · PR01, PR02, PR07 · ADR-003, ADR-007, ADR-008, ADR-009 · `docs/03-design/perfis-de-comportamento.md` · `docs/00-visao-geral/personas.md` · `docs/01-requisitos/gherkin/instituicoes.feature`
+
+## Clarifications
+
+### Session 2026-11-09
+
+- Q: Qual status usa um banco fora do ar, e o que fazer com o 503 do perfil `instavel`? → A: Banco inativo responde 503. O 503 sai dos pesos do `instavel` e fica só para "fora do ar" (RN06, RN13, RN16).
+- Q: A 002 aplica latência e erro sorteados nas chamadas? → A: Não. A 002 entrega configuração, resolução pelo endereço e "fora do ar"; o sorteio é da 007.
+- Q: Como o histórico registra o autor, sem login? → A: Campo opcional `autor`, informado por quem chama a administração, com padrão `operador` (RN05, RN71).
+- Q: Como tratar cenários que dependem de specs futuras? → A: RN08 fica com `@spec-004`; RN06 roda com um dublê do cadastro de clientes.
+- Q: Como se forma o endereço? → A: Do nome, sem o prefixo do ambiente, em minúsculas e sem acento; fixo após a criação; colisão conta como nome repetido (RN07).
+- Q: O que acontece ao apagar ou reativar? → A: Sem clientes, apaga; banco pronto só inativa; reativar é permitido e entra no histórico (RN06).
+- Q: A 002 permite criar perfis próprios? → A: Não; só os 5 prontos, em leitura.
+- Q: Onde fica o QCA sobrescrito por receptora? → A: Na instituição, por `organisationId` da receptora, sem conferir se ela existe; a 004 faz a ligação.
+- Q: Como os perfis viram tempo típico, variação e cauda? → A: Típico = p50; variação = p95 − p50; cauda = % acima de 15 s; as classes escalam 1; 1; 1,33; 2,67.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -121,7 +135,7 @@ Toda alteração fica no histórico, com data, antes e depois. Um banco com clie
 - **FR-003**: O nome de banco inspirado em banco real MUST levar a marca do ambiente em maiúsculas com hífen na frente; com a marca vazia, sem prefixo (RN09).
 - **FR-004**: A instituição chamada MUST ser identificada só pelo endereço, sem cabeçalho próprio (RN07, ADR-007). O cadastro MUST substituir o resolvedor provisório da spec 001.
 - **FR-005**: Endereço que não pertence a nenhuma instituição MUST responder 404 no envelope oficial.
-- **FR-006**: O endereço MUST ser gerado por regra determinada no clarify (ver Pendências).
+- **FR-006**: O endereço MUST sair do nome, sem o prefixo do ambiente, em minúsculas e sem acento, e MUST NOT mudar depois da criação (RN07).
 
 **Cadastro**
 
@@ -140,7 +154,7 @@ Toda alteração fica no histórico, com data, antes e depois. Um banco com clie
 - **FR-016**: Taxa de erro fora de 0 a 100% MUST ser recusada (UC02).
 - **FR-017**: Status sem declaração em nenhuma spec travada, e 429, 423 e 529, MUST ser recusados (RN13, UC02).
 - **FR-018**: A consulta de comportamento MUST mostrar, por classe, o SLA oficial e se o valor fica dentro ou fora (RN11, UI04).
-- **FR-019**: A configuração salva MUST valer na próxima chamada, sem reiniciar (RN05). [NEEDS CLARIFICATION: esta spec aplica o sorteio de latência e erro nas chamadas, ou entrega a configuração e a spec 007 aplica? Ver Q2.]
+- **FR-019**: A configuração salva MUST valer na próxima chamada, sem reiniciar (RN05): cada chamada lê a configuração em vigor. O sorteio de latência e erro fica para a spec 007.
 
 **Limites e paginação**
 
@@ -152,10 +166,11 @@ Toda alteração fica no histórico, com data, antes e depois. Um banco com clie
 
 **Histórico e inativação**
 
-- **FR-025**: Toda alteração de instituição MUST gravar data, antes e depois (RN05, RN71). [NEEDS CLARIFICATION: como registrar o autor, se a administração não tem login? Ver Q3.]
+- **FR-025**: Toda alteração de instituição MUST gravar data, autor informado (padrão `operador`), antes e depois (RN05, RN71).
 - **FR-026**: A administração MUST ficar no endereço separado e sem autenticação (RN71, PR07).
-- **FR-027**: Instituição com clientes MUST ser inativada, e não apagada (RN06). Até a spec 003, o cadastro de clientes é uma porta sem clientes.
-- **FR-028**: Instituição inativa MUST responder como fora do ar, sem explicar o motivo (RN06, RN18). [NEEDS CLARIFICATION: 503 não é declarado por nenhuma spec travada; qual status usar? Ver Q1.]
+- **FR-027**: Pedir para apagar MUST inativar instituição com clientes ou pronta, e apagar as demais (RN06). Até a spec 003, o cadastro de clientes é uma porta sem clientes.
+- **FR-028**: Instituição inativa MUST responder 503 no envelope oficial, sem explicar o motivo (RN06, RN18).
+- **FR-029**: Instituição inativa MUST poder ser reativada, com registro no histórico (RN06).
 
 ### Key Entities
 
@@ -177,11 +192,9 @@ Toda alteração fica no histórico, com data, antes e depois. Um banco com clie
 - **SC-006**: Os cenários de `instituicoes.feature` passam, exceto os que dependerem de spec posterior e estiverem etiquetados.
 - **SC-007**: A cobertura fica em 100% no domínio e em 80% no total (RNF08).
 
-## Pendências do clarify
-
-Decisões abertas, numeradas como Q1 a Q9 no lote enviado a Marcelo. Q1, Q2 e Q3 estão marcadas acima. As demais têm a recomendação registrada como premissa provisória e só valem depois da resposta.
-
 ## Assumptions
+
+- Perfis de comportamento são só os 5 prontos, em leitura. Criar perfis próprios fica fora desta spec.
 
 - Esta spec entrega a API de administração; as telas ficam na spec 010, e as respostas já trazem os dados de UI02 a UI05.
 - Padrões: público PF e PJ, todos os produtos, marca igual ao nome (campos-obrigatorios.md).

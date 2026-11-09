@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Três marcadores [NEEDS CLARIFICATION] (FR-019, FR-025, FR-028) aguardam as respostas de Marcelo.
+- Os marcadores [NEEDS CLARIFICATION] foram resolvidos com Marcelo em 2026-11-09 (seção Clarifications).
 - A menção ao MongoDB e ao Docker Compose em Assumptions registra a dependência decidida na ADR-003.
