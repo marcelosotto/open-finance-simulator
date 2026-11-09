@@ -78,7 +78,8 @@ public sealed record Consentimento(
     DateTimeOffset? AtualizadoEm = null,
     string? UsuarioLogado = null,
     int AprovacoesPendentes = 0,
-    IReadOnlyList<Extensao>? Extensoes = null);
+    IReadOnlyList<Extensao>? Extensoes = null,
+    int Versao = 0);
 
 /// <summary>Uma renovação do consentimento (RN87).</summary>
 public sealed record Extensao(
@@ -140,7 +141,8 @@ public sealed record Ajuste(
     string? Razao = null,
     DateTimeOffset? ExpiraEm = null,
     DateTimeOffset? AtualizadoEm = null,
-    IReadOnlyList<Extensao>? Extensoes = null);
+    IReadOnlyList<Extensao>? Extensoes = null,
+    int Versao = 0);
 
 /// <summary>Quantidades de massa.</summary>
 public sealed record ResumoDeMassa(long Clientes, long Consentimentos, long Recursos, long Ajustes);
@@ -193,6 +195,9 @@ public interface IRepositorioDeMassa
 
     Task SalvarConsentimento(Consentimento consentimento, CancellationToken cancelamento);
 
+    /// <summary>Grava só se a versão guardada for a esperada; ausente vale 0 (RN82).</summary>
+    Task<bool> SalvarConsentimentoSeVersao(Consentimento consentimento, int versaoEsperada, CancellationToken cancelamento);
+
     Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento);
 
     Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento);
@@ -224,6 +229,9 @@ public interface IRepositorioDeMassa
     Task ApagarTudo(CancellationToken cancelamento);
 
     Task SalvarAjuste(Ajuste ajuste, CancellationToken cancelamento);
+
+    /// <summary>Grava só se a versão guardada for a esperada; ausente vale 0 (RN82).</summary>
+    Task<bool> SalvarAjusteSeVersao(Ajuste ajuste, int versaoEsperada, CancellationToken cancelamento);
 
     Task<Ajuste?> ObterAjuste(string alvo, CancellationToken cancelamento);
 
@@ -263,7 +271,8 @@ public interface IEscritaDeMassa
 
     Task InserirConsentimento(Consentimento consentimento, CancellationToken cancelamento);
 
-    Task AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento);
+    /// <summary>Falso se outra chamada gravou desde a leitura (RN82).</summary>
+    Task<bool> AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento);
 
     Task MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento);
 

@@ -198,18 +198,22 @@ public sealed class ConsentimentosPassos : IDisposable
     }
 
     [When(@"^a receptora pede um token para ele$")]
-    public async Task PedeToken() =>
+    public async Task PedeToken()
+    {
         await Guardar(await AtalhosDeConsentimento.PedirToken(_api, _banco, _usuario, _senha, $"consent:{_consentId}"));
+        _recusaEsperada = HttpStatusCode.BadRequest;
+    }
 
     [When(@"^a receptora pede um token com senha errada$")]
     public async Task SenhaErrada()
     {
         await TokenDaReceptora();
         await Guardar(await AtalhosDeConsentimento.PedirToken(_api, _banco, _usuario, "errada", "consents"));
+        _recusaEsperada = HttpStatusCode.Unauthorized;
     }
 
     [Then(@"^o pedido deve ser recusado$")]
-    public void Recusado() => Assert.False(_resposta!.IsSuccessStatusCode);
+    public void Recusado() => Assert.Equal(_recusaEsperada, _resposta!.StatusCode);
 
     [When(@"^Ana chama uma API de administração sem usuário$")]
     public async Task AdminSemUsuario() => await Guardar(await _admin.GetAsync(new Uri("/admin/receptoras", UriKind.Relative)));
@@ -270,7 +274,7 @@ public sealed class ConsentimentosPassos : IDisposable
     private async Task Renovar(DateTimeOffset? nova)
     {
         var dados = new { loggedUser = new { document = new { identification = _documento, rel = "CPF" } }, expirationDateTime = nova?.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture) };
-        await Guardar(await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Post, CaminhoDoConsentimento("/extends"), _tokenDoConsentimento, new { data = dados }));
+        await Guardar(await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Post, CaminhoDoConsentimento("/extends"), _tokenDoConsentimento, new { data = dados }, AtalhosDeConsentimento.CabecalhosDeRenovacao));
     }
 
     [When(@"^Ana tenta renovar o consentimento$")]
@@ -494,6 +498,7 @@ public sealed class ConsentimentosPassos : IDisposable
     public async Task UmFundoEm(string estado) => _resourceId = await AdicionarProduto(_documento, "fundos", estado);
 
     private HttpStatusCode _mudanca;
+    private HttpStatusCode _recusaEsperada;
 
     [When(@"^Diego muda o estado para ""(.*)""$")]
     public async Task DiegoMuda(string estado) => _mudanca = await MudarEstado(_resourceId, estado);

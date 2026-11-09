@@ -55,7 +55,8 @@ internal static class CodecDeToken
     private static string Assinar(string corpo, byte[] chave) =>
         Base64Url.EncodeToString(HMACSHA256.HashData(chave, Encoding.UTF8.GetBytes(corpo)));
 
-    private static bool Iguais(string a, string b) =>
+    /// <summary>Compara em tempo constante.</summary>
+    public static bool Iguais(string a, string b) =>
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(a), Encoding.UTF8.GetBytes(b));
 }
 

@@ -37,7 +37,7 @@ internal sealed class AmbienteDosConsentimentos(
 
     public Task Inserir(DadosDoConsentimento consentimento, CancellationToken cancelamento) => escrita.InserirConsentimento(Mapear(consentimento), cancelamento);
 
-    public Task Atualizar(DadosDoConsentimento consentimento, CancellationToken cancelamento) => escrita.AtualizarConsentimento(Mapear(consentimento), cancelamento);
+    public Task<bool> Atualizar(DadosDoConsentimento consentimento, CancellationToken cancelamento) => escrita.AtualizarConsentimento(Mapear(consentimento), cancelamento);
 
     public async Task MudarEstado(DadosDoRecurso recurso, string estado, CancellationToken cancelamento) =>
         await escrita.MudarEstadoDoRecurso((await consulta.ObterRecurso(recurso.ResourceId, cancelamento).ConfigureAwait(false))!, estado, cancelamento).ConfigureAwait(false);
@@ -57,11 +57,13 @@ internal sealed class AmbienteDosConsentimentos(
 
     private static DadosDoConsentimento Mapear(Consentimento c) => new(
         c.ConsentId, c.Cliente, c.Banco, c.Estado, c.Permissoes, c.Recursos, c.CriadoEm, c.Marca, c.Natureza, c.LoteId, c.ExpiraEm, c.Receptora, c.RejeitadoPor, c.Razao, c.AtualizadoEm, c.UsuarioLogado, c.AprovacoesPendentes,
-        [.. (c.Extensoes ?? []).Select(e => new DadosDaExtensao(e.NovaValidade, e.ValidadeAnterior, e.Documento, e.Rel, e.SolicitadaEm, e.Ip, e.UserAgent))]);
+        [.. (c.Extensoes ?? []).Select(e => new DadosDaExtensao(e.NovaValidade, e.ValidadeAnterior, e.Documento, e.Rel, e.SolicitadaEm, e.Ip, e.UserAgent))],
+        c.Versao);
 
     private static Consentimento Mapear(DadosDoConsentimento c) => new(
         c.ConsentId, c.Cliente, c.Banco, c.Estado, c.Permissoes, c.Recursos, c.CriadoEm, c.Marca, c.Natureza, c.LoteId, c.ExpiraEm, c.Receptora, c.RejeitadoPor, c.Razao, c.AtualizadoEm, c.UsuarioLogado, c.AprovacoesPendentes,
-        [.. c.Extensoes.Select(e => new Extensao(e.NovaValidade, e.ValidadeAnterior, e.Documento, e.Rel, e.SolicitadaEm, e.Ip, e.UserAgent))]);
+        [.. c.Extensoes.Select(e => new Extensao(e.NovaValidade, e.ValidadeAnterior, e.Documento, e.Rel, e.SolicitadaEm, e.Ip, e.UserAgent))],
+        c.Versao);
 }
 
 /// <summary>Leva a operação do catálogo ao portão do módulo.</summary>

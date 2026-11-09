@@ -10,6 +10,15 @@ namespace Simulador.Testes.Host;
 public static class AtalhosDeConsentimento
 {
     public const string Correlacao = "d78fc4e5-37ca-4da3-adf2-9b082bf92280";
+    public const string IpDoCliente = "172.217.22.14";
+    public const string AgenteDoCliente = "Mozilla/5.0 (teste)";
+
+    /// <summary>Cabeçalhos que o contrato exige em <c>/extends</c>.</summary>
+    public static IReadOnlyDictionary<string, string> CabecalhosDeRenovacao { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["x-fapi-customer-ip-address"] = IpDoCliente,
+        ["x-customer-user-agent"] = AgenteDoCliente,
+    };
 
     private static readonly Lazy<IReadOnlyList<OperacaoDoCatalogo>> Operacoes = new(() =>
         ServicosDeSpecs.LerOperacoes(TravaDasSpecs.Ler(Repositorio.Caminho("specs.lock.json")), Repositorio.PastaDasSpecs()));
@@ -54,13 +63,18 @@ public static class AtalhosDeConsentimento
         return corpo.RootElement.GetProperty("access_token").GetString()!;
     }
 
-    public static async Task<HttpResponseMessage> Chamar(HttpClient openFinance, HttpMethod metodo, Uri caminho, string? token, object? corpo = null)
+    public static async Task<HttpResponseMessage> Chamar(HttpClient openFinance, HttpMethod metodo, Uri caminho, string? token, object? corpo = null, IReadOnlyDictionary<string, string>? cabecalhos = null)
     {
         using var requisicao = new HttpRequestMessage(metodo, caminho);
         requisicao.Headers.Add("x-fapi-interaction-id", Correlacao);
         if (token is not null)
         {
             requisicao.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        foreach (var (nome, valor) in cabecalhos ?? new Dictionary<string, string>())
+        {
+            requisicao.Headers.TryAddWithoutValidation(nome, valor);
         }
 
         if (corpo is not null)

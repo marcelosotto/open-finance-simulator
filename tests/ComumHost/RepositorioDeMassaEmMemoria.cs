@@ -93,6 +93,33 @@ public sealed class RepositorioDeMassaEmMemoria : IRepositorioDeMassa
 
     public Task SalvarConsentimento(Consentimento consentimento, CancellationToken cancelamento) => Faz(() => _consentimentos[consentimento.ConsentId] = consentimento);
 
+    /// <summary>Roda uma vez antes da próxima gravação condicional, para simular uma corrida.</summary>
+    public Func<Task>? AntesDaEscritaCondicional { get; set; }
+
+    private async Task AntesDeGravar()
+    {
+        if (AntesDaEscritaCondicional is { } acao)
+        {
+            AntesDaEscritaCondicional = null;
+            await acao();
+        }
+    }
+
+    public async Task<bool> SalvarConsentimentoSeVersao(Consentimento consentimento, int versaoEsperada, CancellationToken cancelamento)
+    {
+        await AntesDeGravar();
+        return Ler(() =>
+        {
+            if (!_consentimentos.TryGetValue(consentimento.ConsentId, out var atual) || atual.Versao != versaoEsperada)
+            {
+                return false;
+            }
+
+            _consentimentos[consentimento.ConsentId] = consentimento;
+            return true;
+        });
+    }
+
     public Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento) => Faz(() => _recursos[recurso.ResourceId] = recurso);
 
     public Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento) => Task.FromResult(Ler(() => _clientes.GetValueOrDefault(documento)));
@@ -155,6 +182,21 @@ public sealed class RepositorioDeMassaEmMemoria : IRepositorioDeMassa
     });
 
     public Task SalvarAjuste(Ajuste ajuste, CancellationToken cancelamento) => Faz(() => _ajustes[ajuste.Alvo] = ajuste);
+
+    public async Task<bool> SalvarAjusteSeVersao(Ajuste ajuste, int versaoEsperada, CancellationToken cancelamento)
+    {
+        await AntesDeGravar();
+        return Ler(() =>
+        {
+            if ((_ajustes.GetValueOrDefault(ajuste.Alvo)?.Versao ?? 0) != versaoEsperada)
+            {
+                return false;
+            }
+
+            _ajustes[ajuste.Alvo] = ajuste;
+            return true;
+        });
+    }
 
     public Task<Ajuste?> ObterAjuste(string alvo, CancellationToken cancelamento) => Task.FromResult(Ler(() => _ajustes.GetValueOrDefault(alvo)));
 

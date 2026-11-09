@@ -67,7 +67,8 @@ public sealed record DadosDoConsentimento(
     DateTimeOffset? AtualizadoEm,
     string? UsuarioLogado,
     int AprovacoesPendentes,
-    IReadOnlyList<DadosDaExtensao> Extensoes);
+    IReadOnlyList<DadosDaExtensao> Extensoes,
+    int Versao = 0);
 
 /// <summary>Recurso como este módulo o enxerga.</summary>
 public sealed record DadosDoRecurso(string ResourceId, string Cliente, string Banco, string Tipo, string Estado, string Natureza);
@@ -95,7 +96,8 @@ public interface IAmbienteDosConsentimentos
 
     Task Inserir(DadosDoConsentimento consentimento, CancellationToken cancelamento);
 
-    Task Atualizar(DadosDoConsentimento consentimento, CancellationToken cancelamento);
+    /// <summary>Falso se outra chamada gravou desde a leitura (RN82).</summary>
+    Task<bool> Atualizar(DadosDoConsentimento consentimento, CancellationToken cancelamento);
 
     Task MudarEstado(DadosDoRecurso recurso, string estado, CancellationToken cancelamento);
 

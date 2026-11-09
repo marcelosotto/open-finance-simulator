@@ -18,6 +18,8 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
     private const string CampoMundo = "doMundo";
     private const string CampoCancelar = "cancelar";
     private const string CampoValor = "valor";
+    private const string CampoVersao = "versao";
+    private const int ChaveDuplicada = 11000;
     private const string ChavePosicoes = "posicoes";
     private const string ChaveMundo = "mundo";
 
@@ -129,6 +131,15 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
         Upsert,
         cancelamento);
 
+    public async Task<bool> SalvarConsentimentoSeVersao(Consentimento consentimento, int versaoEsperada, CancellationToken cancelamento)
+    {
+        var resultado = await _consentimentos.ReplaceOneAsync(
+            NaVersao(consentimento.ConsentId, versaoEsperada),
+            Documento(consentimento.ConsentId, consentimento, (CampoLote, consentimento.LoteId), (CampoBanco, consentimento.Banco), (CampoCliente, consentimento.Cliente), (CampoVersao, consentimento.Versao)),
+            cancellationToken: cancelamento).ConfigureAwait(false);
+        return resultado.MatchedCount == 1;
+    }
+
     public Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento) => _recursos.ReplaceOneAsync(
         PorId(recurso.ResourceId),
         Documento(recurso.ResourceId, recurso, (CampoLote, recurso.LoteId), (CampoBanco, recurso.Banco), (CampoCliente, recurso.Cliente), (CampoPerfil, recurso.Perfil)),
@@ -218,6 +229,23 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
         Upsert,
         cancelamento);
 
+    public async Task<bool> SalvarAjusteSeVersao(Ajuste ajuste, int versaoEsperada, CancellationToken cancelamento)
+    {
+        try
+        {
+            await _ajustes.ReplaceOneAsync(
+                NaVersao(ajuste.Alvo, versaoEsperada),
+                Documento(ajuste.Alvo, ajuste, (CampoLote, ajuste.LoteId), (CampoBanco, ajuste.Banco), (CampoRecurso, ajuste.RecursoId), (CampoMundo, ajuste.DoMundo), (CampoVersao, ajuste.Versao)),
+                Upsert,
+                cancelamento).ConfigureAwait(false);
+            return true;
+        }
+        catch (MongoWriteException erro) when (erro.WriteError.Code == ChaveDuplicada)
+        {
+            return false;
+        }
+    }
+
     public Task<Ajuste?> ObterAjuste(string alvo, CancellationToken cancelamento) => Obter<Ajuste>(_ajustes, alvo, cancelamento);
 
     public Task<IReadOnlyList<Ajuste>> ListarAjustesDoRecurso(string recursoId, CancellationToken cancelamento) => Listar<Ajuste>(_ajustes, Filtro.Eq(CampoRecurso, recursoId), cancelamento);
@@ -233,6 +261,10 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
     public void Dispose() => _cliente.Dispose();
 
     private static FilterDefinition<BsonDocument> PorId(string id) => Filtro.Eq(Id, id);
+
+    private static FilterDefinition<BsonDocument> NaVersao(string id, int versao) => Filtro.And(
+        PorId(id),
+        versao == 0 ? Filtro.Or(Filtro.Eq(CampoVersao, 0), Filtro.Exists(CampoVersao, false)) : Filtro.Eq(CampoVersao, versao));
 
     private static FilterDefinition<BsonDocument> AjustesDoBanco(string banco) => Filtro.And(Filtro.Eq(CampoBanco, banco), Filtro.Eq(CampoMundo, false));
 

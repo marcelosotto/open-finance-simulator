@@ -62,7 +62,7 @@ public sealed class ContratoTests : IDisposable
         using var renovada = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Post, Caminho("/consents/{consentId}/extends", id), tokenConsentimento, new
         {
             data = new { loggedUser = new { document = new { identification = cpf, rel = "CPF" } }, expirationDateTime = Data(_fabrica.Relogio.GetUtcNow().AddDays(60)) },
-        });
+        }, AtalhosDeConsentimento.CabecalhosDeRenovacao);
         await Validar(renovada, "consentsPostConsentsConsentIdExtends", 201);
 
         using var extensoes = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, Caminho("/consents/{consentId}/extensions", id), tokenReceptora);
@@ -128,7 +128,11 @@ public sealed class ContratoTests : IDisposable
     {
         var (usuario, senha, _) = await AtalhosDeConsentimento.CriarReceptora(_admin);
         var token = await Token(usuario, senha, "consents");
-        _fabrica.Relogio.Advance(TimeSpan.FromSeconds(900));
+        _fabrica.Relogio.Advance(TimeSpan.FromSeconds(899));
+        using var antes = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, Caminho("/consents/{consentId}", "urn:x:y"), token);
+        Assert.Equal(HttpStatusCode.NotFound, antes.StatusCode);
+
+        _fabrica.Relogio.Advance(TimeSpan.FromSeconds(1));
         using var resposta = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, Caminho("/consents/{consentId}", "urn:x:y"), token);
         Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
     }
@@ -147,7 +151,7 @@ public sealed class ContratoTests : IDisposable
         using var extensao = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Post, Caminho("/consents/{consentId}/extends", id), tokenConsentimento, new
         {
             data = new { loggedUser = new { document = new { identification = item.Cliente.Documento, rel = "CPF" } } },
-        });
+        }, AtalhosDeConsentimento.CabecalhosDeRenovacao);
         Assert.Equal(HttpStatusCode.Created, extensao.StatusCode);
         using var extensoes = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, Caminho("/consents/{consentId}/extensions", id), tokenReceptora);
         Assert.Equal(1, JsonDocument.Parse(await extensoes.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).RootElement.GetProperty("data").GetArrayLength());

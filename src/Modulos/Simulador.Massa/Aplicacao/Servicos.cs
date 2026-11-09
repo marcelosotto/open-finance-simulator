@@ -571,8 +571,9 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
                 RejeitadoPor = ajuste.RejeitadoPor,
                 Razao = ajuste.Razao,
                 ExpiraEm = ajuste.ExpiraEm ?? consentimento.ExpiraEm,
-                AtualizadoEm = ajuste.AtualizadoEm,
-                Extensoes = ajuste.Extensoes,
+                AtualizadoEm = ajuste.AtualizadoEm ?? consentimento.AtualizadoEm,
+                Extensoes = ajuste.Extensoes ?? consentimento.Extensoes,
+                Versao = ajuste.Versao,
             });
         }
 
@@ -683,7 +684,16 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
         };
         if (resultado.Tipo == TipoDeResultado.Ok)
         {
-            await repositorio.SalvarAjuste(resultado.Valor!, cancelamento).ConfigureAwait(false);
+            var ajuste = resultado.Valor!;
+            if (pedido.Tipo != "consentimento")
+            {
+                await repositorio.SalvarAjuste(ajuste, cancelamento).ConfigureAwait(false);
+            }
+            else if (!await repositorio.SalvarAjusteSeVersao(ajuste, ajuste.Versao - 1, cancelamento).ConfigureAwait(false))
+            {
+                return Resultados.Conflito<Ajuste>("consentimento em alteração");
+            }
+
             await baseDaMassa.Registrar(autor, "ajuste-gravado", [new MudancaDaMassa("ajuste", null, resultado.Valor!.Alvo)], cancelamento).ConfigureAwait(false);
         }
 
@@ -725,7 +735,7 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
             return Resultados.Invalido<Ajuste>("só consentimento virtual recebe ajuste");
         }
 
-        return Resultados.Ok(new Ajuste(ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId), pedido.Tipo, DoMundo: true, Estado: pedido.Estado, RejeitadoPor: "USER", Banco: consentimento.Banco, Razao: "CUSTOMER_MANUALLY_REVOKED", AtualizadoEm: relogio.GetUtcNow()));
+        return Resultados.Ok(new Ajuste(ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId), pedido.Tipo, DoMundo: true, Estado: pedido.Estado, RejeitadoPor: "USER", Banco: consentimento.Banco, Razao: "CUSTOMER_MANUALLY_REVOKED", ExpiraEm: consentimento.ExpiraEm, AtualizadoEm: relogio.GetUtcNow(), Extensoes: consentimento.Extensoes, Versao: consentimento.Versao + 1));
     }
 }
 
@@ -745,9 +755,9 @@ internal sealed class EscritaDeMassa(
     public Task InserirConsentimento(Consentimento consentimento, CancellationToken cancelamento) =>
         repositorio.SalvarConsentimento(consentimento, cancelamento);
 
-    public Task AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento) =>
+    public Task<bool> AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento) =>
         consentimento.Natureza == Naturezas.Virtual
-            ? repositorio.SalvarAjuste(
+            ? repositorio.SalvarAjusteSeVersao(
                 new Ajuste(
                     ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId),
                     "consentimento",
@@ -758,9 +768,11 @@ internal sealed class EscritaDeMassa(
                     Razao: consentimento.Razao,
                     ExpiraEm: consentimento.ExpiraEm,
                     AtualizadoEm: consentimento.AtualizadoEm,
-                    Extensoes: consentimento.Extensoes),
+                    Extensoes: consentimento.Extensoes,
+                    Versao: consentimento.Versao + 1),
+                consentimento.Versao,
                 cancelamento)
-            : repositorio.SalvarConsentimento(consentimento, cancelamento);
+            : repositorio.SalvarConsentimentoSeVersao(consentimento with { Versao = consentimento.Versao + 1 }, consentimento.Versao, cancelamento);
 
     public Task MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento) =>
         recurso.Natureza == Naturezas.Virtual
