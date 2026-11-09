@@ -18,10 +18,13 @@ internal sealed class GeradorDeIdentificador(MarcaDoAmbiente marca, IGeradorAlea
         return prefixo + aleatorio.ProximoTexto(tamanho);
     }
 
-    public string NovoConsentId(Natureza natureza) =>
-        marca.Vazia
-            ? $"urn:{Letra(natureza)}:{aleatorio.ProximoTexto(TamanhoAleatorio)}"
-            : $"urn:{marca.Valor}:{Letra(natureza)}-{aleatorio.ProximoTexto(TamanhoAleatorio)}";
+    public string NovoConsentId(Natureza natureza) => ConsentId(natureza, aleatorio.ProximoTexto(TamanhoAleatorio));
+
+    public string Identificador(Natureza natureza, string corpo) =>
+        marca.Vazia ? $"{Letra(natureza)}-{corpo}" : $"{marca.Valor}-{Letra(natureza)}-{corpo}";
+
+    public string ConsentId(Natureza natureza, string corpo) =>
+        marca.Vazia ? $"urn:{Letra(natureza)}:{corpo}" : $"urn:{marca.Valor}:{Letra(natureza)}-{corpo}";
 
     public static char Letra(Natureza natureza) => natureza switch
     {
@@ -116,6 +119,10 @@ internal sealed class Marcador(MarcaDoAmbiente marca, IGeradorAleatorio aleatori
     public string NovoIdentificador(Natureza natureza) => _gerador.NovoIdentificador(natureza);
 
     public string NovoConsentId(Natureza natureza) => _gerador.NovoConsentId(natureza);
+
+    public string Identificador(Natureza natureza, string corpo) => _gerador.Identificador(natureza, corpo);
+
+    public string ConsentId(Natureza natureza, string corpo) => _gerador.ConsentId(natureza, corpo);
 
     public string MarcarTexto(string texto, int? tamanhoMaximo) => MarcadorDeTexto.Marcar(marca, texto, tamanhoMaximo);
 

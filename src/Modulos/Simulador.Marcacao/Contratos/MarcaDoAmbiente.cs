@@ -45,6 +45,12 @@ public interface IMarcador
     /// <summary><c>urn:{marca}:{p|v}-{aleatório}</c>, ou <c>urn:{p|v}:{aleatório}</c> com a marca vazia.</summary>
     string NovoConsentId(Natureza natureza);
 
+    /// <summary>Como <see cref="NovoIdentificador"/>, com um corpo já calculado, para dados repetíveis (RN54).</summary>
+    string Identificador(Natureza natureza, string corpo);
+
+    /// <summary>Como <see cref="NovoConsentId"/>, com um corpo já calculado, para dados repetíveis (RN54).</summary>
+    string ConsentId(Natureza natureza, string corpo);
+
     /// <summary>Coloca <see cref="MarcaDoAmbiente.Textual"/> na frente, dentro do tamanho máximo.</summary>
     string MarcarTexto(string texto, int? tamanhoMaximo);
 

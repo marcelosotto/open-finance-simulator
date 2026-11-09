@@ -14,6 +14,7 @@ Sem autenticação (RN71). Cabeçalho opcional `x-sim-autor` nas escritas; padr�
 | `GET /admin/massa/clientes/{documento}` | 200 com recursos e consentimentos; 404 |
 | `POST /admin/massa/lotes` | 202; 422 |
 | `GET /admin/massa/lotes` e `/{id}` | 200; 404 |
+| `GET /admin/massa/lotes/{id}/clientes?inicio=0&quantidade=100` | 200 |
 | `POST /admin/massa/lotes/{id}/cancelar` | 202; 404; 409 já terminado |
 | `GET /admin/massa/mundo-virtual` | 200; 404 não definido |
 | `PUT /admin/massa/mundo-virtual` | 200; 409 falta confirmar; 422 |

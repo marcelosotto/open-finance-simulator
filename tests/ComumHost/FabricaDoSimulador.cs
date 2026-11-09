@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 using Simulador.Comum.Aleatorio;
 using Simulador.Instituicoes.Contratos;
+using Simulador.Massa.Contratos;
 using Simulador.Testes.Infra;
 
 namespace Simulador.Testes.Host;
@@ -22,6 +23,9 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
     private readonly Dictionary<string, string?> _configuracao = new(StringComparer.Ordinal);
     private readonly List<Action<IServiceCollection>> _servicos = [];
     private bool _usarMongo;
+
+    /// <summary>Massa em memória dos testes sem contêiner.</summary>
+    public RepositorioDeMassaEmMemoria Massa { get; } = new();
 
     public FabricaDoSimulador(string? marcaDoAmbiente = "hml")
     {
@@ -79,6 +83,8 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
             {
                 servicos.RemoveAll<IRepositorioDeInstituicoes>();
                 servicos.AddSingleton<IRepositorioDeInstituicoes>(new RepositorioEmMemoria());
+                servicos.RemoveAll<IRepositorioDeMassa>();
+                servicos.AddSingleton<IRepositorioDeMassa>(Massa);
             }
 
             foreach (var registrar in _servicos)

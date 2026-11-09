@@ -16,7 +16,7 @@
 **Consequência:** mundo virtual até 50 milhões, e reservas além do saldo são recusadas (RN57).
 
 ## R04. Banco de cada consentimento
-**Decisão:** ciclo de 10.000 posições, embaralhado pela semente, com a quantidade de cada banco proporcional à porcentagem (até 2 casas decimais). A sobra vai para os maiores restos.
+**Decisão:** ciclo de 10.000 posições, embaralhado pela semente, com a quantidade de cada banco proporcional à porcentagem. Como a porcentagem aceita até 2 casas decimais, o ciclo fecha exato.
 **Motivo:** é o sorteio de RN56 e permite achar o n-ésimo item de um banco em O(1), sem varrer o mundo.
 **Alternativas:** sorteio por item, que obriga a varrer ao filtrar por banco.
 
