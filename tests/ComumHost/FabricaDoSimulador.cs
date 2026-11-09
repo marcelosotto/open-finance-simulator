@@ -60,6 +60,13 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         return this;
     }
 
+    /// <summary>Usa os contadores informados.</summary>
+    public FabricaDoSimulador ComContadores(IContadores contadores)
+    {
+        Contadores = contadores;
+        return this;
+    }
+
     /// <summary>Observa as leituras do serviço de dados.</summary>
     public FabricaDoSimulador ComEspiaoDeDados(EspiaoDeDados espiao) => ComServicos(s =>
     {

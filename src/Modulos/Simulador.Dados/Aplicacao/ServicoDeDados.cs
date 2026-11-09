@@ -25,6 +25,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
     private const string Credito = "CREDITO";
     private const string Debito = "DEBITO";
     private const string Valor = ".amount";
+    private static readonly HashSet<string> TipoDaConta = new(StringComparer.Ordinal) { "type" };
     private const int ItensDaSublista = 2;
     private const int SegundosDaPrimeiraHora = 3_599;
     private static readonly TimeOnly UltimoSegundoDaPrimeiraHora = new(0, 59, 59);
@@ -276,7 +277,15 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             valores[campo] = recurso.ResourceId;
         }
 
-        return new Preenchimento(valores, baseDosIds, Documentos.Semente(baseDosIds));
+        var semente = Documentos.Semente(baseDosIds);
+        var conta = recurso.Tipo == "ACCOUNT";
+        if (conta)
+        {
+            valores.TryAdd("branchCode", "0001");
+            valores.TryAdd("checkDigit", string.Create(CultureInfo.InvariantCulture, $"{semente % 10}"));
+        }
+
+        return new Preenchimento(valores, baseDosIds, semente, conta ? TipoDaConta : null);
     }
 
     private static Preenchimento DeTransacao(RecursoDeDados recurso, TransacaoDeDados t, string? billId, DateTimeOffset instante)
@@ -309,7 +318,12 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             valores["billId"] = billId;
         }
 
-        return Item(recurso, valores, t.Id);
+        if (recurso.Tipo == "CREDIT_CARD_ACCOUNT")
+        {
+            TiposDoCartao.Preencher(valores, t.Credito, semente);
+        }
+
+        return Item(recurso, valores, t.Id) with { VariamPorSemente = null };
     }
 
     /// <summary>Nunca depois do instante da consulta, exceto lançamento futuro (RN44).</summary>

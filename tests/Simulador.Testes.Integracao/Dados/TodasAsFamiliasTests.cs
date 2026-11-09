@@ -25,6 +25,7 @@ public sealed class TodasAsFamiliasTests : IDisposable
     ];
 
     private readonly EspiaoDeDados _espiao = new();
+    private readonly ContagemDeLeituras _leituras = new();
     private readonly FabricaDoSimulador _fabrica;
     private readonly HttpClient _admin;
     private readonly HttpClient _api;
@@ -35,7 +36,7 @@ public sealed class TodasAsFamiliasTests : IDisposable
 
     public TodasAsFamiliasTests()
     {
-        _fabrica = new FabricaDoSimulador().ComEspiaoDeDados(_espiao);
+        _fabrica = new FabricaDoSimulador().ComEspiaoDeDados(_espiao).ComContagemDeInstituicoes(_leituras);
         _admin = _fabrica.ClienteAdministracao();
         _api = _fabrica.ClienteOpenFinance();
         _massa = new AdminDaMassa(_admin);
@@ -266,22 +267,73 @@ public sealed class TodasAsFamiliasTests : IDisposable
     }
 
     [Fact]
+    public async Task Tipo_de_conta_varia_e_o_filtro_seleciona_parte()
+    {
+        var (massa, token) = await Preparar("PF", "contas", "contas", "contas", "contas", "contas");
+        var endereco = Endereco(Operacao("accountsGetAccounts"), massa);
+        var dados = (await Ler(endereco, token)).GetProperty("data");
+        var tipos = dados.EnumerateArray().Select(c => c.GetProperty("type").GetString()!).ToList();
+        var escolhido = tipos.First(t => t != "CONTA_DEPOSITO_A_VISTA");
+
+        var filtradas = (await Ler(ComConsulta(endereco, $"?accountType={escolhido}"), token)).GetProperty("data");
+
+        Assert.Equal(tipos.Count(t => t == escolhido), filtradas.GetArrayLength());
+        Assert.True(filtradas.GetArrayLength() < dados.GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Tipo_da_conta_e_o_mesmo_na_lista_e_no_detalhe()
+    {
+        var (massa, token) = await Preparar("PF");
+        var lista = (await Ler(Endereco(Operacao("accountsGetAccounts"), massa), token)).GetProperty("data")[0].GetProperty("type").GetString();
+        var detalhe = (await Ler(Endereco(Operacao("accountsGetAccountsAccountId"), massa), token)).GetProperty("data").GetProperty("type").GetString();
+        Assert.Equal(lista, detalhe);
+    }
+
+    [Fact]
     public async Task Filtros_do_cartao_comparam_com_a_resposta()
     {
         var (massa, token) = await Preparar("PF");
         var endereco = Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBillsBillIdTransactions"), massa);
-        var dados = (await Ler(endereco, token)).GetProperty("data");
-        var primeira = dados[0];
-        var tipo = primeira.GetProperty("transactionType").GetString()!;
-        var outro = tipo == "CASHBACK" ? "TARIFA" : "CASHBACK";
-        var mcc = primeira.GetProperty("payeeMCC").GetRawText();
+        var dados = (await Ler(ComConsulta(endereco, "?page-size=1000"), token)).GetProperty("data");
+        var tipos = dados.EnumerateArray().Select(t => t.GetProperty("transactionType").GetString()!).ToList();
+        var tipo = tipos.First(t => t != "PAGAMENTO");
+        var mcc = dados[0].GetProperty("payeeMCC").GetRawText();
 
-        Assert.Equal(dados.GetArrayLength(), (await Ler(ComConsulta(endereco, $"?transactionType={tipo}"), token)).GetProperty("data").GetArrayLength());
-        Assert.Equal(0, (await Ler(ComConsulta(endereco, $"?transactionType={outro}"), token)).GetProperty("data").GetArrayLength());
-        var filtradas = (await Ler(ComConsulta(endereco, $"?payeeMCC={mcc}"), token)).GetProperty("data");
+        var porTipo = (await Ler(ComConsulta(endereco, $"?transactionType={tipo}&page-size=1000"), token)).GetProperty("data");
+
+        Assert.Equal(tipos.Count(t => t == tipo), porTipo.GetArrayLength());
+        Assert.True(porTipo.GetArrayLength() < dados.GetArrayLength());
+        Assert.All(porTipo.EnumerateArray(), t => Assert.Equal(tipo, t.GetProperty("transactionType").GetString()));
+        var filtradas = (await Ler(ComConsulta(endereco, $"?payeeMCC={mcc}&page-size=1000"), token)).GetProperty("data");
         Assert.True(filtradas.GetArrayLength() is > 0);
         Assert.True(filtradas.GetArrayLength() < dados.GetArrayLength());
         Assert.All(filtradas.EnumerateArray(), t => Assert.Equal(mcc, t.GetProperty("payeeMCC").GetRawText()));
+    }
+
+    [Fact]
+    public async Task Bills_nao_vai_alem_de_12_meses_mesmo_com_data_antiga()
+    {
+        var (massa, token) = await Preparar("PF");
+        var endereco = Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBills"), massa);
+        _espiao.Intervalos.Clear();
+
+        await Ler(ComConsulta(endereco, "?fromDueDate=2024-01-01"), token);
+
+        var (de, _) = Assert.Single(_espiao.Intervalos);
+        Assert.Equal(new DateOnly(2025, 10, 1), de);
+        Assert.Equal(0, (await Ler(ComConsulta(endereco, "?fromDueDate=2024-01-01&toDueDate=2024-12-31"), token)).GetProperty("data").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Instituicao_e_lida_uma_vez_por_chamada()
+    {
+        var (massa, token) = await Preparar("PF");
+        _leituras.Obter = 0;
+
+        await Ler(Endereco(Operacao("accountsGetAccountsAccountId"), massa), token);
+
+        Assert.Equal(1, _leituras.Obter);
     }
 
     [Fact]
@@ -476,6 +528,70 @@ public sealed class TodasAsFamiliasTests : IDisposable
 
         Assert.NotEqual(0, dados.GetArrayLength());
         Assert.All(dados.EnumerateArray(), t => Assert.True(t.GetProperty("transactionDateTime").GetDateTimeOffset() <= agora));
+    }
+
+    private async Task<List<JsonElement>> TransacoesDoCartao(MassaGerada massa, string token)
+    {
+        var fatura = await Ler(ComConsulta(Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBillsBillIdTransactions"), massa), "?page-size=1000"), token);
+        var extrato = await Ler(ComConsulta(Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdTransactions"), massa), "?fromTransactionDate=2026-10-01&toTransactionDate=2026-10-31&page-size=1000"), token);
+        return [.. fatura.GetProperty("data").EnumerateArray(), .. extrato.GetProperty("data").EnumerateArray()];
+    }
+
+    [Fact]
+    public async Task Transacao_do_cartao_traz_os_campos_que_o_tipo_exige()
+    {
+        var (massa, token) = await Preparar("PF");
+        var transacoes = await TransacoesDoCartao(massa, token);
+        string Tipo(JsonElement t) => t.GetProperty("transactionType").GetString()!;
+
+        foreach (var tipo in new[] { "TARIFA", "OPERACOES_CREDITO_CONTRATADAS_CARTAO", "PAGAMENTO", "OUTROS" })
+        {
+            Assert.Contains(transacoes, t => Tipo(t) == tipo);
+        }
+
+        Assert.All(transacoes, t =>
+        {
+            Assert.Equal(Tipo(t) == "TARIFA", t.TryGetProperty("feeType", out _));
+            Assert.Equal(Tipo(t) == "OPERACOES_CREDITO_CONTRATADAS_CARTAO", t.TryGetProperty("otherCreditsType", out _));
+            Assert.Equal(Tipo(t) == "OUTROS", t.TryGetProperty("transactionalAdditionalInfo", out _));
+            Assert.False(t.TryGetProperty("feeTypeAdditionalInfo", out _));
+            Assert.False(t.TryGetProperty("otherCreditsAdditionalInfo", out _));
+            Assert.True(Tipo(t) != "PAGAMENTO" || t.TryGetProperty("payeeMCC", out _));
+        });
+    }
+
+    [Fact]
+    public async Task Tipo_do_cartao_e_coerente_com_credito_ou_debito()
+    {
+        var (massa, token) = await Preparar("PF");
+
+        Assert.All(await TransacoesDoCartao(massa, token), t =>
+        {
+            var sentido = t.GetProperty("creditDebitType").GetString();
+            switch (t.GetProperty("transactionType").GetString())
+            {
+                case "PAGAMENTO_FATURA" or "ESTORNO" or "CASHBACK":
+                    Assert.Equal("CREDITO", sentido);
+                    break;
+                case "PAGAMENTO" or "TARIFA" or "OPERACOES_CREDITO_CONTRATADAS_CARTAO":
+                    Assert.Equal("DEBITO", sentido);
+                    break;
+            }
+        });
+    }
+
+    [Fact]
+    public async Task Conta_traz_agencia_e_digito()
+    {
+        var (massa, token) = await Preparar("PF");
+        var lista = (await Ler(Endereco(Operacao("accountsGetAccounts"), massa), token)).GetProperty("data")[0];
+        var detalhe = (await Ler(Endereco(Operacao("accountsGetAccountsAccountId"), massa), token)).GetProperty("data");
+
+        foreach (var conta in new[] { lista, detalhe })
+        {
+            Assert.Matches(@"^\d{4}$", conta.GetProperty("branchCode").GetString()!);
+            Assert.Matches(@"^\d$", conta.GetProperty("checkDigit").GetString()!);
+        }
     }
 
     public void Dispose()

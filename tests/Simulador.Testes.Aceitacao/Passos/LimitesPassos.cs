@@ -7,12 +7,15 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Reqnroll;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Dados.Contratos;
 using Simulador.Host;
 using Simulador.Instituicoes.Contratos;
+using Simulador.Limites.Contratos;
 using Simulador.Limites.Dominio;
+using Simulador.Limites.Persistencia;
 using Simulador.Massa.Contratos;
 using Simulador.Massa.Dominio;
 using Simulador.Testes.Host;
@@ -35,6 +38,8 @@ public sealed class LimitesPassos : IDisposable
     private static readonly string[] Produtos = ["contas", "cartoes"];
 
     private readonly ContadoresEmMemoria _contadores = new();
+    private readonly ContadoresComutaveis _comutaveis;
+    private ContadoresRedis? _redis;
     private readonly FabricaDoSimulador _fabrica;
     private readonly HttpClient _admin;
     private readonly HttpClient _api;
@@ -57,8 +62,9 @@ public sealed class LimitesPassos : IDisposable
 
     public LimitesPassos()
     {
+        _comutaveis = new ContadoresComutaveis(_contadores);
         _fabrica = new FabricaDoSimulador()
-            .ComContadoresEmMemoria(_contadores)
+            .ComContadores(_comutaveis)
             .Com("Simulador:Token:Chave", ChaveDoToken)
             .ComServicos(s =>
             {
@@ -408,8 +414,10 @@ public sealed class LimitesPassos : IDisposable
         var instituicoes = _fabrica.Services.GetRequiredService<IRepositorioDeInstituicoes>();
         var massa = _fabrica.Services.GetRequiredService<IRepositorioDeMassa>();
         var receptoras = _fabrica.Services.GetRequiredService<IRepositorioDeReceptoras>();
+        _redis = new ContadoresRedis(RedisDeTeste.Conexao, NullLogger<ContadoresRedis>.Instance, TimeProvider.System);
+        _comutaveis.Alvo = _redis;
         _outra = new FabricaDoSimulador()
-            .ComContadoresEmMemoria(_contadores)
+            .ComContadores(_comutaveis)
             .Com("Simulador:Token:Chave", ChaveDoToken)
             .ComServicos(s =>
             {
@@ -511,6 +519,17 @@ public sealed class LimitesPassos : IDisposable
         _apiDaOutra?.Dispose();
         _outra?.Dispose();
         _fabrica.Dispose();
+        _redis?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+    }
+
+    /// <summary>Permite trocar os contadores depois que o host subiu.</summary>
+    private sealed class ContadoresComutaveis(IContadores inicial) : IContadores
+    {
+        public IContadores Alvo { get; set; } = inicial;
+
+        public Task<long> Somar(string chave, TimeSpan validade, CancellationToken cancelamento) => Alvo.Somar(chave, validade, cancelamento);
+
+        public Task<long> Ler(string chave, CancellationToken cancelamento) => Alvo.Ler(chave, cancelamento);
     }
 
     /// <summary>Liga a falha de dados dos cenários de erro.</summary>

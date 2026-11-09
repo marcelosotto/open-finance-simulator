@@ -6,7 +6,8 @@ using System.Text.RegularExpressions;
 namespace Simulador.Dados.Aplicacao;
 
 /// <summary>Valores da massa de um item; a chave é <c>campo</c> ou <c>pai.campo</c>.</summary>
-internal sealed record Preenchimento(IReadOnlyDictionary<string, string> Valores, string BaseDosIds, uint Semente);
+/// <param name="VariamPorSemente">Campos de enum sem valor da massa cujo valor sai da semente do item.</param>
+internal sealed record Preenchimento(IReadOnlyDictionary<string, string> Valores, string BaseDosIds, uint Semente, IReadOnlySet<string>? VariamPorSemente = null);
 
 /// <summary>
 /// Monta um item a partir do schema travado (princípio VII, Q5): emite os campos obrigatórios e
@@ -109,7 +110,8 @@ internal static class GeradorPorSchema
 
         if (schema["enum"]?.AsArray() is { Count: > 0 } valores)
         {
-            return valores[0]!.GetValue<string>();
+            var indice = item.VariamPorSemente?.Contains(nome) == true ? (int)(item.Semente % (uint)valores.Count) : 0;
+            return valores[indice]!.GetValue<string>();
         }
 
         if (schema["example"]?.ToString() is { } exemplo && Cabe(schema, exemplo))

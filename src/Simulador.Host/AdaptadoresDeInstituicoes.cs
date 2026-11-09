@@ -22,8 +22,32 @@ internal sealed class AmbienteDasInstituicoes(IMarcador marcador, ICatalogo cata
     public string NovoOrganisationId() => marcador.NovoIdentificador(Natureza.Persistido);
 }
 
+/// <summary>Lê a instituição uma vez por chamada; a chamada seguinte lê de novo, para valer a mudança de configuração (RN05).</summary>
+internal sealed class InstituicoesDaChamada(IConsultaDeInstituicoes consulta, IHttpContextAccessor acesso)
+{
+    private const string Prefixo = "instituicao-da-chamada:";
+
+    public async Task<Instituicao?> Obter(string endereco, CancellationToken cancelamento)
+    {
+        var itens = acesso.HttpContext?.Items;
+        var chave = Prefixo + endereco;
+        if (itens?[chave] is Instituicao guardada)
+        {
+            return guardada;
+        }
+
+        var lida = await consulta.Obter(endereco, cancelamento).ConfigureAwait(false);
+        if (itens is not null && lida is not null)
+        {
+            itens[chave] = lida;
+        }
+
+        return lida;
+    }
+}
+
 /// <summary>Resolve o endereço pelo cadastro, a cada chamada (RN05, RN07).</summary>
-internal sealed class ResolvedorPeloCadastro(IConsultaDeInstituicoes consulta) : IResolvedorDeInstituicao
+internal sealed class ResolvedorPeloCadastro(InstituicoesDaChamada consulta) : IResolvedorDeInstituicao
 {
     public async ValueTask<SituacaoDoBanco> Situacao(string banco, CancellationToken cancelamento) =>
         await consulta.Obter(banco, cancelamento).ConfigureAwait(false) switch
@@ -39,6 +63,8 @@ internal static class ExtensoesDosAdaptadores
     public static IServiceCollection AddAdaptadoresDeInstituicoes(this IServiceCollection servicos)
     {
         servicos.AddSingleton<IAmbienteDasInstituicoes, AmbienteDasInstituicoes>();
+        servicos.AddHttpContextAccessor();
+        servicos.AddSingleton<InstituicoesDaChamada>();
         servicos.AddSingleton<IResolvedorDeInstituicao, ResolvedorPeloCadastro>();
         return servicos;
     }
