@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-09
 
-**Status**: Draft (aguardando as decisões de [perguntas.md](perguntas.md))
+**Status**: Aprovada
 
 **Input**: User description: "Comportamento e cenários: UC04, UC21 e UC28, com perfis, timeout, indisponibilidade e relógio. Usar docs/ e comportamento.feature. Nome curto: comportamento-e-cenarios"
 
@@ -12,7 +12,28 @@
 
 ## Clarifications
 
-Pendente. Os requisitos marcados com (Qn) usam a opção recomendada de [perguntas.md](perguntas.md) e podem mudar com as decisões.
+### Session 2026-11-09
+
+Marcelo aprovou a opção A de Q1 a Q18, repassada pela sessão controladora. Decisões registradas em `docs/` (RN10, RN12 a RN17, RN39, RN54, RN73, RN108, nova RN109, UC04, UC21, UC28, perfis e modelo de dados). Evidências em [perguntas.md](perguntas.md). Cada (Qn) nos requisitos aponta a decisão.
+
+- Q1: recusa nos pesos → status não declarado, abaixo de 400, 429, 423, 529 e 503.
+- Q2: regra de estado → sobrepõe na leitura, sem gravar; ressalva em RN39.
+- Q3: indisponibilidade → na etapa de regra de cenário (RN39 literal).
+- Q4: status de regra → 200, erros declarados e 503; endpoint que não declara não é afetado, salvo 503.
+- Q5: chamada lenta → cauda e todo 504 simulado esperam 15 s reais; regra pode mudar a duração.
+- Q6: `recursoIndisponivelPct` → sorteio por chamada, 403 no acesso direto (RN109).
+- Q7: escritas da administração → relógio do banco quando entram em resposta ou comparação; histórico, lotes e massa na hora real.
+- Q8: vencedora → uma só, substitui só o que define.
+- Q9: frequência sem disparo → segue o perfil.
+- Q10: semente → sequência por regra nos contadores.
+- Q11: período → instantes UTC, [início, fim); janela do perfil em ciclos a partir de 00:00 UTC.
+- Q12: instituição → opcional, com ao menos um filtro.
+- Q13: transporte na cota → só a conexão cortada não conta.
+- Q14: códigos → nome HTTP em inglês; enums de Consentimentos respeitados.
+- Q15: latência → só quem chega à etapa.
+- Q16: acelerado → continua da hora simulada; fator em (0, 100.000].
+- Q17: relógio que volta → nada é corrigido; decorrido negativo conta como zero.
+- Q18: fora → defeitos e RN115 na 009; tela na 010.
 
 ## User Scenarios & Testing *(mandatory)*
 

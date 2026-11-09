@@ -10,7 +10,7 @@
 | Erros mais comuns | 500 | 504 | 500 e 504 | 504 | 500 |
 | Chamadas que passam de 15 s | Nenhuma | 0,1% | 0,5% | 5% | Nenhuma |
 | Janelas de indisponibilidade | Nenhuma | Nenhuma | 2 min a cada hora | Nenhuma | Nenhuma |
-| Recurso indisponível | 0,2% | 0,2% | 2% | 0,2% | 1% |
+| Recurso indisponível ([RN109](../01-requisitos/regras-de-negocio.md#rn109)) | 0,2% | 0,2% | 2% | 0,2% | 1% |
 | Limite operacional | Ligado, no oficial | Ligado, no oficial | Ligado, no oficial | Ligado, no oficial | Ligado, na metade do oficial |
 | TPM | Oficial | Oficial | Oficial | Oficial | Metade do oficial |
 | Validade da `pagination-key` | 60 min | 60 min | 60 min | 60 min | 10 min |
@@ -19,7 +19,7 @@
 
 Em endpoints de média e baixa frequência, os tempos crescem na proporção do SLA da classe, a partir da alta: 1 na média-alta, 1,33 na média e 2,67 na baixa.
 
-Na configuração por classe ([RN10](../01-requisitos/regras-de-negocio.md#rn10)), o **tempo típico** é o p50, a **variação** é o p95 menos o p50, e a **cauda lenta** é a porcentagem de chamadas que passam de 15 s.
+Na configuração por classe ([RN10](../01-requisitos/regras-de-negocio.md#rn10)), o **tempo típico** é o p50, a **variação** é o p95 menos o p50, e a **cauda lenta** é a porcentagem de chamadas que esperam 15 s e terminam em 504 ([RN12](../01-requisitos/regras-de-negocio.md#rn12)).
 
 O Banco Instável mostra 503 nas janelas de indisponibilidade, e não no sorteio de erros ([RN13](../01-requisitos/regras-de-negocio.md#rn13)).
 

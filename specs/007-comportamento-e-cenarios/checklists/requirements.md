@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Sem marcadores: as dúvidas estão em [perguntas.md](../perguntas.md), e os requisitos marcados com (Qn) usam a opção recomendada, de forma provisória.
-- A spec só fica pronta para `/speckit-plan` depois das decisões sobre as 18 perguntas.
+- Sem marcadores: as dúvidas estão em [perguntas.md](../perguntas.md), e os requisitos marcados com (Qn) seguem as decisões registradas na seção Clarifications.
+- Pronta para `/speckit-plan`: as 18 perguntas foram respondidas.
 - Termos como `x-sim-clock`, 503 e `code` são parte do contrato que o simulador reproduz, e não detalhe de implementação.

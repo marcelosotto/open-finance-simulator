@@ -1,6 +1,6 @@
 # Spec 007: divergências e perguntas
 
-**Aguardando decisões.** Nenhum plano, tarefa ou código foi feito. A [spec](spec.md) usa, de forma provisória, a opção A de cada pergunta.
+**Respondidas em 2026-11-09.** Aprovada a opção A de todas as perguntas. Decisões na seção Clarifications da [spec](spec.md).
 
 Conferência de `docs/` e dos `.feature` contra os contratos em `.specs/7bdb9c1a6c4c265d7aabcdbc662f94c61718135e/contracts/expansion/snapshots/` (15 arquivos, 75 operações). Os números de linha são desses arquivos, de `docs/` e de `src/` no commit `2b17b54`.
 
