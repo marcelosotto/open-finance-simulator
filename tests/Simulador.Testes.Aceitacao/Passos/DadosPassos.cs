@@ -20,7 +20,7 @@ public sealed class DadosPassos : IDisposable
     private const string InicioDoMes = "2026-10";
     private static readonly string[] ProdutosDoPerfil = ["contas", "cartoes", "fundos"];
 
-    private readonly FabricaDoSimulador _fabrica = new();
+    private readonly FabricaDoSimulador _fabrica = new FabricaDoSimulador().ComContadoresEmMemoria();
     private readonly HttpClient _admin;
     private readonly HttpClient _api;
     private readonly AdminDaMassa _massa;
@@ -35,6 +35,7 @@ public sealed class DadosPassos : IDisposable
     private string _chaveEnviada = string.Empty;
     private string _provisorio = string.Empty;
     private decimal _somaEfetivadas;
+    private long _cotaAntes;
     private HttpResponseMessage? _resposta;
     private string _corpo = string.Empty;
     private readonly List<string> _lidos = [];
@@ -423,7 +424,36 @@ public sealed class DadosPassos : IDisposable
     }
 
     [When(@"^Ana pede a página seguinte$")]
-    public Task PaginaSeguinte() => Seguir(_proximo);
+    public async Task PaginaSeguinte()
+    {
+        _cotaAntes = Cota;
+        await Seguir(_proximo);
+    }
+
+    [Given(@"^uma chave emitida há 59 minutos$")]
+    public async Task ChaveDe59Minutos()
+    {
+        await ListaDeTresPaginas();
+        _proximo = Link("next");
+        _fabrica.Relogio.Advance(TimeSpan.FromMinutes(59));
+        await RenovarToken();
+    }
+
+    [Then(@"^a cota não deve mudar$")]
+    public void CotaNaoMudou()
+    {
+        Status(200);
+        Assert.Equal(_cotaAntes, Cota);
+    }
+
+    [Then(@"^a cota deve subir 1$")]
+    public void CotaSubiu()
+    {
+        Status(200);
+        Assert.Equal(_cotaAntes + 1, Cota);
+    }
+
+    private long Cota => ((ContadoresEmMemoria)_fabrica.Contadores).TotalDaCota;
 
     [Then(@"^os links devem trazer uma nova chave$")]
     public void NovaChave() => Assert.NotEqual(_chaveEnviada, Chave(Link("self")));

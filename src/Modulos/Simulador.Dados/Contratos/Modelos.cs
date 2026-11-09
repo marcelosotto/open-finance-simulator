@@ -43,6 +43,17 @@ public interface IAmbienteDosDados
 
     /// <summary>Declara a natureza de um item da resposta (RN61, RN65).</summary>
     void RegistrarNatureza(HttpContext contexto, string natureza);
+
+    /// <summary>A cota mensal da chamada; nula quando o endpoint não tem limite operacional (RN25, RN28).</summary>
+    Task<ICotaDeDados?> Cota(HttpContext contexto, OperacaoDeDados operacao, ConsentimentoDaChamada consentimento, CancellationToken cancelamento);
+}
+
+/// <summary>Cota de uma chamada de dados (UC19).</summary>
+public interface ICotaDeDados
+{
+    Task<bool> Esgotada(CancellationToken cancelamento);
+
+    Task Contar(CancellationToken cancelamento);
 }
 
 /// <summary>Atende as operações das famílias de dados (UC16, UC17).</summary>

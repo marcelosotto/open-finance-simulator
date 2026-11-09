@@ -73,7 +73,6 @@ Funcionalidade: Paginar como o Open Finance
     E links não deve ter next nem last
 
   # RN35
-  @spec-006
   Cenário: Chave dentro da validade
     Dado uma chave emitida há 59 minutos
     Quando Ana pede a página seguinte
@@ -92,7 +91,6 @@ Funcionalidade: Paginar como o Open Finance
       | inválida |
 
   # RN36
-  @spec-006
   Cenário: Chave recusada conta na cota
     Dado uma chave "expirada"
     Quando Ana pede a página seguinte

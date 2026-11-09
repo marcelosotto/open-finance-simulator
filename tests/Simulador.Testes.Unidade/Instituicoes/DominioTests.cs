@@ -105,7 +105,7 @@ public class ValidacaoTests
         return exemplo with { Comportamento = mudar(exemplo.Comportamento) };
     }
 
-    private static Instituicao ComLimites(Func<Limites, Limites> mudar)
+    private static Instituicao ComLimites(Func<Simulador.Instituicoes.Contratos.Limites, Simulador.Instituicoes.Contratos.Limites> mudar)
     {
         var exemplo = Exemplo();
         return exemplo with { Limites = mudar(exemplo.Limites) };

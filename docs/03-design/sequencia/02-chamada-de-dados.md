@@ -18,7 +18,8 @@ sequenceDiagram
       L-->>P: 529 ou 429
       P-->>R: 529 ou 429
     else Dentro
-      P->>P: Parâmetros
+      P->>P: Acesso ao recurso e parâmetros
+      Note over P,L: Chave válida não confere a cota
       P->>L: Cota do mês
       alt Sem cota
         P-->>R: 423

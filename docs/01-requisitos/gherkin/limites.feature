@@ -1,8 +1,6 @@
 # language: pt
 # Casos de uso: UC18, UC19, UC20 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 006: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-006
 Funcionalidade: Aplicar os limites oficiais
   Como receptora
   Quero que os limites funcionem como no Open Finance
@@ -79,10 +77,34 @@ Funcionalidade: Aplicar os limites oficiais
     Quando Ana consulta o saldo da conta "B"
     Então a resposta deve ter status 200
 
+  # RN25
+  Cenário: A cota das transações de fatura é por fatura
+    Dado que a fatura "A" esgotou a cota de transações
+    Quando Ana consulta as transações da fatura "B"
+    Então a resposta deve ter status 200
+
+  # RN27, UC19
+  Cenário: Chave válida segue com a cota esgotada
+    Dado uma consulta com 3 páginas que gastou a última unidade da cota
+    Quando Ana pede a página seguinte com a chave recebida
+    Então a resposta deve ter status 200
+
+  # RN36
+  Cenário: Chave recusada com a cota esgotada responde 423
+    Dado uma consulta com 3 páginas que gastou a última unidade da cota
+    Quando Ana pede a página seguinte com uma chave inválida
+    Então a resposta deve ter status 423
+
   # RN29
   Cenário: Passar da capacidade responde 529
     Dado que o "Banco Azul" tem capacidade de 300 TPS
     Quando chegam 301 chamadas no mesmo segundo
+    Então a última deve receber 529
+
+  # RN29
+  Cenário: A capacidade soma todas as rotas com 529 no contrato
+    Dado que o "Banco Azul" tem capacidade de 2 TPS
+    Quando chegam no mesmo segundo uma chamada de contas, uma de recursos e uma de consentimentos
     Então a última deve receber 529
 
   # RN30
@@ -96,6 +118,12 @@ Funcionalidade: Aplicar os limites oficiais
     Dado que o endpoint já passou do TPM
     Quando Ana chama com consentimento revogado
     Então a resposta deve ter status 401
+
+  # RN39
+  Cenário: Tráfego vem antes do acesso ao recurso
+    Dado que o endpoint já passou do TPM
+    Quando Ana chama com a conta de outro cliente
+    Então a resposta deve ter status 429
 
   # RN21
   Cenário: QCA do banco vale para toda receptora

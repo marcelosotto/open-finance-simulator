@@ -3,7 +3,7 @@
 Fonte: [referência de endpoints do portal](../00-visao-geral/referencias.md#f02), captura de 30/10/2026. Vale como valor padrão de toda instituição simulada ([PR01](../00-visao-geral/premissas.md#pr01)).
 
 - **Timeout:** 15 s em todos os endpoints.
-- **TPS:** 300 em todos os endpoints.
+- **TPS:** 300 por instituição, somando todos os endpoints ([RN29](regras-de-negocio.md#rn29)).
 - **SLA:** percentil 95 diário: alta e média-alta 1.500 ms, média 2.000 ms, baixa 4.000 ms.
 - **TPM na alta:** depende dos consentimentos ativos ([RN21](regras-de-negocio.md#rn21)).
 - **Limite operacional:** mínimo por mês ([RN26](regras-de-negocio.md#rn26)).
