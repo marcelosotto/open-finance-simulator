@@ -20,6 +20,7 @@ classDiagram
   }
   class ConfiguracaoDeLimites {
     qcaPadrao
+    qcaPorReceptora
     tpmPorClasse
     capacidadeTps
     limiteOperacionalLigado
@@ -27,7 +28,6 @@ classDiagram
   }
   class Receptora {
     organisationId
-    qcaPorInstituicao
   }
   class ClienteSimulado {
     documento

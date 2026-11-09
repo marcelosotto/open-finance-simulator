@@ -1,8 +1,6 @@
 # language: pt
 # Casos de uso: UC01, UC02, UC03 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 002: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-002
 Funcionalidade: Cadastrar instituições simuladas
   Como operador
   Quero criar bancos com comportamentos diferentes
@@ -68,7 +66,8 @@ Funcionalidade: Cadastrar instituições simuladas
     Quando Diego abre o "Banco Azul"
     Então deve ver público, produtos, marca e organisationId
 
-  # RN08
+  # RN08: depende da criação de consentimento (ADR-009).
+  @spec-004
   Cenário: Instituição sem conta de depósito
     Dado que o "Banco Azul" não oferece contas
     Quando Ana cria um consentimento de contas e cartões nesse banco

@@ -5,7 +5,7 @@ Documentos relacionados: [Regras de negócio](regras-de-negocio.md) · [Casos de
 ## Funcionais
 | ID | Descrição | Caso de uso |
 |---|---|---|
-| <a id="rf01"></a>RF01 | Operador cadastra, edita e inativa instituições simuladas | [UC01](casos-de-uso/README.md#uc01) |
+| <a id="rf01"></a>RF01 | Operador cadastra, edita, inativa e reativa instituições simuladas | [UC01](casos-de-uso/README.md#uc01) |
 | <a id="rf02"></a>RF02 | O ambiente nasce com os bancos estável, lento, instável, timeout e restritivo | [UC01](casos-de-uso/README.md#uc01) |
 | <a id="rf03"></a>RF03 | Operador configura latência, erros, limites e paginação de cada instituição | [UC02](casos-de-uso/README.md#uc02), [UC03](casos-de-uso/README.md#uc03) |
 | <a id="rf04"></a>RF04 | QA programa regras de cenário por instituição, endpoint, cliente ou recurso | [UC04](casos-de-uso/README.md#uc04) |

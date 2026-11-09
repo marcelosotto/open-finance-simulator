@@ -86,7 +86,7 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Informa o nome e escolhe um perfil de comportamento. 2. Opcionalmente ajusta público, produtos e marca. 3. O sistema gera `organisationId` e endereço e publica a instituição.
 - **Fluxo alternativo — banco com nome real:** informa o banco real, e o sistema aplica o prefixo do ambiente, como `HML-Itaú` ([RN09](../regras-de-negocio.md#rn09)).
 - **Fluxo alternativo — usar banco pronto:** os bancos de perfil e os de nome real já existem ao subir o ambiente ([RN02](../regras-de-negocio.md#rn02)).
-- **Fluxo alternativo — inativar:** instituição com clientes é inativada e responde como fora do ar ([RN06](../regras-de-negocio.md#rn06)).
+- **Fluxo alternativo — inativar:** instituição com clientes é inativada e responde como fora do ar. Instituição inativa pode ser reativada ([RN06](../regras-de-negocio.md#rn06)).
 - **Exceções:** nome repetido → recusado.
 - **Pós-condição:** vale na próxima chamada, com histórico ([RN05](../regras-de-negocio.md#rn05)).
 - **Regras:** [RN01](../regras-de-negocio.md#rn01) a [RN09](../regras-de-negocio.md#rn09).

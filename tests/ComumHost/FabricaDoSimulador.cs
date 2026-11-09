@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 using Simulador.Comum.Aleatorio;
+using Simulador.Instituicoes.Contratos;
 using Simulador.Testes.Infra;
 
 namespace Simulador.Testes.Host;
@@ -20,6 +21,7 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
 
     private readonly Dictionary<string, string?> _configuracao = new(StringComparer.Ordinal);
     private readonly List<Action<IServiceCollection>> _servicos = [];
+    private bool _usarMongo;
 
     public FabricaDoSimulador(string? marcaDoAmbiente = "hml")
     {
@@ -36,6 +38,13 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
     {
         _configuracao[chave] = valor;
         return this;
+    }
+
+    /// <summary>Usa o MongoDB em contêiner, em vez do cadastro em memória.</summary>
+    public FabricaDoSimulador ComMongo()
+    {
+        _usarMongo = true;
+        return Com("Simulador:Mongo:Conexao", MongoDeTeste.Conexao).Com("Simulador:Mongo:Base", MongoDeTeste.NovaBase());
     }
 
     /// <summary>Registra serviços extras (por exemplo, manipuladores de teste).</summary>
@@ -66,6 +75,12 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
             servicos.AddSingleton<TimeProvider>(Relogio);
             servicos.RemoveAll<IGeradorAleatorio>();
             servicos.AddSingleton<IGeradorAleatorio>(new GeradorAleatorioComSemente(Semente));
+            if (!_usarMongo)
+            {
+                servicos.RemoveAll<IRepositorioDeInstituicoes>();
+                servicos.AddSingleton<IRepositorioDeInstituicoes>(new RepositorioEmMemoria());
+            }
+
             foreach (var registrar in _servicos)
             {
                 registrar(servicos);

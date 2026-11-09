@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Simulador.Catalogo.Leitura;
 using Simulador.Catalogo.Rotas;
 
@@ -16,7 +15,6 @@ public static class ExtensoesDoCatalogo
     {
         servicos.AddSingleton(_ => OpcoesDoCatalogo.Ler(configuracao));
         servicos.AddSingleton<ICatalogo>(provedor => CarregadorDoCatalogo.Carregar(provedor.GetRequiredService<OpcoesDoCatalogo>()));
-        servicos.TryAddSingleton<IResolvedorDeInstituicao, ResolvedorProvisorio>();
         servicos.AddSingleton<Despachante>();
         return servicos;
     }

@@ -1,19 +1,9 @@
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Simulador.Catalogo.Contratos;
 using Simulador.Comum.Erros;
 
 namespace Simulador.Catalogo.Rotas;
-
-/// <summary>Aceita qualquer identificador de banco no formato do endereço, até a spec 002 (research R04).</summary>
-internal sealed partial class ResolvedorProvisorio : IResolvedorDeInstituicao
-{
-    public bool Existe(string banco) => FormatoDoBanco().IsMatch(banco);
-
-    [GeneratedRegex("^[a-z0-9-]{1,64}$")]
-    private static partial Regex FormatoDoBanco();
-}
 
 /// <summary>
 /// Leva a chamada ao manipulador da operação; sem manipulador, responde 501 (FR-006).
@@ -27,9 +17,10 @@ internal sealed class Despachante(IResolvedorDeInstituicao resolvedor, TimeProvi
     public async Task<IResult> Despachar(HttpContext contexto, OperacaoDoCatalogo operacao)
     {
         var banco = contexto.Request.RouteValues["banco"] as string ?? string.Empty;
-        if (!resolvedor.Existe(banco))
+        var situacao = await resolvedor.Situacao(banco, contexto.RequestAborted).ConfigureAwait(false);
+        if (situacao != SituacaoDoBanco.Ativo)
         {
-            return Respostas.NaoEncontrado(relogio);
+            return situacao == SituacaoDoBanco.Inativo ? Respostas.ForaDoAr(relogio) : Respostas.NaoEncontrado(relogio);
         }
 
         var manipulador = contexto.RequestServices.GetServices<IManipuladorDeOperacao>()
@@ -51,6 +42,16 @@ internal static class Respostas
             relogio),
         EnvelopeDeErro.OpcoesJson,
         statusCode: StatusCodes.Status501NotImplemented);
+
+    /// <summary>Instituição fora do ar, sem explicar o motivo (RN06, RN18).</summary>
+    public static IResult ForaDoAr(TimeProvider relogio) => Results.Json(
+        EnvelopeDeErro.Criar(
+            "SERVICO_INDISPONIVEL",
+            "Serviço indisponível",
+            "O serviço não está disponível no momento.",
+            relogio),
+        EnvelopeDeErro.OpcoesJson,
+        statusCode: StatusCodes.Status503ServiceUnavailable);
 
     public static IResult NaoEncontrado(TimeProvider relogio) => Results.Json(
         EnvelopeDeErro.Criar(
