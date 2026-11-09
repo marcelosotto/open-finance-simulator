@@ -1,6 +1,6 @@
 # Spec 006: divergências e perguntas
 
-**Aguardando respostas de Marcelo.** Nada aqui foi registrado em `docs/`.
+**Respondidas em 2026-11-09.** Aprovadas as recomendações, salvo Q4 (mudou para a opção B: limites antes do 403 de recurso, com ressalva em RN39) e Q10 (opção B: códigos em inglês). Decisões na seção Clarifications da [spec](spec.md).
 
 Conferência de `docs/` contra os contratos em `.specs/7bdb9c1a6c4c265d7aabcdbc662f94c61718135e/contracts/expansion/snapshots/` (15 arquivos, conferidos com `specs verificar`). Os números de linha são desses arquivos.
 

@@ -10,10 +10,10 @@ flowchart LR
 
   subgraph pipeline["Pipeline da chamada"]
     p1["Resolver instituição"]
-    p2["Cabeçalhos e segurança<br/><small>400, 401, 403</small>"]
+    p2["Cabeçalhos e segurança do token<br/><small>400, 401, 403</small>"]
     p3["Capacidade<br/><small>529</small>"]
     p4["Tráfego<br/><small>429</small>"]
-    p5["Parâmetros<br/><small>422</small>"]
+    p5["Acesso ao recurso e parâmetros<br/><small>403, 422</small>"]
     p6["Limite operacional<br/><small>423</small>"]
     p7["Regras de cenário<br/><small>latência, erro, timeout</small>"]
     p8["Responder<br/><small>dados e paginação</small>"]

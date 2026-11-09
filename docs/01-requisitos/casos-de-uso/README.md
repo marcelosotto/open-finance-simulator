@@ -277,7 +277,7 @@ Todos começam como **Rascunho**.
 ### <a id="uc19"></a>UC19 — Aplicar limite operacional
 - **Status:** Aprovado
 - **Ator:** Sistema
-- **Fluxo principal:** 1. Confere a cota do mês, por endpoint, objeto, cliente e receptora. 2. Passou: responde 423. 3. Depois de uma resposta 2XX que não seja de página seguinte, conta a chamada.
+- **Fluxo principal:** 1. Confere a cota do mês, por endpoint, objeto, cliente e receptora, exceto em chamada com `pagination-key` válida. 2. Passou: responde 423. 3. Depois de uma resposta 2XX que não seja de página seguinte, conta a chamada.
 - **Regras:** [RN25](../regras-de-negocio.md#rn25) a [RN28](../regras-de-negocio.md#rn28).
 
 ### <a id="uc20"></a>UC20 — Aplicar capacidade

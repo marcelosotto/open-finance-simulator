@@ -10,7 +10,23 @@
 
 **Origem em `docs/`**: [UC18](../../docs/01-requisitos/casos-de-uso/README.md#uc18), [UC19](../../docs/01-requisitos/casos-de-uso/README.md#uc19), [UC20](../../docs/01-requisitos/casos-de-uso/README.md#uc20), [RF14](../../docs/01-requisitos/requisitos.md#rf14), [RN20](../../docs/01-requisitos/regras-de-negocio.md#rn20) a [RN30](../../docs/01-requisitos/regras-de-negocio.md#rn30), [RN35](../../docs/01-requisitos/regras-de-negocio.md#rn35), [RN36](../../docs/01-requisitos/regras-de-negocio.md#rn36), [RN39](../../docs/01-requisitos/regras-de-negocio.md#rn39), [RN73](../../docs/01-requisitos/regras-de-negocio.md#rn73), [PA10](../../docs/01-requisitos/regras-de-negocio.md#pa10), [PA11](../../docs/01-requisitos/regras-de-negocio.md#pa11), [RNF02](../../docs/01-requisitos/requisitos.md#rnf02) a [RNF04](../../docs/01-requisitos/requisitos.md#rnf04), [RNF12](../../docs/01-requisitos/requisitos.md#rnf12), [tabela de endpoints](../../docs/01-requisitos/tabela-de-endpoints.md), [sequência 02](../../docs/03-design/sequencia/02-chamada-de-dados.md), [sequência 03](../../docs/03-design/sequencia/03-coleta-paginada.md), [ADR-003](../../docs/05-adr/ADR-003-mongodb-e-redis.md), [ADR-008](../../docs/05-adr/ADR-008-pipeline-de-avaliacao.md). Contratos oficiais: os 15 fixados em `specs.lock.json`. Cenários Gherkin: [limites.feature](../../docs/01-requisitos/gherkin/limites.feature) e os dois cenários `@spec-006` de [paginacao.feature](../../docs/01-requisitos/gherkin/paginacao.feature) ("Chave dentro da validade", linha 77, e "Chave recusada conta na cota", linha 96).
 
-**Pendências**: as divergências e perguntas estão em [perguntas.md](perguntas.md). Onde há decisão aberta, o requisito traz a referência `Qn` e a redação reflete só a recomendação, ainda não aprovada.
+## Clarifications
+
+### Session 2026-11-09
+
+Decisões aprovadas por Marcelo em 2026-11-09 e registradas em `docs/` (RN23, RN25, RN28 a RN30, RN36, RN39, UC19, tabela de endpoints, ADR-008, sequência 02, C3 e `limites.feature`). Evidências em [perguntas.md](perguntas.md).
+
+- Q1: Qual o alcance da capacidade? → A: Por instituição, somando todos os endpoints.
+- Q2: Quem produz 429? → A: Entre os limites, só o TPM; regra de cenário também pode; concorrência global não é simulada.
+- Q3: Em quais rotas vale a capacidade? → A: Nas 75 operações dos contratos; token e administração não contam.
+- Q4: Onde entra o 403 de recurso? → A: Depois de capacidade e tráfego, em etapa própria de acesso ao recurso; `PAGE_NOT_FOUND` é parâmetro, antes da cota.
+- Q5: Cota esgotada na paginação? → A: Chave válida responde 200 sem conferir a cota; chave recusada responde 423.
+- Q6: O que é o objeto? → A: O último parâmetro do caminho; sem parâmetro, o consentimento.
+- Q7: Fuso do mês? → A: UTC.
+- Q8: Contadores indisponíveis? → A: A chamada segue como dentro dos limites, e a falha vai só para a observabilidade.
+- Q9: Cota sob concorrência? → A: Confere antes e conta depois do 2XX; pode ultrapassar em poucas unidades.
+- Q10: Códigos das recusas? → A: `TOO_MANY_REQUESTS`, `LOCKED` e `SITE_IS_OVERLOADED`.
+- Q11: Cenário do 500? → A: Fica na 006, com o 500 provocado pelo teste.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -91,10 +107,11 @@ Como operador, quero que os limites valham sobre o total de várias instâncias 
 - `page=2` sem chave: é consulta nova e conta; o que define "página seguinte" é a chave válida, como diz o contrato (`accounts-2.5.1.yaml:1458`).
 - Instituição com limite operacional desligado: não conta nem responde 423 (RN25).
 - Mudança de limite no meio do mês ou do minuto: vale na próxima chamada, sem zerar contadores (RN05).
-- Virada do mês: a cota recomeça (Q7).
+- Virada do mês em UTC: a cota recomeça (Q7).
 - Relógio da instituição alterado: mês pela hora simulada; TPM e capacidade pela hora real (RN73). O relógio por instituição é entregue na spec 007.
-- Cota esgotada com chave válida ou recusada (Q5).
-- Contadores indisponíveis (Q8).
+- Cota esgotada: chave válida responde 200; chave recusada responde 423 (Q5).
+- Acima do TPM, recurso de outro cliente responde 429 (Q4).
+- Contadores indisponíveis: a chamada segue normal (Q8).
 
 ## Requirements *(mandatory)*
 
@@ -102,7 +119,7 @@ Como operador, quero que os limites valham sobre o total de várias instâncias 
 
 **Ordem**
 
-- **FR-001**: As etapas MUST seguir RN39: cabeçalhos e segurança (400, 401, 403), capacidade (529), tráfego (429), parâmetros (422), limite operacional (423) e resposta, encaixadas sem criar caminho paralelo (ADR-008). [NEEDS CLARIFICATION: Q4 — o 403 de recurso (RN104, RN105) e o 422 `PAGE_NOT_FOUND` entram nas etapas de segurança e parâmetros?]
+- **FR-001**: As etapas MUST seguir RN39: cabeçalhos e segurança do token (400, 401, 403), capacidade (529), tráfego (429), acesso ao recurso (403), parâmetros (422, inclusive `PAGE_NOT_FOUND`), limite operacional (423) e resposta, sem caminho paralelo (ADR-008, Q4).
 
 **Tráfego (UC18)**
 
@@ -114,30 +131,30 @@ Como operador, quero que os limites valham sobre o total de várias instâncias 
 
 **Limite operacional (UC19)**
 
-- **FR-007**: Com o limite ligado, a cota MUST contar por mês, endpoint, objeto, cliente e receptora (RN25). O objeto segue Q6.
+- **FR-007**: Com o limite ligado, a cota MUST contar por mês, endpoint, objeto, cliente e receptora, com mês em UTC (RN25, Q7). O objeto é o último parâmetro do caminho; sem parâmetro, o consentimento (Q6).
 - **FR-008**: A cota MUST valer só nos 69 endpoints de dados: Consentimentos e Recursos não têm esse limite (RN28; nenhum dos dois contratos declara 423).
 - **FR-009**: Valores por classe, com 420 para saldos e limites da conta, e configuráveis por instituição, mesmo abaixo do oficial, com aviso na configuração (RN26).
 - **FR-010**: Passar da cota MUST responder 423 (RN28).
-- **FR-011**: Só 2XX MUST contar, depois da resposta (RN27, ADR-008). A contagem sob concorrência segue Q9.
+- **FR-011**: Só 2XX MUST contar, depois da resposta (RN27, ADR-008). Chamadas simultâneas podem ultrapassar a cota em poucas unidades (Q9).
 - **FR-012**: Chamada com `pagination-key` válida MUST NOT contar (RN27). Chamada com chave inválida ou expirada MUST contar, além de gerar nova chave e responder com sucesso (RN36).
-- **FR-013**: O resultado da chave MUST ficar disponível à etapa de cota, sem gravar a chave (RN37). [NEEDS CLARIFICATION: Q5 — com a cota esgotada, a página seguinte de chave válida é atendida, e a de chave recusada responde 423?]
+- **FR-013**: O resultado da chave MUST ficar disponível à etapa de cota, sem gravar a chave (RN37). Com a cota esgotada, chave válida MUST responder 200, e chave recusada MUST responder 423, sem nova chave (RN36, UC19, Q5).
 
 **Capacidade (UC20)**
 
-- **FR-014**: A capacidade MUST contar requisições por segundo cheio, por instituição, pela hora real (RN29, RN73, UC20). [NEEDS CLARIFICATION: Q1 — a capacidade é da instituição, como dizem contrato, RN29 e UC20, e não por endpoint, como lê a tabela?]
-- **FR-015**: Passar da capacidade configurada MUST responder 529 (RN29), nas rotas cujo contrato o declara (Q3).
+- **FR-014**: A capacidade MUST contar requisições por segundo cheio, por instituição, somando todos os endpoints, pela hora real (RN29, RN73, UC20, Q1).
+- **FR-015**: Passar da capacidade configurada MUST responder 529 nas 75 operações cujo contrato o declara; token e administração não contam (RN29, Q3).
 
 **Contadores e respostas**
 
-- **FR-016**: Os contadores MUST ser compartilhados entre instâncias (RN30, RNF04), em Redis (ADR-003), e o ambiente Docker Compose MUST incluí-lo (RNF11). A falha dos contadores segue Q8.
-- **FR-017**: As respostas 429, 423 e 529 MUST validar contra o schema de erro do contrato de cada operação (RNF01), com os códigos de Q10, e MUST NOT explicar por que saíram assim (RN18).
-- **FR-018**: 429, 423 e 529 MUST NOT sair do sorteio de erros (RN13). Quem mais pode produzir 429 segue Q2.
+- **FR-016**: Os contadores MUST ser compartilhados entre instâncias (RN30, RNF04), em Redis (ADR-003), e o ambiente Docker Compose MUST incluí-lo (RNF11). Com os contadores indisponíveis, a chamada MUST seguir como dentro dos limites, e a falha MUST aparecer só na observabilidade (RN30, Q8).
+- **FR-017**: As respostas 429, 423 e 529 MUST validar contra o schema de erro do contrato de cada operação (RNF01), com `code` `TOO_MANY_REQUESTS`, `LOCKED` e `SITE_IS_OVERLOADED` (Q10), e MUST NOT explicar por que saíram assim (RN18).
+- **FR-018**: 429, 423 e 529 MUST NOT sair do sorteio de erros (RN13). Nesta spec, o 429 sai só do TPM; a regra de cenário entra na 007 (RN23, Q2).
 - **FR-019**: Mudar limites MUST valer nas próximas chamadas, sem reiniciar (RN05, RNF12).
 - **FR-020**: O simulador MUST NOT guardar registro das chamadas: os contadores guardam só totais (RN18, princípio V).
 
 **Cenários**
 
-- **FR-021**: Os cenários de `limites.feature` e os dois `@spec-006` de `paginacao.feature` MUST rodar no CI, sem a etiqueta, ao fim desta spec (ADR-009). O cenário de resposta 500 segue Q11.
+- **FR-021**: Os cenários de `limites.feature` e os dois `@spec-006` de `paginacao.feature` MUST rodar no CI, sem a etiqueta, ao fim desta spec (ADR-009). O 500 do cenário de erro é provocado pelo teste (Q11).
 
 ### Key Entities *(include if feature involves data)*
 
@@ -151,7 +168,7 @@ Como operador, quero que os limites valham sobre o total de várias instâncias 
 
 ### Measurable Outcomes
 
-- **SC-001**: 100% dos cenários de `limites.feature` e os dois `@spec-006` de `paginacao.feature` passam no CI, sem etiqueta, salvo decisão em Q11.
+- **SC-001**: 100% dos cenários de `limites.feature` e os dois `@spec-006` de `paginacao.feature` passam no CI, sem etiqueta.
 - **SC-002**: Nos 69 endpoints de dados, o limite aplicado é igual ao da tabela oficial em 100% dos casos.
 - **SC-003**: Com várias instâncias, o total atendido em um minuto nunca passa do TPM configurado.
 - **SC-004**: Uma coleta paginada dentro da validade da chave consome exatamente 1 da cota, em 100% das execuções.
