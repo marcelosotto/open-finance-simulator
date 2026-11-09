@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-09
 
-**Status**: Draft — aguardando as respostas de [perguntas.md](perguntas.md)
+**Status**: Draft
 
 **Input**: User description: "APIs de dados: UC16 e UC17, com todas as famílias de dados e paginação oficial. Usar docs/ e os .feature dados-e-transacoes e paginacao. Nome curto: apis-de-dados"
 
@@ -14,7 +14,18 @@
 
 ### Session 2026-11-09
 
-Perguntas Q1 a Q10 entregues à sessão controladora em [perguntas.md](perguntas.md), com evidência nos contratos e recomendação. Nenhuma resposta foi registrada ainda. Os requisitos marcados com `(Qn)` usam a recomendação como hipótese de trabalho e MUST ser revistos com a resposta.
+Decisões aprovadas por Marcelo em 2026-11-09 e registradas em `docs/` (RN31, RN33, RN37, RN41 a RN44, RN46, RN59, RN104, RN105, `paginacao.feature`, `dados-e-transacoes.feature`, `recursos.feature`). Evidências em [perguntas.md](perguntas.md).
+
+- Q1: Como tratar os totais das transações? → A: RN33 vale quando o contrato os declara; as 14 operações de transações não trazem totais.
+- Q2: Quem aceita data futura? → A: Só Contas.
+- Q3: O mínimo de 25 vale em todas as famílias? → A: Não. O mínimo é dado por família, lido do contrato: 25 nas 6 famílias (e Consentimentos e Recursos) com `minimum: 25`; o `page-size` pedido nas 7 com `minimum: 1`.
+- Q4: Como ficam as datas de faturas? → A: `/bills` aceita datas isoladas e, sem datas, traz 12 meses; `/bills/{billId}/transactions` exige o par e, sem datas, traz a fatura inteira.
+- Q5: Até onde vai o dado? → A: Coerência completa em contas e cartão; nas demais, determinístico, válido no schema e coerente dentro da resposta.
+- Q6: Para onde vão os cenários de outras specs? → A: Cota em `@spec-006`; anomalia em `@spec-009`.
+- Q7: Como a transação muda de estado? → A: Pelo relógio injetado. Lançamentos futuros só em Contas e só em 30 dias; a consulta aceita 12 meses, e além do dia 30 vem vazia, sem cálculo. Futuro não entra no saldo. Nada é gravado.
+- Q8: O que a chave congela? → A: Consulta e instante; ajustes posteriores não aparecem; filtros diferentes invalidam a chave.
+- Q9: Quais códigos de parâmetro? → A: `PARAMETRO_INVALIDO` e `PARAMETRO_NAO_INFORMADO`; `reserved-balances` em página única, sem chave.
+- Q10: RN104 e RN105 em todas as famílias? → A: Sim, nas famílias com recurso.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -51,7 +62,7 @@ Como receptora, quero a paginação oficial, para ler listas grandes sem gastar 
 **Acceptance Scenarios**:
 
 1. **Given** uma lista, **When** a receptora não informa `page` e `page-size`, **Then** recebe até 25 registros.
-2. **Given** 47 registros, **When** pede `page-size` 5, **Then** a primeira página tem 25 e a segunda 22 (Q3).
+2. **Given** 47 registros, **When** pede `page-size` 5, **Then** nas famílias com mínimo de 25 a primeira página tem 25 e a segunda 22, e nas demais a primeira tem 5 (Q3).
 3. **Given** 3 páginas, **When** pede a página 9, **Then** responde 422 `PAGE_NOT_FOUND`.
 4. **Given** `page-size` 5000, **When** a receptora pede, **Then** recebe até 1000 e o `self` mostra 1000.
 5. **Given** um banco com máximo de 800, **When** a receptora pede a página 2 com 1000, **Then** recebe os itens 801 a 1600.
@@ -132,20 +143,20 @@ Como operador, quero que mudanças concorrentes de estado de recurso não se per
 
 - **FR-004**: Com perfil `estavel` e sem defeitos, toda resposta MUST validar contra o schema da versão fixada (RN40, princípio VII).
 - **FR-005**: O conteúdo MUST sair da semente, da mesma forma para massa persistida e virtual, sem gravar item a item, com ajustes por cima (RN51 a RN54).
-- **FR-006**: Saldo e extrato MUST ser coerentes; em cartão, limite usado e faturas MUST bater com as transações do ciclo (RN46). A coerência nas demais famílias segue Q5. [NEEDS CLARIFICATION: Q5, profundidade do dado por família]
+- **FR-006**: Saldo e extrato MUST ser coerentes; em cartão, limite usado e faturas MUST bater com as transações do ciclo (RN46). Nas demais famílias, o dado é determinístico, válido no schema e coerente dentro da resposta (Q5).
 - **FR-007**: Toda resposta MUST levar a marcação de ambiente e natureza: cabeçalhos, prefixo dos IDs e texto marcado (RN60 a RN66).
 - **FR-008**: A contraparte MUST seguir a tabela oficial por tipo e sentido da transação (RN45).
 - **FR-009**: Transações MUST vir da mais recente para a mais antiga (RN43), em todas as famílias (Q5).
-- **FR-010**: Uma transação MUST passar pelos estados de RN44, e identificador provisório e definitivo MUST NOT aparecer juntos (Q7).
+- **FR-010**: Uma transação MUST passar pelos estados de RN44, derivados do relógio injetado, e identificador provisório e definitivo MUST NOT aparecer juntos. Lançamentos futuros existem só em Contas, até 30 dias; além disso a lista vem vazia, sem cálculo, e eles não entram no saldo (RN44, RN46, RN59, Q7).
 
 **Filtros de data**
 
-- **FR-011**: `/transactions` e `/transactions-current` MUST aplicar as janelas oficiais de cada família e responder 422 fora delas (RN41). [NEEDS CLARIFICATION: Q2, janela futura fora de Contas]
+- **FR-011**: `/transactions` e `/transactions-current` MUST aplicar as janelas oficiais de cada família e responder 422 fora delas (RN41, Q2).
 - **FR-012**: `from*` e `to*` MUST andar juntos onde o contrato exige, com 422 se vier só um; sem nenhum dos dois, vale o dia atual (RN42), exceto em faturas (Q4).
 
 **Paginação**
 
-- **FR-013**: `page` começa em 1 e `page-size` vale 25 por padrão (RN31). Acima do máximo, MUST aplicar o máximo e mostrá-lo no `self` (PA21, RN32). Abaixo de 25, segue Q3. [NEEDS CLARIFICATION: Q3, mínimo de 25 frente a `minimum: 1`]
+- **FR-013**: `page` começa em 1 e `page-size` vale 25 por padrão (RN31). Acima do máximo, MUST aplicar o máximo e mostrá-lo no `self` (PA21, RN32). O mínimo é o `minimum` do `page-size` no contrato da família; abaixo dele, MUST aplicar o mínimo (RN31, Q3).
 - **FR-014**: O máximo da instituição MUST valer no cálculo da página (RN32).
 - **FR-015**: Sem registros, `meta` MUST trazer totais zerados nos contratos que têm totais. Nos 14 endpoints de transações que declaram só `requestDateTime`, `meta` MUST NOT trazer totais (Q1).
 - **FR-016**: Página além do total MUST responder 422 `PAGE_NOT_FOUND`, exceto a primeira (RN33).

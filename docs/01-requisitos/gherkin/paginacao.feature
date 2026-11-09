@@ -1,8 +1,6 @@
 # language: pt
 # Caso de uso: UC17 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 005: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-005
 Funcionalidade: Paginar como o Open Finance
   Como receptora
   Quero a paginação oficial
@@ -14,11 +12,18 @@ Funcionalidade: Paginar como o Open Finance
     Então a resposta deve ter até 25 registros
 
   # RN31
-  Cenário: Mínimo de 25 registros
-    Dado uma lista com 47 registros
+  Cenário: Mínimo de 25 registros nas famílias que o declaram
+    Dado uma lista de fundos com 47 registros
     Quando Ana pede page-size 5
     Então a primeira página deve ter 25 registros
     E a segunda deve ter 22 registros
+
+  # RN31
+  Cenário: Tamanho pedido nas famílias sem mínimo de 25
+    Dado uma lista de contas com 47 registros
+    Quando Ana pede page-size 5
+    Então a primeira página deve ter 5 registros
+    E o link self deve mostrar page-size 5
 
   # RN33
   Cenário: Página além do total
@@ -39,12 +44,19 @@ Funcionalidade: Paginar como o Open Finance
     Então a resposta deve trazer os itens 801 a 1600
 
   # RN33
-  Cenário: Lista vazia
-    Dado que a conta não tem transações no período
-    Quando Ana consulta transações
+  Cenário: Lista vazia com totais
+    Dado que a única conta do consentimento está indisponível
+    Quando Ana lista contas
     Então a resposta deve ter status 200
     E meta.totalRecords deve ser 0
     E meta.totalPages deve ser 0
+
+  # RN33
+  Cenário: Transações vazias não trazem totais
+    Dado que a conta não tem transações no período
+    Quando Ana consulta transações
+    Então a resposta deve ter status 200
+    E meta não deve ter totais
 
   # RN34
   Cenário: Links da primeira página
@@ -61,6 +73,7 @@ Funcionalidade: Paginar como o Open Finance
     E links não deve ter next nem last
 
   # RN35
+  @spec-006
   Cenário: Chave dentro da validade
     Dado uma chave emitida há 59 minutos
     Quando Ana pede a página seguinte
@@ -72,14 +85,21 @@ Funcionalidade: Paginar como o Open Finance
     Quando Ana pede a página seguinte
     Então a resposta deve ter status 200
     E os links devem trazer uma nova chave
-    E a cota deve subir 1
 
     Exemplos:
       | estado   |
       | expirada |
       | inválida |
 
+  # RN36
+  @spec-006
+  Cenário: Chave recusada conta na cota
+    Dado uma chave "expirada"
+    Quando Ana pede a página seguinte
+    Então a cota deve subir 1
+
   # RN113
+  @spec-009
   Cenário: Anomalia de chave com 422
     Dado que o "Banco Restritivo" tem a anomalia "chave-recusada-com-422"
     E uma chave expirada

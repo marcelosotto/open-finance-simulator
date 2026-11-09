@@ -1,8 +1,6 @@
 # language: pt
 # Caso de uso: UC16 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 005: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-005
 Funcionalidade: Consultar dados cadastrais e transacionais
   Como receptora
   Quero respostas iguais às das instituições
@@ -38,6 +36,24 @@ Funcionalidade: Consultar dados cadastrais e transacionais
       | transactions-current  | D-7   | hoje | 422    |
       | transactions          | D-365 | hoje | 200    |
       | transactions          | D-400 | hoje | 422    |
+
+  # RN41
+  Cenário: Data futura fora de Contas
+    Quando Ana consulta o cartão com data final em D+1
+    Então a resposta deve ter status 422
+
+  # RN44, RN59
+  Cenário: Lançamentos futuros só nos próximos 30 dias
+    Quando Ana consulta "transactions" de D+1 até D+60
+    Então a resposta deve ter status 200
+    E nenhuma transação deve passar de D+30
+    E todas devem estar em "LANCAMENTO_FUTURO"
+
+  # RN44, RN46
+  Cenário: Lançamento futuro não entra no saldo
+    Dado que existem lançamentos futuros na conta
+    Quando Ana soma as transações efetivadas ao saldo inicial
+    Então o resultado deve ser igual ao saldo informado
 
   # RN42
   Cenário: Data inicial sem data final

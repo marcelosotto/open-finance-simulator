@@ -1,5 +1,7 @@
 # Spec 005: divergências e perguntas
 
+**Respondidas em 2026-11-09.** Aprovadas as recomendações, salvo Q3 (o mínimo é dado por família) e Q7 (lançamentos futuros só em Contas e até 30 dias). Decisões na seção Clarifications da [spec](spec.md).
+
 Conferência de `docs/` contra os contratos em `.specs/7bdb9c1a6c4c265d7aabcdbc662f94c61718135e/contracts/expansion/snapshots/` (os 13 arquivos de dados conferem com os `sha256` de `specs.lock.json`). Os números de linha são desses arquivos.
 
 Os 69 endpoints de `tabela-de-endpoints.md` batem, um a um, com os caminhos dos 13 contratos. A RN38 confere (`accounts-2.5.1.yaml:1381`), e os padrões de ID aceitam os prefixos de RN62 (`accounts-2.5.1.yaml:1388`, `transactionId` em `:926`).

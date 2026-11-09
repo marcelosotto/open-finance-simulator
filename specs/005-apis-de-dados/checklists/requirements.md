@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [ ] No [NEEDS CLARIFICATION] markers remain
+- [x] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -31,5 +31,5 @@
 
 ## Notes
 
-- Restam 3 marcadores (Q2, Q3 e Q5), e os requisitos com `(Qn)` usam a recomendação como hipótese. Resolver com as respostas de [perguntas.md](../perguntas.md) antes de `/speckit-plan`.
+- As respostas às perguntas de [perguntas.md](../perguntas.md) estão na seção Clarifications da spec.
 - Nomes de rota, cabeçalho e campo vêm do contrato oficial e são o próprio domínio do produto.
