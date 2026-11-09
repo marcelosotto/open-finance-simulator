@@ -30,7 +30,11 @@
 - Os componentes MUST NOT aceitar nem guardar dado real como massa.
 - Todo dado gerado MUST carregar ambiente e natureza (persistido ou virtual) no cabeçalho, no
   prefixo dos IDs e no texto marcado (RN60 a RN66).
-- Nenhum perfil pode desligar a marcação.
+- A marca de ambiente serve para saber de qual ambiente saiu a informação. Ela é um valor
+  livre definido na configuração da implantação (`dev`, `hml`, `stage` ou outro), sem lista
+  fechada nem regra: o sistema só concatena o valor. Em produção a configuração fica vazia e
+  nada é concatenado.
+- Nenhum perfil pode desligar a marcação. O valor da marca vem só da configuração do ambiente.
 
 ### V. Só responde; não julga nem registra
 
@@ -107,4 +111,4 @@
 - Toda revisão de plano e de código MUST verificar a conformidade com esta constituição.
   Qualquer exceção MUST ser justificada no plano.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-05 | **Last Amended**: 2026-11-05
+**Version**: 2.0.0 | **Ratified**: 2026-11-05 | **Last Amended**: 2026-11-05

@@ -1,6 +1,8 @@
 # language: pt
 # Casos de uso: UC01, UC02, UC03 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 002: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-002
 Funcionalidade: Cadastrar instituições simuladas
   Como operador
   Quero criar bancos com comportamentos diferentes
@@ -22,6 +24,7 @@ Funcionalidade: Cadastrar instituições simuladas
       | ambiente | nome     |
       | hml      | HML-Itaú |
       | dev      | DEV-Itaú |
+      |          | Itaú     |
 
   # RN03
   Cenário: Criar um banco só com o nome

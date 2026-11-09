@@ -1,2 +1,12 @@
 site/
 .DS_Store
+bin/
+obj/
+TestResults/
+coverage*/
+.specs/
+*.user
+*.suo
+.vs/
+.idea/
+*.feature.cs

@@ -11,7 +11,7 @@ Sem nenhuma configuração, uma instituição simulada segue as regras oficiais:
 O simulador precisa se comportar mal, porque as instituições reais às vezes se comportam mal. Mas todo desvio da regra oficial é uma **anomalia configurada**: tem nome, é ligada de propósito e aparece no histórico. Um desvio nunca acontece por padrão ou por acaso.
 
 ## <a id="pr03"></a>PR03 — Tudo é simulado e se reconhece como simulado
-Nenhum dado real de cliente entra no simulador. Todo dado gerado carrega a marca do ambiente e da natureza, de um jeito que continua visível depois de ser copiado para outro sistema ([RN60](../01-requisitos/regras-de-negocio.md#rn60)).
+Nenhum dado real de cliente entra no simulador. Todo dado gerado carrega a marca do ambiente e da natureza, de um jeito que continua visível depois de ser copiado para outro sistema. A marca do ambiente é um valor de configuração que o sistema só concatena; em produção ela fica vazia ([RN60](../01-requisitos/regras-de-negocio.md#rn60)).
 
 ## <a id="pr04"></a>PR04 — O simulador produz o problema; não julga o resultado
 O simulador gera lentidão, erro e dado ruim. Ele não valida a qualidade de dados nem diz se o cliente reagiu bem. Quem avalia é o sistema sob teste e suas ferramentas, como o MQD.
@@ -26,4 +26,4 @@ Rotas, contratos e exemplos saem das specs do repositório `open-finance-specs`,
 Para a receptora, o simulador é uma instituição. Ela usa os mesmos caminhos, cabeçalhos e fluxos que usaria em produção, trocando só o endereço e as credenciais. Atalhos de teste existem, mas ficam em APIs de administração separadas. Exceção: o consentimento nasce `AUTHORISED`, sem a etapa de autorização ([RN80](../01-requisitos/regras-de-negocio.md#rn80)).
 
 ## <a id="pr08"></a>PR08 — Foco em desenvolvimento e homologação
-O simulador existe para desenvolvimento e homologação, e não recebe dado real. O uso em produção não é bloqueado nem decidido agora. Se um dia houver, será preciso decidir como fica a marcação dos dados ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).
+O simulador existe para desenvolvimento e homologação, e não recebe dado real. O uso em produção não é bloqueado. Se houver, a marca do ambiente fica vazia ([RN70](../01-requisitos/regras-de-negocio.md#rn70)).

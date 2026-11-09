@@ -9,5 +9,5 @@
 | R05 | CPF gerado coincidir com pessoa real | Exposição indevida | Risco aceito: dígito fixo e marca nos nomes ([RN57](../01-requisitos/regras-de-negocio.md#rn57)) |
 | R06 | Modo FAPI consumir o projeto | Atraso nas partes mais usadas | Spec própria, depois do modo simples |
 | R07 | Simulador virar o gargalo do teste de carga | Mede o simulador, não o cliente | [RNF02](../01-requisitos/requisitos.md#rnf02) e [RNF03](../01-requisitos/requisitos.md#rnf03) |
-| R08 | Simulador apontado por engano em produção | Dado falso em produção | Marca visível nos dados; proteção a decidir se houver uso em produção ([RN70](../01-requisitos/regras-de-negocio.md#rn70)) |
+| R08 | Simulador apontado por engano em produção | Dado falso em produção | Marca visível nos dados fora de produção; em produção a marca fica vazia por configuração, então a configuração da implantação é a proteção ([RN70](../01-requisitos/regras-de-negocio.md#rn70)) |
 | R09 | Nome real de banco em dado simulado | Print ou log confundido com dado do banco de verdade | Prefixo do ambiente e marca nos dados ([RN09](../01-requisitos/regras-de-negocio.md#rn09)) |

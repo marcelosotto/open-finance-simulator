@@ -5,7 +5,7 @@ Detalhes de interface que **não são regra de negócio**. Ao mudar um botão, a
 ## Back-office
 | ID | Tela | Comportamento | Regra |
 |---|---|---|---|
-| <a id="ui01"></a>UI01 | Topo | Mostra o ambiente em destaque, com cor diferente em `dev` e `hml`. | [RN72](regras-de-negocio.md#rn72) |
+| <a id="ui01"></a>UI01 | Topo | Mostra a marca do ambiente em destaque, com cor diferente por marca. Com a marca vazia, não mostra nada. | [RN72](regras-de-negocio.md#rn72) |
 | <a id="ui02"></a>UI02 | Bancos | Lista os bancos com perfil, situação e um aviso quando há anomalias ligadas. | [RN114](regras-de-negocio.md#rn114) |
 | <a id="ui03"></a>UI03 | Novo banco | Pede nome e perfil; o resto já vem preenchido e pode ser ajustado. | [RN03](regras-de-negocio.md#rn03) |
 | <a id="ui04"></a>UI04 | Comportamento | Mostra ao lado de cada classe o SLA oficial e se o valor configurado fica dentro ou fora. | [RN11](regras-de-negocio.md#rn11) |

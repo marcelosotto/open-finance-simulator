@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specs-lock.schema.json",
+  "title": "specs.lock.json",
+  "description": "Commit de open-finance-specs e contratos travados. Ver research.md R01.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["repositorio", "commit", "contratos"],
+  "properties": {
+    "repositorio": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$",
+      "examples": ["marcelosotto/open-finance-specs"]
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "examples": ["7bdb9c1a6c4c265d7aabcdbc662f94c61718135e"]
+    },
+    "catalogo": {
+      "type": "string",
+      "default": "contracts/expansion/catalog.json"
+    },
+    "contratos": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "caminhoLocal", "sha256"],
+        "properties": {
+          "id": { "type": "string", "examples": ["accounts"] },
+          "caminhoLocal": {
+            "type": "string",
+            "examples": ["contracts/expansion/snapshots/accounts-2.5.1.yaml"]
+          },
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,8 @@
 # language: pt
 # Casos de uso: UC10, UC11 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 008: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-008
 Funcionalidade: Criar consentimento no painel
   Como usuário do sistema
   Quero criar um consentimento por um menu

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.OpenApi.YamlReader" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Simulador.Comum\Simulador.Comum.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Simulador.Testes.Unidade" />
+    <InternalsVisibleTo Include="Simulador.Testes.Integracao" />
+    <InternalsVisibleTo Include="Simulador.Testes.Aceitacao" />
+  </ItemGroup>
+</Project>

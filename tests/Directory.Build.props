@@ -1,0 +1,7 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Compile Include="$(MSBuildThisFileDirectory)Comum\**\*.cs" Link="Comum\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

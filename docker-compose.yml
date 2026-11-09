@@ -1,0 +1,20 @@
+# Ambiente local completo (RNF11): docker compose up --build
+# Marca do ambiente: hml por padrão. Para produção, deixe vazia:
+#   Simulador__MarcaDoAmbiente= docker compose up --build
+services:
+  simulador:
+    build: .
+    ports:
+      - "8080:8080"            # APIs Open Finance
+      - "127.0.0.1:8081:8081"  # Administração: só na própria máquina (FR-025)
+    environment:
+      Simulador__MarcaDoAmbiente: ${Simulador__MarcaDoAmbiente-hml}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+    depends_on:
+      - otel-collector
+
+  otel-collector:
+    image: otel/opentelemetry-collector:0.115.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./deploy/otel-collector.yaml:/etc/otelcol/config.yaml:ro

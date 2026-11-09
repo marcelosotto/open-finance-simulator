@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Simulador.Comum\Simulador.Comum.csproj" />
+    <ProjectReference Include="..\Modulos\Simulador.Catalogo\Simulador.Catalogo.csproj" />
+    <ProjectReference Include="..\Modulos\Simulador.Marcacao\Simulador.Marcacao.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\config\tabela-de-endpoints.json" Link="config\tabela-de-endpoints.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\specs.lock.json" Link="specs.lock.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Simulador.Testes.Unidade" />
+    <InternalsVisibleTo Include="Simulador.Testes.Integracao" />
+    <InternalsVisibleTo Include="Simulador.Testes.Aceitacao" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  portoes:
+    name: Portões de qualidade
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      SPECS_TOKEN: ${{ secrets.SPECS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restaurar
+        run: dotnet restore Simulador.slnx
+
+      - name: Formatação
+        run: dotnet format Simulador.slnx --verify-no-changes --no-restore
+
+      - name: Build e análise estática
+        run: dotnet build Simulador.slnx --no-restore -warnaserror
+
+      - name: Baixar as specs travadas
+        run: dotnet run --project tools/Simulador.Ferramentas --no-build -- specs baixar
+
+      - name: Conferir os SHA-256 das specs
+        run: dotnet run --project tools/Simulador.Ferramentas --no-build -- specs verificar
+
+      - name: Diferenças das specs (PR que troca o commit)
+        if: github.event_name == 'pull_request'
+        run: |
+          git show "origin/${{ github.base_ref }}:specs.lock.json" > "$RUNNER_TEMP/base.lock.json" || exit 0
+          if ! cmp -s "$RUNNER_TEMP/base.lock.json" specs.lock.json; then
+            dotnet run --project tools/Simulador.Ferramentas --no-build -- specs diferencas \
+              --base "$RUNNER_TEMP/base.lock.json" --novo specs.lock.json --resumo "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Testes (unidade, integração, contrato, tabela oficial e Gherkin)
+        run: dotnet test Simulador.slnx --no-build --collect:"XPlat Code Coverage"
+
+      - name: Cobertura (100% no domínio, 80% no total)
+        run: dotnet run --project tools/Simulador.Ferramentas --no-build -- cobertura conferir --relatorios "tests/**/coverage.cobertura.xml"
+
+      - name: Imagem
+        run: docker build .

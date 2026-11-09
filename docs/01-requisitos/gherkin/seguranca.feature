@@ -1,6 +1,8 @@
 # language: pt
 # Caso de uso: UC25 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
+# Spec 004: os cenários ficam ignorados até a spec ser entregue (ADR-009).
+@spec-004
 Funcionalidade: Autenticar a receptora
   Como receptora
   Quero me autenticar como em produção
