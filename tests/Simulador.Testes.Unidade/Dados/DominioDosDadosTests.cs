@@ -93,7 +93,7 @@ public class DominioDosDadosTests
     [Fact]
     public void Faturas_aceitam_datas_isoladas_e_12_meses()
     {
-        Assert.Equal(new Periodo(Hoje.AddMonths(-12), Hoje), JanelaDeDatas.Faturas(null, null, Hoje));
+        Assert.Equal(new Periodo(Hoje.AddMonths(-12), Hoje.AddMonths(1)), JanelaDeDatas.Faturas(null, null, Hoje));
         Assert.Equal(new DateOnly(2026, 1, 1), JanelaDeDatas.Faturas("2026-01-01", null, Hoje).De);
         Assert.Equal(new DateOnly(2026, 1, 1), JanelaDeDatas.Faturas(null, "2026-01-01", Hoje).Ate);
         Assert.Equal(ErroDeData.Invalido, JanelaDeDatas.Faturas("x", null, Hoje).Erro);

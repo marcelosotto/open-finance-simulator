@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using Simulador.Catalogo.Contratos;
 using Simulador.Massa.Contratos;
@@ -23,15 +24,18 @@ public sealed class TodasAsFamiliasTests : IDisposable
         "investimentos", "renda-fixa-credito", "renda-variavel", "tesouro-direto", "fundos", "cambio",
     ];
 
-    private readonly FabricaDoSimulador _fabrica = new();
+    private readonly EspiaoDeDados _espiao = new();
+    private readonly FabricaDoSimulador _fabrica;
     private readonly HttpClient _admin;
     private readonly HttpClient _api;
     private readonly AdminDaMassa _massa;
     private string _usuario = string.Empty;
     private string _senha = string.Empty;
+    private string _consentId = string.Empty;
 
     public TodasAsFamiliasTests()
     {
+        _fabrica = new FabricaDoSimulador().ComEspiaoDeDados(_espiao);
         _admin = _fabrica.ClienteAdministracao();
         _api = _fabrica.ClienteOpenFinance();
         _massa = new AdminDaMassa(_admin);
@@ -43,7 +47,7 @@ public sealed class TodasAsFamiliasTests : IDisposable
         [.. ServicosDeSpecs.LerOperacoes(TravaDasSpecs.Ler(Repositorio.Caminho("specs.lock.json")), Repositorio.PastaDasSpecs())
             .Where(o => o.Contrato is not ("consents" or "resources"))];
 
-    private async Task<(MassaGerada Massa, string Token)> Preparar(string tipo)
+    private async Task<(MassaGerada Massa, string Token)> Preparar(string tipo, params string[] produtosExtras)
     {
         if (_usuario.Length == 0)
         {
@@ -52,6 +56,11 @@ public sealed class TodasAsFamiliasTests : IDisposable
         }
 
         var massa = await _massa.Enviar<MassaGerada>(HttpMethod.Post, "/clientes", new { tipo, bancos = new[] { Banco }, perfil = Perfil });
+        foreach (var produto in produtosExtras)
+        {
+            await AdicionarProduto(massa.Cliente.Documento, produto);
+        }
+
         var token = await Token("consents");
         var cpf = tipo == "PF" ? massa.Cliente.Documento : (await _massa.Enviar<MassaGerada>(HttpMethod.Post, "/clientes", new { tipo = "PF", bancos = new[] { Banco } })).Cliente.Documento;
         object dados = tipo == "PF"
@@ -60,8 +69,8 @@ public sealed class TodasAsFamiliasTests : IDisposable
         using var resposta = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Post, AtalhosDeConsentimento.Caminho(Banco, "consents", "/consents"), token, new { data = dados });
         Assert.True(resposta.StatusCode == HttpStatusCode.Created, await resposta.Content.ReadAsStringAsync(Cancelamento));
         using var corpo = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync(Cancelamento));
-        var consentId = corpo.RootElement.GetProperty("data").GetProperty("consentId").GetString()!;
-        return (massa, await Token($"consent:{consentId}"));
+        _consentId = corpo.RootElement.GetProperty("data").GetProperty("consentId").GetString()!;
+        return (massa, await Token($"consent:{_consentId}"));
     }
 
     private async Task<string> Token(string escopo)
@@ -165,19 +174,242 @@ public sealed class TodasAsFamiliasTests : IDisposable
         Assert.Contains(codigo, await resposta.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
     }
 
-    [Fact]
-    public async Task Fatura_de_outro_recurso_ou_do_mes_aberto_e_proibida()
+    [Theory]
+    [InlineData("-b202611")] // mês aberto
+    [InlineData("-bxx")] // malformada
+    [InlineData("-b202510")] // antes do histórico do cliente: não existe
+    [InlineData("-b202509")] // vencida há mais de 12 meses
+    public async Task Fatura_inexistente_ou_fora_da_janela_e_proibida(string sufixo)
     {
         var (massa, token) = await Preparar("PF");
         var operacao = Operacoes().First(o => o.Caminho.Contains("{billId}", StringComparison.Ordinal));
-        var endereco = Endereco(operacao, massa).ToString();
+        var endereco = Endereco(operacao, massa).ToString().Replace("-b202610", sufixo, StringComparison.Ordinal);
 
-        foreach (var trocada in new[] { endereco.Replace("-b202610", "-b202611", StringComparison.Ordinal), endereco.Replace("-b202610", "-bxx", StringComparison.Ordinal) })
+        using var resposta = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, new Uri(endereco, UriKind.Relative), token);
+
+        Assert.Equal(HttpStatusCode.Forbidden, resposta.StatusCode);
+        Assert.Contains("RESOURCE_FORBIDDEN", await resposta.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Fatura_de_outro_recurso_e_proibida()
+    {
+        var (massa, token) = await Preparar("PF");
+        var operacao = Operacoes().First(o => o.Caminho.Contains("{billId}", StringComparison.Ordinal));
+        var cartao = massa.Recursos.First(r => r.Tipo == "CREDIT_CARD_ACCOUNT").ResourceId;
+        var endereco = Endereco(operacao, massa).ToString().Replace($"{cartao}-b", "outro-b", StringComparison.Ordinal);
+
+        using var resposta = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, new Uri(endereco, UriKind.Relative), token);
+
+        Assert.Equal(HttpStatusCode.Forbidden, resposta.StatusCode);
+        Assert.Contains("RESOURCE_FORBIDDEN", await resposta.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
+    }
+
+    private async Task AdicionarProduto(string documento, string produto)
+    {
+        using var resposta = await _admin.PostAsJsonAsync(new Uri($"/admin/clientes/{documento}/produtos", UriKind.Relative), new { banco = Banco, produto }, Cancelamento);
+        Assert.True(resposta.IsSuccessStatusCode, await resposta.Content.ReadAsStringAsync(Cancelamento));
+    }
+
+    private async Task<JsonElement> Ler(Uri endereco, string token)
+    {
+        using var resposta = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, endereco, token);
+        var texto = await resposta.Content.ReadAsStringAsync(Cancelamento);
+        Assert.True(resposta.StatusCode == HttpStatusCode.OK, texto);
+        return JsonDocument.Parse(texto).RootElement;
+    }
+
+    private static Uri Seguinte(JsonElement pagina) =>
+        new(new Uri(pagina.GetProperty("links").GetProperty("next").GetString()!, UriKind.Absolute).PathAndQuery, UriKind.Relative);
+
+    private static OperacaoDoCatalogo Operacao(string operationId) => Operacoes().Single(o => o.OperationId == operationId);
+
+    private static Uri ComConsulta(Uri endereco, string consulta) => new(endereco + consulta, UriKind.Relative);
+
+    private const string JanelaDoMes = "?fromBookingDate=2026-10-01&toBookingDate=2026-10-31&page-size=1000";
+
+    [Fact]
+    public async Task Filtro_de_credito_ou_debito_reduz_a_lista_e_entra_na_chave()
+    {
+        var (massa, token) = await Preparar("PF");
+        var endereco = Endereco(Operacao("accountsGetAccountsAccountIdTransactions"), massa);
+        var todas = (await Ler(ComConsulta(endereco, JanelaDoMes), token)).GetProperty("data").GetArrayLength();
+
+        var debitos = await Ler(ComConsulta(endereco, JanelaDoMes + "&creditDebitIndicator=DEBITO"), token);
+        var creditos = await Ler(ComConsulta(endereco, JanelaDoMes + "&creditDebitIndicator=CREDITO"), token);
+
+        Assert.All(debitos.GetProperty("data").EnumerateArray(), t => Assert.Equal("DEBITO", t.GetProperty("creditDebitType").GetString()));
+        Assert.All(creditos.GetProperty("data").EnumerateArray(), t => Assert.Equal("CREDITO", t.GetProperty("creditDebitType").GetString()));
+        Assert.True(debitos.GetProperty("data").GetArrayLength() > 0 && creditos.GetProperty("data").GetArrayLength() > 0);
+        Assert.Equal(todas, debitos.GetProperty("data").GetArrayLength() + creditos.GetProperty("data").GetArrayLength());
+
+        var paginada = await Ler(ComConsulta(endereco, "?fromBookingDate=2026-10-01&toBookingDate=2026-10-31&page-size=1&creditDebitIndicator=DEBITO"), token);
+        var proxima = paginada.GetProperty("links").GetProperty("next").GetString()!;
+        var trocada = new Uri(new Uri(proxima.Replace("creditDebitIndicator=DEBITO", "creditDebitIndicator=CREDITO", StringComparison.Ordinal), UriKind.Absolute).PathAndQuery, UriKind.Relative);
+        var chaveEnviada = proxima.Split("pagination-key=")[1].Split('&')[0];
+
+        var recusada = await Ler(trocada, token);
+
+        Assert.DoesNotContain(chaveEnviada, recusada.GetProperty("links").GetProperty("self").GetString()!, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Filtro_de_tipo_de_conta_compara_com_a_resposta()
+    {
+        var (massa, token) = await Preparar("PF");
+        var endereco = Endereco(Operacao("accountsGetAccounts"), massa);
+        var tipo = (await Ler(endereco, token)).GetProperty("data")[0].GetProperty("type").GetString()!;
+        var outro = tipo == "CONTA_POUPANCA" ? "CONTA_DEPOSITO_A_VISTA" : "CONTA_POUPANCA";
+
+        Assert.NotEqual(0, (await Ler(ComConsulta(endereco, $"?accountType={tipo}"), token)).GetProperty("data").GetArrayLength());
+        Assert.Equal(0, (await Ler(ComConsulta(endereco, $"?accountType={outro}"), token)).GetProperty("data").GetArrayLength());
+    }
+
+    [Fact]
+    public async Task Filtros_do_cartao_comparam_com_a_resposta()
+    {
+        var (massa, token) = await Preparar("PF");
+        var endereco = Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBillsBillIdTransactions"), massa);
+        var dados = (await Ler(endereco, token)).GetProperty("data");
+        var primeira = dados[0];
+        var tipo = primeira.GetProperty("transactionType").GetString()!;
+        var outro = tipo == "CASHBACK" ? "TARIFA" : "CASHBACK";
+        var mcc = primeira.GetProperty("payeeMCC").GetRawText();
+
+        Assert.Equal(dados.GetArrayLength(), (await Ler(ComConsulta(endereco, $"?transactionType={tipo}"), token)).GetProperty("data").GetArrayLength());
+        Assert.Equal(0, (await Ler(ComConsulta(endereco, $"?transactionType={outro}"), token)).GetProperty("data").GetArrayLength());
+        var filtradas = (await Ler(ComConsulta(endereco, $"?payeeMCC={mcc}"), token)).GetProperty("data");
+        Assert.True(filtradas.GetArrayLength() is > 0);
+        Assert.True(filtradas.GetArrayLength() < dados.GetArrayLength());
+        Assert.All(filtradas.EnumerateArray(), t => Assert.Equal(mcc, t.GetProperty("payeeMCC").GetRawText()));
+    }
+
+    [Fact]
+    public async Task Bills_mostra_a_fatura_fechada_que_ainda_nao_venceu()
+    {
+        _fabrica.Relogio.SetUtcNow(new DateTimeOffset(2026, 12, 5, 12, 0, 0, TimeSpan.Zero));
+        var (massa, token) = await Preparar("PF");
+
+        var faturas = (await Ler(Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBills"), massa), token)).GetProperty("data");
+
+        Assert.Contains(faturas.EnumerateArray(), f => f.GetProperty("dueDate").GetString() == "2026-12-10");
+    }
+
+    [Fact]
+    public async Task Bills_calcula_so_o_periodo_pedido()
+    {
+        var (massa, token) = await Preparar("PF");
+        _espiao.Intervalos.Clear();
+
+        await Ler(ComConsulta(Endereco(Operacao("creditCardsGetAccountsCreditCardAccountIdBills"), massa), "?fromDueDate=2026-10-01&toDueDate=2026-10-31"), token);
+
+        var (de, ate) = Assert.Single(_espiao.Intervalos);
+        Assert.Equal(new DateOnly(2026, 9, 1), de);
+        Assert.Equal(new DateOnly(2026, 10, 31), ate);
+    }
+
+    [Fact]
+    public async Task Ajuste_regravado_depois_da_chave_mantem_o_valor_da_emissao()
+    {
+        var (massa, token) = await Preparar("PF");
+        var conta = massa.Recursos.First(r => r.Tipo == "ACCOUNT");
+        var dia = _fabrica.Relogio.GetUtcNow().UtcDateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        await _massa.Enviar<Ajuste>(HttpMethod.Post, "/ajustes", new { tipo = "transacao", recursoId = conta.ResourceId, dia, posicao = 1, valor = 111.11m });
+        _fabrica.Relogio.Advance(TimeSpan.FromMinutes(1));
+        var primeira = await Ler(ComConsulta(Endereco(Operacao("accountsGetAccountsAccountIdTransactions"), massa), "?page-size=1"), token);
+        _fabrica.Relogio.Advance(TimeSpan.FromMinutes(1));
+        await _massa.Enviar<Ajuste>(HttpMethod.Post, "/ajustes", new { tipo = "transacao", recursoId = conta.ResourceId, dia, posicao = 1, valor = 222.22m });
+
+        var segunda = (await Ler(Seguinte(primeira), token)).GetRawText();
+
+        Assert.Contains("111.11", segunda, StringComparison.Ordinal);
+        Assert.DoesNotContain("222.22", segunda, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Lista_de_recursos_fica_no_instante_da_chave()
+    {
+        var (massa, token) = await Preparar("PF", "contas");
+        var endereco = ComConsulta(Endereco(Operacao("accountsGetAccounts"), massa), "?page-size=1");
+        var primeira = await Ler(endereco, token);
+        Assert.Equal(2, primeira.GetProperty("meta").GetProperty("totalRecords").GetInt32());
+        _fabrica.Relogio.Advance(TimeSpan.FromMinutes(1));
+        var conta = massa.Recursos.First(r => r.Tipo == "ACCOUNT").ResourceId;
+        using var mudou = await _admin.PutAsJsonAsync(new Uri($"/admin/recursos/{conta}/estado", UriKind.Relative), new { estado = "TEMPORARILY_UNAVAILABLE" }, Cancelamento);
+        mudou.EnsureSuccessStatusCode();
+
+        var segunda = await Ler(Seguinte(primeira), token);
+
+        Assert.Equal(2, segunda.GetProperty("meta").GetProperty("totalRecords").GetInt32());
+    }
+
+    [Fact]
+    public async Task Recurso_novo_nao_entra_na_lista_da_chave()
+    {
+        var (massa, token) = await Preparar("PF", "emprestimos");
+        var primeira = await Ler(ComConsulta(Endereco(Operacao("loansGetContracts"), massa), "?page-size=1"), token);
+        Assert.Equal(2, primeira.GetProperty("meta").GetProperty("totalRecords").GetInt32());
+        _fabrica.Relogio.Advance(TimeSpan.FromMinutes(1));
+        await AdicionarProduto(massa.Cliente.Documento, "emprestimos");
+
+        var segunda = await Ler(Seguinte(primeira), token);
+
+        Assert.Equal(2, segunda.GetProperty("meta").GetProperty("totalRecords").GetInt32());
+    }
+
+    [Fact]
+    public async Task Ids_de_dados_cadastrais_trazem_o_prefixo_oficial()
+    {
+        var (massa, token) = await Preparar("PF");
+
+        var dados = await Ler(Endereco(Operacao("customersGetPersonalIdentifications"), massa), token);
+
+        Assert.StartsWith("hml-p-", dados.GetProperty("data")[0].GetProperty("personalId").GetString()!, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Saldo_so_e_calculado_na_rota_de_saldos()
+    {
+        var (massa, token) = await Preparar("PF");
+        _espiao.Saldos = 0;
+
+        await Ler(Endereco(Operacao("accountsGetAccountsAccountId"), massa), token);
+        Assert.Equal(0, _espiao.Saldos);
+
+        await Ler(Endereco(Operacao("accountsGetAccountsAccountIdBalances"), massa), token);
+        Assert.Equal(1, _espiao.Saldos);
+    }
+
+    [Fact]
+    public async Task Transacao_de_hoje_nao_tem_hora_futura()
+    {
+        var (massa, token) = await Preparar("PF");
+        var agora = _fabrica.Relogio.GetUtcNow();
+
+        var dados = (await Ler(Endereco(Operacao("accountsGetAccountsAccountIdTransactions"), massa), token)).GetProperty("data");
+
+        Assert.NotEqual(0, dados.GetArrayLength());
+        Assert.All(dados.EnumerateArray(), t =>
         {
-            using var resposta = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, new Uri(trocada, UriKind.Relative), token);
-            Assert.Equal(HttpStatusCode.Forbidden, resposta.StatusCode);
-            Assert.Contains("RESOURCE_FORBIDDEN", await resposta.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
-        }
+            var momento = t.GetProperty("transactionDateTime").GetDateTimeOffset();
+            Assert.True(momento <= agora, $"{momento:O}");
+            Assert.Equal(agora.UtcDateTime.Date, momento.UtcDateTime.Date);
+        });
+    }
+
+    [Theory]
+    [InlineData("?page=0")]
+    [InlineData("?page-size=abc")]
+    [InlineData("?page-size=0")]
+    public async Task Recursos_e_extensoes_recusam_paginacao_invalida(string consulta)
+    {
+        var (_, token) = await Preparar("PF");
+        using var recursos = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, new Uri(AtalhosDeConsentimento.Caminho(Banco, "resources", "/resources") + consulta, UriKind.Relative), token);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, recursos.StatusCode);
+        Assert.Contains("PARAMETRO_INVALIDO", await recursos.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
+        using var extensoes = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Get, new Uri(AtalhosDeConsentimento.Caminho(Banco, "consents", "/consents/{consentId}/extensions", _consentId) + consulta, UriKind.Relative), await Token("consents"));
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, extensoes.StatusCode);
+        Assert.Contains("PARAMETRO_INVALIDO", await extensoes.Content.ReadAsStringAsync(Cancelamento), StringComparison.Ordinal);
     }
 
     [Fact]

@@ -60,6 +60,14 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         return this;
     }
 
+    /// <summary>Observa as leituras do serviço de dados.</summary>
+    public FabricaDoSimulador ComEspiaoDeDados(EspiaoDeDados espiao) => ComServicos(s =>
+    {
+        s.RemoveAll<Simulador.Dados.Contratos.IAmbienteDosDados>();
+        s.AddSingleton<Simulador.Dados.Contratos.IAmbienteDosDados>(p =>
+            new AmbienteEspiao(ActivatorUtilities.CreateInstance<Simulador.Host.AmbienteDosDados>(p), espiao));
+    });
+
     /// <summary>Contadores desta fábrica.</summary>
     public IContadores Contadores { get; private set; } = new ContadoresNulos();
 

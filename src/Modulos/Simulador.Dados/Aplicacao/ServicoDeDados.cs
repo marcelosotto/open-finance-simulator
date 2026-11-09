@@ -70,7 +70,11 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         var filtro = tipo == TipoDeOperacao.Faturas ? "DueDate" : familia.FiltroDeData;
         string? de = query[$"from{filtro}"];
         string? ate = query[$"to{filtro}"];
-        var consulta = $"{operacao.OperationId}|{consentimento.ConsentId}|{contexto.Request.Path}|{de}|{ate}";
+        var filtros = FiltrosOficiais.Campos
+            .Where(f => operacao.ParametrosDeConsulta.Contains(f.Key, StringComparer.Ordinal) && !string.IsNullOrEmpty(query[f.Key]))
+            .Select(f => (Campo: f.Value, Valor: query[f.Key].ToString()))
+            .ToList();
+        var consulta = $"{operacao.OperationId}|{consentimento.ConsentId}|{contexto.Request.Path}|{de}|{ate}|{string.Join(',', filtros)}";
         var agora = relogio.GetUtcNow();
         var emissao = operacao.TemChave
             ? ChaveDePaginacao.Ler(query["pagination-key"], consulta, segredo.Valor, agora, limites.ValidadeDaChaveMin)
@@ -78,7 +82,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         var instante = emissao ?? agora;
         var chave = operacao.TemChave ? ChaveDePaginacao.Emitir(instante, consulta, segredo.Valor) : null;
 
-        var itens = await Montar(tipo, familia, consentimento, recurso, contexto.Request.RouteValues["billId"] as string, de, ate, instante, cancelamento).ConfigureAwait(false);
+        var itens = await Montar(tipo, familia, consentimento, recurso, contexto.Request.RouteValues["billId"] as string, de, ate, instante, operacao.SchemaDaResposta, cancelamento).ConfigureAwait(false);
         if (itens.Recusa is not null)
         {
             return itens.Recusa;
@@ -86,7 +90,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
 
         // Chave válida é página seguinte: não confere nem conta a cota (RN27, UC19).
         var cota = emissao is null ? await ambiente.Cota(contexto, operacao, consentimento, cancelamento).ConfigureAwait(false) : null;
-        return await Saida(contexto, operacao, itens.Lista, pedido, chave, consentimento, recurso, cota).ConfigureAwait(false);
+        return await Saida(contexto, operacao, itens.Lista, pedido, chave, consentimento, recurso, cota, filtros).ConfigureAwait(false);
     }
 
     private async Task<(RecursoDeDados? Recurso, IResult? Recusa)> Acessar(string? id, Familia familia, ConsentimentoDaChamada consentimento, CancellationToken cancelamento)
@@ -111,6 +115,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         string? de,
         string? ate,
         DateTimeOffset instante,
+        string schema,
         CancellationToken cancelamento)
     {
         var hoje = DateOnly.FromDateTime(instante.UtcDateTime);
@@ -119,7 +124,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             case TipoDeOperacao.Cadastral:
                 return await Cadastro(consentimento, cancelamento).ConfigureAwait(false);
             case TipoDeOperacao.ListaDeRecursos:
-                return new Itens(await Disponiveis(familia, consentimento, cancelamento).ConfigureAwait(false));
+                return new Itens(await Disponiveis(familia, consentimento, instante, cancelamento).ConfigureAwait(false));
             case TipoDeOperacao.Transacoes or TipoDeOperacao.TransacoesRecentes:
                 var periodo = JanelaDeDatas.Transacoes(de, ate, hoje, tipo == TipoDeOperacao.TransacoesRecentes, familia.AceitaFuturo);
                 return await DasTransacoes(recurso!, periodo, instante, cancelamento).ConfigureAwait(false);
@@ -132,7 +137,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             case TipoDeOperacao.NotaDeNegociacao:
                 return new Itens([Item(recurso!, new Dictionary<string, string>(StringComparer.Ordinal) { ["brokerNoteId"] = IdsDerivados.DaNota(recurso!.ResourceId) }, recurso.ResourceId)]);
             default:
-                return await Detalhe(recurso!, instante, cancelamento).ConfigureAwait(false);
+                return await Detalhe(recurso!, instante, schema, cancelamento).ConfigureAwait(false);
         }
     }
 
@@ -148,15 +153,15 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             valores["cnpjNumber"] = cliente.Documento;
         }
 
-        return new Itens([new Preenchimento(valores, consentimento.ConsentId.Replace(':', '-'), Documentos.Semente(consentimento.Cliente))]);
+        return new Itens([new Preenchimento(valores, IdsDerivados.BaseDoConsentimento(consentimento.ConsentId), Documentos.Semente(consentimento.Cliente))]);
     }
 
-    private async Task<IReadOnlyList<Preenchimento>> Disponiveis(Familia familia, ConsentimentoDaChamada consentimento, CancellationToken cancelamento)
+    private async Task<IReadOnlyList<Preenchimento>> Disponiveis(Familia familia, ConsentimentoDaChamada consentimento, DateTimeOffset instante, CancellationToken cancelamento)
     {
         var itens = new List<Preenchimento>();
         foreach (var id in consentimento.Recursos)
         {
-            var recurso = await ambiente.Recurso(id, cancelamento).ConfigureAwait(false);
+            var recurso = await ambiente.RecursoNoInstante(id, instante, cancelamento).ConfigureAwait(false);
             if (recurso?.Tipo == familia.TipoDeRecurso && recurso!.Estado == Disponivel)
             {
                 itens.Add(Item(recurso, new Dictionary<string, string>(StringComparer.Ordinal), recurso.ResourceId));
@@ -174,24 +179,31 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         }
 
         var transacoes = await ambiente.Transacoes(recurso.ResourceId, periodo.De, periodo.Ate, instante, cancelamento).ConfigureAwait(false);
-        return new Itens(Ordenadas(transacoes).Select(t => DeTransacao(recurso, t, null)).ToList());
+        return new Itens(Ordenadas(transacoes).Select(t => DeTransacao(recurso, t, null, instante)).ToList());
     }
 
     private async Task<Itens> DaFatura(RecursoDeDados recurso, string billId, string? de, string? ate, DateOnly hoje, DateTimeOffset instante, CancellationToken cancelamento)
     {
-        if (IdsDerivados.MesDaFatura(billId, recurso.ResourceId) is not { } mes || mes >= InicioDoMes(hoje))
+        if (IdsDerivados.MesDaFatura(billId, recurso.ResourceId) is not { } mes || mes >= InicioDoMes(hoje) || Vencimento(mes) < hoje.AddMonths(-JanelaDeDatas.MesesDeHistorico))
         {
             return new Itens([], Proibido("RESOURCE_FORBIDDEN"));
         }
 
-        var periodo = JanelaDeDatas.DaFatura(de, ate, mes, mes.AddMonths(1).AddDays(-1));
+        var fim = mes.AddMonths(1).AddDays(-1);
+        var transacoes = await ambiente.Transacoes(recurso.ResourceId, mes, fim, instante, cancelamento).ConfigureAwait(false);
+        if (transacoes.Count == 0)
+        {
+            return new Itens([], Proibido("RESOURCE_FORBIDDEN"));
+        }
+
+        var periodo = JanelaDeDatas.DaFatura(de, ate, mes, fim);
         if (RecusaDeData(periodo) is { } recusa)
         {
             return new Itens([], recusa);
         }
 
-        var transacoes = await ambiente.Transacoes(recurso.ResourceId, periodo.De, periodo.Ate, instante, cancelamento).ConfigureAwait(false);
-        return new Itens(Ordenadas(transacoes).Select(t => DeTransacao(recurso, t, billId)).ToList());
+        var doPeriodo = transacoes.Where(t => t.Dia >= periodo.De && t.Dia <= periodo.Ate);
+        return new Itens(Ordenadas(doPeriodo).Select(t => DeTransacao(recurso, t, billId, instante)).ToList());
     }
 
     private async Task<Itens> Faturas(RecursoDeDados recurso, Periodo periodo, DateTimeOffset instante, CancellationToken cancelamento)
@@ -202,11 +214,12 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         }
 
         var hoje = DateOnly.FromDateTime(instante.UtcDateTime);
-        var transacoes = await ambiente.Transacoes(recurso.ResourceId, hoje.AddMonths(-JanelaDeDatas.MesesDeHistorico - 1), hoje, instante, cancelamento).ConfigureAwait(false);
+        var ate = periodo.Ate < hoje ? periodo.Ate : hoje;
+        var transacoes = await ambiente.Transacoes(recurso.ResourceId, InicioDoMes(periodo.De).AddMonths(-1), ate, instante, cancelamento).ConfigureAwait(false);
         var itens = transacoes
             .Where(t => InicioDoMes(t.Dia) < InicioDoMes(hoje))
             .GroupBy(t => InicioDoMes(t.Dia))
-            .Select(g => (Mes: g.Key, Vencimento: g.Key.AddMonths(1).AddDays(9), Total: Math.Abs(Soma(g))))
+            .Select(g => (Mes: g.Key, Vencimento: Vencimento(g.Key), Total: Math.Abs(Soma(g))))
             .Where(f => f.Vencimento >= periodo.De && f.Vencimento <= periodo.Ate)
             .OrderByDescending(f => f.Mes)
             .Select(f => Item(
@@ -222,14 +235,14 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         return new Itens(itens);
     }
 
-    private async Task<Itens> Detalhe(RecursoDeDados recurso, DateTimeOffset instante, CancellationToken cancelamento)
+    private async Task<Itens> Detalhe(RecursoDeDados recurso, DateTimeOffset instante, string schema, CancellationToken cancelamento)
     {
         var valores = new Dictionary<string, string>(StringComparer.Ordinal);
-        if (recurso.Tipo == "ACCOUNT")
+        if (recurso.Tipo == "ACCOUNT" && schema.Contains("\"availableAmount\"", StringComparison.Ordinal))
         {
             valores["availableAmount" + Valor] = Dinheiro(await ambiente.Saldo(recurso.ResourceId, cancelamento).ConfigureAwait(false));
         }
-        else if (recurso.Tipo == "CREDIT_CARD_ACCOUNT")
+        else if (recurso.Tipo == "CREDIT_CARD_ACCOUNT" && schema.Contains("\"usedAmount\"", StringComparison.Ordinal))
         {
             var hoje = DateOnly.FromDateTime(instante.UtcDateTime);
             var usado = Math.Abs(Soma(await ambiente.Transacoes(recurso.ResourceId, InicioDoMes(hoje), hoje, instante, cancelamento).ConfigureAwait(false)));
@@ -248,6 +261,8 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
 
     private static DateOnly InicioDoMes(DateOnly dia) => new(dia.Year, dia.Month, 1);
 
+    private static DateOnly Vencimento(DateOnly mes) => mes.AddMonths(1).AddDays(9);
+
     private static string Data(DateOnly dia) => dia.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Dinheiro(decimal valor) => valor.ToString("F2", CultureInfo.InvariantCulture);
@@ -262,10 +277,10 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         return new Preenchimento(valores, baseDosIds, Documentos.Semente(baseDosIds));
     }
 
-    private static Preenchimento DeTransacao(RecursoDeDados recurso, TransacaoDeDados t, string? billId)
+    private static Preenchimento DeTransacao(RecursoDeDados recurso, TransacaoDeDados t, string? billId, DateTimeOffset instante)
     {
         var semente = Documentos.Semente(t.Id);
-        var momento = t.Dia.ToDateTime(new TimeOnly(23, 59, 59)).AddSeconds(-Math.Min(t.Posicao, 86_000));
+        var momento = Momento(t, instante);
         var valores = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             ["transactionId"] = t.Id,
@@ -285,6 +300,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             ["partieNumber"] = string.Create(CultureInfo.InvariantCulture, $"{semente % 100_000_000:D8}"),
             ["partieCheckDigit"] = string.Create(CultureInfo.InvariantCulture, $"{semente % 10}"),
             ["brokerNoteId"] = IdsDerivados.DaNota(recurso.ResourceId),
+            ["payeeMCC"] = string.Create(CultureInfo.InvariantCulture, $"{1000 + (semente % 9000)}"),
         };
         if (billId is not null)
         {
@@ -292,6 +308,15 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         }
 
         return Item(recurso, valores, t.Id);
+    }
+
+    /// <summary>Nunca depois do instante da consulta, exceto lançamento futuro (RN44).</summary>
+    private static DateTime Momento(TransacaoDeDados t, DateTimeOffset instante)
+    {
+        var agora = instante.UtcDateTime;
+        var topo = DateOnly.FromDateTime(agora) == t.Dia ? agora : t.Dia.ToDateTime(new TimeOnly(23, 59, 59));
+        var momento = topo.AddSeconds(-Math.Min(t.Posicao, 86_000));
+        return DateOnly.FromDateTime(momento) == t.Dia ? momento : t.Dia.ToDateTime(TimeOnly.MinValue);
     }
 
     private IResult? RecusaDeData(Periodo periodo) => periodo.Erro switch
@@ -309,13 +334,19 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         string? chave,
         ConsentimentoDaChamada consentimento,
         RecursoDeDados? recurso,
-        ICotaDeDados? cota)
+        ICotaDeDados? cota,
+        List<(string Campo, string Valor)> filtros)
     {
         var schema = Schemas.GetOrAdd(operacao.OperationId, _ => JsonNode.Parse(operacao.SchemaDaResposta)!.AsObject());
         var propriedades = schema["properties"]!.AsObject();
         var esquemaDeDados = propriedades["data"];
         var lista = esquemaDeDados!["type"]?.GetValue<string>() == "array";
         var paginada = operacao.MinimoDoTamanho is not null;
+        if (lista && filtros.Count > 0)
+        {
+            itens = [.. itens.Where(i => Corresponde(esquemaDeDados["items"], i, filtros))];
+        }
+
         var total = lista ? itens.Count : 1;
         if (paginada && pedido.ForaDaFaixa(total))
         {
@@ -362,6 +393,12 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         }
 
         return resposta;
+    }
+
+    private static bool Corresponde(JsonNode? schema, Preenchimento item, List<(string Campo, string Valor)> filtros)
+    {
+        var gerado = GeradorPorSchema.Gerar(schema, item);
+        return filtros.All(f => gerado?[f.Campo]?.ToString() == f.Valor);
     }
 
     private JsonObject Meta(JsonObject? schema, int total, int paginas)

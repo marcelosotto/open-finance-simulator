@@ -23,7 +23,7 @@ public sealed record LimitesDePaginacao(int PageSizeMaximo, int ValidadeDaChaveM
 /// <summary>O que este módulo precisa da operação oficial, lido do contrato travado.</summary>
 /// <param name="SchemaDaResposta">Schema da resposta 200, com os <c>$ref</c> resolvidos.</param>
 /// <param name="MinimoDoTamanho"><c>minimum</c> do <c>page-size</c>; nulo se a operação não pagina.</param>
-public sealed record OperacaoDeDados(string Contrato, string OperationId, string Caminho, string SchemaDaResposta, int? MinimoDoTamanho, bool TemChave);
+public sealed record OperacaoDeDados(string Contrato, string OperationId, string Caminho, string SchemaDaResposta, int? MinimoDoTamanho, bool TemChave, IReadOnlyList<string> ParametrosDeConsulta);
 
 /// <summary>O que o módulo precisa dos outros; o host implementa (ADR-007).</summary>
 public interface IAmbienteDosDados
@@ -31,6 +31,9 @@ public interface IAmbienteDosDados
     ConsentimentoDaChamada? Consentimento(HttpContext contexto);
 
     Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento);
+
+    /// <summary>Como o recurso estava no instante da chave; nulo se ainda não existia (RN37).</summary>
+    Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento);
 
     Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento);
 

@@ -32,6 +32,11 @@ internal sealed class AmbienteDosDados(IConsultaDeInstituicoes instituicoes, ICo
             ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, r.Estado, r.Natureza, r.InicioDoHistorico)
             : null;
 
+    public async Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) =>
+        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r && r.CriadoEm <= instante
+            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, NoInstante.Estado(r.Estado, r.EstadosAnteriores, instante), r.Natureza, r.InicioDoHistorico)
+            : null;
+
     public async Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) =>
         await consulta.ObterCliente(documento, cancelamento).ConfigureAwait(false) is { } m
             ? new ClienteDeDados(m.Cliente.Documento, m.Cliente.Nome, m.Cliente.Natureza)
@@ -69,7 +74,8 @@ internal sealed class ManipuladorDasFamilias(IDadosDasApis dados) : IManipulador
             operacao.Caminho,
             operacao.Respostas["200"],
             minimo,
-            operacao.Parametros.Any(p => p.Nome == "pagination-key")));
+            operacao.Parametros.Any(p => p.Nome == "pagination-key"),
+            [.. operacao.Parametros.Where(p => p.Local == "query").Select(p => p.Nome)]));
     }
 }
 
