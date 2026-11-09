@@ -25,6 +25,9 @@ services:
 
   mongo:
     image: mongo:8.0
+    environment:
+      # O MongoDB 8.0 recusa iniciar em kernel 6.19 ou mais novo com cache por CPU (SERVER-121912).
+      GLIBC_TUNABLES: glibc.pthread.rseq=1
     volumes:
       - dados-mongo:/data/db
     healthcheck:

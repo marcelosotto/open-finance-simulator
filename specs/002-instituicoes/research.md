@@ -36,6 +36,11 @@
 ## R09 — Retry-After
 **Decisão:** ligado, com 60 segundos no padrão (RN23), porque o TPM zera na virada do minuto (RN22).
 
+## R10 — MongoDB 8.0 em kernel 6.19 ou mais novo
+**Decisão:** subir o contêiner com `GLIBC_TUNABLES=glibc.pthread.rseq=1`, nos testes e no Compose.
+**Por quê:** o MongoDB 8.0 recusa iniciar nesses kernels com cache por CPU ativo (SERVER-121912), e o runner `ubuntu-latest` já usa um deles. O ajuste desliga esse cache e mantém a versão.
+**Alternativa:** voltar para `mongo:7.0` ou fixar um runner com kernel antigo; muda a versão ou só adia o problema.
+
 ## Dependências novas
 | Pacote | Versão | Motivo |
 |---|---|---|
