@@ -289,7 +289,7 @@ public sealed class AdminInstituicoesTests : IDisposable
 
         var corpo = await resposta.Content.ReadAsStringAsync(_ct);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, resposta.StatusCode);
-        Assert.Contains("SERVICO_INDISPONIVEL", corpo, StringComparison.Ordinal);
+        Assert.Contains("SERVICE_UNAVAILABLE", corpo, StringComparison.Ordinal);
         Assert.DoesNotContain("inativ", corpo, StringComparison.OrdinalIgnoreCase);
     }
 

@@ -334,6 +334,9 @@ public interface IAmbienteDaMassa
     /// <summary>Produtos oferecidos por cada instituição cadastrada (RN08).</summary>
     Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> ProdutosDosBancos(CancellationToken cancelamento);
 
+    /// <summary>A hora do banco, para escritas que entram em resposta (RN73).</summary>
+    Task<DateTimeOffset> AgoraNoBanco(string banco, CancellationToken cancelamento);
+
     Task RegistrarHistorico(EventoDaMassa evento, CancellationToken cancelamento);
 
     Task<IReadOnlyList<EventoDaMassa>> LerHistorico(CancellationToken cancelamento);

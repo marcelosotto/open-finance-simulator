@@ -81,7 +81,7 @@ internal static class Validacao
         Exigir(Porcentagem(comportamento.RecursoIndisponivelPct), "recursoIndisponivelPct deve ser de 0 a 100");
         foreach (var status in comportamento.PesosPorStatus.Keys)
         {
-            Exigir(statusDeclarados.Contains(status) && !ValoresOficiais.StatusExclusivos.Contains(status), $"status {status} não pode ser configurado");
+            Exigir(status >= 400 && statusDeclarados.Contains(status) && !ValoresOficiais.StatusExclusivos.Contains(status), $"status {status} não pode ser configurado");
         }
 
         Exigir(comportamento.PesosPorStatus.Values.All(p => p >= 0), "peso não pode ser negativo");

@@ -50,6 +50,18 @@ public sealed record Limites(
 /// <summary>Modelo de comportamento e limites (RN04).</summary>
 public sealed record PerfilDeComportamento(string Nome, Comportamento Comportamento, Limites Limites);
 
+/// <summary>Relógio alterado de uma instituição; fator zero é relógio fixado (RN73).</summary>
+public sealed record RelogioSimulado(DateTimeOffset BaseSimulada, DateTimeOffset BaseReal, decimal Fator)
+{
+    /// <summary>A hora simulada neste instante real.</summary>
+    public DateTimeOffset Agora(DateTimeOffset real)
+    {
+        var limite = (decimal)(DateTimeOffset.MaxValue.UtcTicks - BaseSimulada.UtcTicks);
+        var passado = Math.Clamp((real - BaseReal).Ticks * Fator, -(decimal)BaseSimulada.UtcTicks, limite);
+        return BaseSimulada.AddTicks((long)passado);
+    }
+}
+
 /// <summary>Situações possíveis de uma instituição (RN06).</summary>
 public static class Situacoes
 {
@@ -69,7 +81,8 @@ public sealed record Instituicao(
     string Situacao,
     bool Pronta,
     Comportamento Comportamento,
-    Limites Limites)
+    Limites Limites,
+    RelogioSimulado? Relogio = null)
 {
     /// <summary>Se a instituição oferece o produto (RN08).</summary>
     public bool Oferece(string produto) => Produtos.Contains(produto);

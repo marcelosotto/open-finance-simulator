@@ -71,6 +71,26 @@ internal static class RotasDeInstituicoes
         administracao.MapPost(Base + "/{endereco}/reativar", async (string endereco, HttpContext contexto, CadastroDeInstituicoes cadastro) =>
             Responder(await cadastro.Reativar(endereco, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false)));
 
+        administracao.MapPut(Base + "/{endereco}/relogio", async (string endereco, HttpContext contexto, CadastroDeInstituicoes cadastro) =>
+        {
+            PedidoDeRelogio? pedido;
+            try
+            {
+                pedido = await JsonSerializer.DeserializeAsync<PedidoDeRelogio>(contexto.Request.Body, JsonDasInstituicoes.Opcoes, contexto.RequestAborted).ConfigureAwait(false);
+            }
+            catch (JsonException)
+            {
+                return CorpoInvalido();
+            }
+
+            return pedido is null
+                ? CorpoInvalido()
+                : Responder(await cadastro.MudarRelogio(endereco, pedido, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false));
+        });
+
+        administracao.MapDelete(Base + "/{endereco}/relogio", async (string endereco, HttpContext contexto, CadastroDeInstituicoes cadastro) =>
+            Responder(await cadastro.VoltarAoRelogioReal(endereco, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false)));
+
         administracao.MapGet(Base + "/{endereco}/historico", async (string endereco, CadastroDeInstituicoes cadastro, CancellationToken cancelamento) =>
             await cadastro.Obter(endereco, cancelamento).ConfigureAwait(false) is null
                 && (await cadastro.Historico(endereco, cancelamento).ConfigureAwait(false)).Count == 0

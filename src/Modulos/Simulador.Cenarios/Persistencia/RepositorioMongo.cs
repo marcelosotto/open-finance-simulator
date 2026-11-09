@@ -66,12 +66,13 @@ internal sealed class RepositorioMongo : IRepositorioDeCenarios, IDisposable
         return documento is null ? null : Ler<T>(documento);
     }
 
-    private Task Salvar<T>(string id, T valor, CancellationToken cancelamento) =>
+    private async Task Salvar<T>(string id, T valor, CancellationToken cancelamento) =>
+        await
         _cenarios.ReplaceOneAsync(
             PorId(id),
             new BsonDocument { [Id] = id, [Conteudo] = JsonSerializer.Serialize(valor, JsonDosCenarios.Opcoes) },
             new ReplaceOptions { IsUpsert = true },
-            cancelamento);
+            cancelamento).ConfigureAwait(false);
 
-    private Task Apagar(string id, CancellationToken cancelamento) => _cenarios.DeleteOneAsync(PorId(id), cancelamento);
+    private async Task Apagar(string id, CancellationToken cancelamento) => await _cenarios.DeleteOneAsync(PorId(id), cancelamento).ConfigureAwait(false);
 }

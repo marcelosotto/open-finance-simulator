@@ -23,6 +23,9 @@ public sealed record OperacaoDoCatalogo(
     IReadOnlyList<string>? Escopos = null,
     IReadOnlyList<string>? Permissoes = null)
 {
+    /// <summary>Item da chamada com a operação avaliada.</summary>
+    public const string ItemDaChamada = "sim:operacao";
+
     /// <summary>Segmento da API no caminho base (ex.: <c>accounts</c>).</summary>
     public string Api => CaminhoBase.Split('/', StringSplitOptions.RemoveEmptyEntries)[^2];
 

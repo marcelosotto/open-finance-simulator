@@ -2,7 +2,7 @@ using Simulador.Cenarios.Contratos;
 
 namespace Simulador.Cenarios.Dominio;
 
-internal static class Efeitos
+public static class Efeitos
 {
     public const string Latencia = "latencia";
     public const string Status = "status";
@@ -180,7 +180,7 @@ internal static class AvaliacaoDoPerfil
 }
 
 /// <summary>O <c>code</c> de cada status simulado (RN13).</summary>
-internal static class CodigosDeErro
+public static class CodigosDeErro
 {
     private const string Consentimentos = "consents";
     private const int NaoProcessado = 422;

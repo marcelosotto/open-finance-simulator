@@ -6,6 +6,12 @@ namespace Simulador.Comum.Comportamento;
 /// <summary>A hora real, para o que mede tráfego ou tempo de verdade (RN73).</summary>
 public sealed record HoraReal(TimeProvider Relogio);
 
+/// <summary>Segura a resposta em hora real (RN12, RN73).</summary>
+public interface IEsperaDaChamada
+{
+    Task Aguardar(TimeSpan duracao, CancellationToken cancelamento);
+}
+
 /// <summary>Etapa de regra de cenário e perfil (RN39); o host implementa.</summary>
 public interface IComportamentoDaChamada
 {

@@ -6,7 +6,7 @@ using Simulador.Massa.Contratos;
 namespace Simulador.Host;
 
 /// <summary>Liga Massa a Marcação e Instituições, sem referência entre os módulos (ADR-007).</summary>
-internal sealed class AmbienteDaMassa(IMarcador marcador, IRepositorioDeInstituicoes instituicoes, TimeProvider relogio) : IAmbienteDaMassa
+internal sealed class AmbienteDaMassa(IMarcador marcador, IRepositorioDeInstituicoes instituicoes, TimeProvider relogio, RelogioDosBancos relogios) : IAmbienteDaMassa
 {
     /// <summary>Tem dois-pontos, que um endereço de instituição não aceita.</summary>
     private const string ChaveDoHistorico = "massa:geral";
@@ -30,6 +30,8 @@ internal sealed class AmbienteDaMassa(IMarcador marcador, IRepositorioDeInstitui
     public async Task<IReadOnlyList<EventoDaMassa>> LerHistorico(CancellationToken cancelamento) =>
         [.. (await instituicoes.LerHistorico(ChaveDoHistorico, cancelamento).ConfigureAwait(false))
             .Select(e => new EventoDaMassa(e.Data, e.Autor, e.Acao, [.. e.Mudancas.Select(m => new MudancaDaMassa(m.Campo, m.Antes, m.Depois))]))];
+
+    public Task<DateTimeOffset> AgoraNoBanco(string banco, CancellationToken cancelamento) => relogios.Agora(banco, cancelamento);
 
     public async Task<int> ContarInstituicoesCriadas(IReadOnlySet<string> exceto, CancellationToken cancelamento) =>
         (await Criadas(exceto, cancelamento).ConfigureAwait(false)).Count;

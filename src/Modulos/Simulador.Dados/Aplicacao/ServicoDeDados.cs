@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using Simulador.Comum.Comportamento;
 using Simulador.Comum.Erros;
 using Simulador.Dados.Contratos;
 using Simulador.Dados.Dominio;
@@ -52,7 +53,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         if (parametro is not null)
         {
             var id = tipo == TipoDeOperacao.NotaDeNegociacao ? IdsDerivados.RecursoDaNota(bruto!) : bruto;
-            (recurso, var recusa) = await Acessar(id, familia, consentimento, cancelamento).ConfigureAwait(false);
+            (recurso, var recusa) = await Acessar(contexto, id, familia, consentimento, cancelamento).ConfigureAwait(false);
             if (recusa is not null)
             {
                 return recusa;
@@ -96,7 +97,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         return await Saida(contexto, operacao, itens.Lista, pedido, chave, consentimento, recurso, cota, filtros).ConfigureAwait(false);
     }
 
-    private async Task<(RecursoDeDados? Recurso, IResult? Recusa)> Acessar(string? id, Familia familia, ConsentimentoDaChamada consentimento, CancellationToken cancelamento)
+    private async Task<(RecursoDeDados? Recurso, IResult? Recusa)> Acessar(HttpContext contexto, string? id, Familia familia, ConsentimentoDaChamada consentimento, CancellationToken cancelamento)
     {
         var recurso = id is not null && consentimento.Recursos.Contains(id)
             ? await ambiente.Recurso(id, cancelamento).ConfigureAwait(false)
@@ -106,7 +107,14 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             return (null, Proibido("RESOURCE_FORBIDDEN"));
         }
 
-        return recurso.Estado == Disponivel ? (recurso, null) : (null, Proibido($"STATUS_RESOURCE_{recurso.Estado}"));
+        if (recurso.Estado != Disponivel)
+        {
+            return (null, Proibido($"STATUS_RESOURCE_{recurso.Estado}"));
+        }
+
+        return await EtapaDeComportamento.RecursoIndisponivel(contexto).ConfigureAwait(false)
+            ? (null, Proibido("STATUS_RESOURCE_TEMPORARILY_UNAVAILABLE"))
+            : (recurso, null);
     }
 
     private async Task<Itens> Montar(
@@ -374,6 +382,11 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
                 EnvelopeDeErro.Criar("LOCKED", "Recurso bloqueado", "A operação foi recusada porque o limite de consultas foi atingido.", relogio),
                 EnvelopeDeErro.OpcoesJson,
                 statusCode: StatusCodes.Status423Locked);
+        }
+
+        if (await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+        {
+            return desvio;
         }
 
         JsonNode? dados;
