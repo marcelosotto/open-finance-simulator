@@ -10,6 +10,7 @@
     <ProjectReference Include="..\Modulos\Simulador.Marcacao\Simulador.Marcacao.csproj" />
     <ProjectReference Include="..\Modulos\Simulador.Instituicoes\Simulador.Instituicoes.csproj" />
     <ProjectReference Include="..\Modulos\Simulador.Massa\Simulador.Massa.csproj" />
+    <ProjectReference Include="..\Modulos\Simulador.Consentimentos\Simulador.Consentimentos.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\config\tabela-de-endpoints.json" Link="config\tabela-de-endpoints.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

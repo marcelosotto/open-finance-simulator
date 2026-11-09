@@ -18,8 +18,8 @@ internal static class Listas
 }
 
 /// <summary>
-/// Passos de <c>massa-e-semente.feature</c>. Os passos que citam as APIs oficiais conferem, por
-/// enquanto, o estado calculado na administração; as specs 004 e 005 os ligam às APIs.
+/// Passos de <c>massa-e-semente.feature</c>. Os passos de consentimento e recursos chamam as APIs
+/// oficiais (spec 004); os de dados de produto, a spec 005 liga.
 /// </summary>
 [Binding]
 public sealed class MassaPassos : IDisposable
@@ -48,6 +48,8 @@ public sealed class MassaPassos : IDisposable
     private ClienteSimulado? _clienteDoLote;
     private ClienteSimulado? _clienteVirtual;
     private JsonElement _extrato;
+    private Consentimento? _virtual;
+    private string _tokenDoVirtual = string.Empty;
 
     public MassaPassos()
     {
@@ -227,8 +229,22 @@ public sealed class MassaPassos : IDisposable
         Assert.Equal(1_000, _itens.Count);
         foreach (var item in _itens.Take(20))
         {
-            Assert.Equal("AUTHORISED", (await _admin.Ler<Consentimento>($"/consentimentos/{item.Consentimentos[0].ConsentId}")).Estado);
+            var consentimento = item.Consentimentos[0];
+            Assert.Equal(HttpStatusCode.OK, await ConsultarRecursos(consentimento.Banco, await TokenDe(consentimento)));
         }
+    }
+
+    private async Task<string> TokenDe(Consentimento consentimento)
+    {
+        using var cliente = _fabrica.ClienteOpenFinance();
+        return await AtalhosDeConsentimento.Token(_http, cliente, consentimento.Banco, $"consent:{consentimento.ConsentId}");
+    }
+
+    private async Task<HttpStatusCode> ConsultarRecursos(string banco, string token)
+    {
+        using var cliente = _fabrica.ClienteOpenFinance();
+        using var resposta = await AtalhosDeConsentimento.Chamar(cliente, HttpMethod.Get, AtalhosDeConsentimento.Caminho(banco, "resources", "/resources"), token);
+        return resposta.StatusCode;
     }
 
     [Then(@"^só o total e a semente devem estar gravados$")]
@@ -276,7 +292,12 @@ public sealed class MassaPassos : IDisposable
     }
 
     [Given(@"^um consentimento virtual$")]
-    public Task UmConsentimentoVirtual() => GarantirMundo();
+    public async Task UmConsentimentoVirtual()
+    {
+        await GarantirMundo();
+        _virtual = (await _admin.Ler<IReadOnlyList<MassaGerada>>("/mundo-virtual/itens?inicio=0&quantidade=1"))[0].Consentimentos[0];
+        _tokenDoVirtual = await TokenDe(_virtual);
+    }
 
     [When(@"^Bruno o revoga$")]
     public Task BrunoRevoga() => Revogar(0);
@@ -285,6 +306,7 @@ public sealed class MassaPassos : IDisposable
     public async Task Responde401()
     {
         Assert.Equal("REJECTED", (await _admin.Ler<Consentimento>($"/consentimentos/{_revogados[0]}")).Estado);
+        Assert.Equal(HttpStatusCode.Unauthorized, await ConsultarRecursos(_virtual!.Banco, _tokenDoVirtual));
     }
 
     [Given(@"^um mundo virtual com um consentimento revogado$")]

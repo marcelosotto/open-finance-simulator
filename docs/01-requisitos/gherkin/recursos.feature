@@ -1,8 +1,6 @@
 # language: pt
 # Casos de uso: UC14, UC15 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 004: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-004
 Funcionalidade: API de Recursos
   Como receptora
   Quero saber o que posso consumir

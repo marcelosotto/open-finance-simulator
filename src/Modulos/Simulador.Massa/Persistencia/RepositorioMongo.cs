@@ -123,6 +123,18 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
         await Inserir(_recursos, massa.SelectMany(m => m.Recursos).Select(r => Documento(r.ResourceId, r, (CampoLote, r.LoteId), (CampoBanco, r.Banco), (CampoCliente, r.Cliente), (CampoPerfil, r.Perfil))), cancelamento).ConfigureAwait(false);
     }
 
+    public Task SalvarConsentimento(Consentimento consentimento, CancellationToken cancelamento) => _consentimentos.ReplaceOneAsync(
+        PorId(consentimento.ConsentId),
+        Documento(consentimento.ConsentId, consentimento, (CampoLote, consentimento.LoteId), (CampoBanco, consentimento.Banco), (CampoCliente, consentimento.Cliente)),
+        Upsert,
+        cancelamento);
+
+    public Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento) => _recursos.ReplaceOneAsync(
+        PorId(recurso.ResourceId),
+        Documento(recurso.ResourceId, recurso, (CampoLote, recurso.LoteId), (CampoBanco, recurso.Banco), (CampoCliente, recurso.Cliente), (CampoPerfil, recurso.Perfil)),
+        Upsert,
+        cancelamento);
+
     public Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento) => Obter<ClienteSimulado>(_clientes, documento, cancelamento);
 
     public Task<Consentimento?> ObterConsentimento(string consentId, CancellationToken cancelamento) => Obter<Consentimento>(_consentimentos, consentId, cancelamento);

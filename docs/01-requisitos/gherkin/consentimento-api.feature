@@ -1,8 +1,6 @@
 # language: pt
 # Casos de uso: UC09, UC12, UC13 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 004: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-004
 Funcionalidade: API de Consentimentos
   Como receptora
   Quero criar, consultar, revogar e renovar consentimentos

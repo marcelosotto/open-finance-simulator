@@ -91,6 +91,10 @@ public sealed class RepositorioDeMassaEmMemoria : IRepositorioDeMassa
         }
     }
 
+    public Task SalvarConsentimento(Consentimento consentimento, CancellationToken cancelamento) => Faz(() => _consentimentos[consentimento.ConsentId] = consentimento);
+
+    public Task SalvarRecurso(Recurso recurso, CancellationToken cancelamento) => Faz(() => _recursos[recurso.ResourceId] = recurso);
+
     public Task<ClienteSimulado?> ObterCliente(string documento, CancellationToken cancelamento) => Task.FromResult(Ler(() => _clientes.GetValueOrDefault(documento)));
 
     public Task<Consentimento?> ObterConsentimento(string consentId, CancellationToken cancelamento) => Task.FromResult(Ler(() => _consentimentos.GetValueOrDefault(consentId)));

@@ -470,6 +470,8 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
 
     public static string AlvoDoConsentimento(string consentId) => PrefixoConsentimento + consentId;
 
+    public static string AlvoDoRecurso(string resourceId) => "recurso:" + resourceId;
+
     public async Task<MassaGerada?> ObterCliente(string documento, CancellationToken cancelamento)
     {
         if (await repositorio.ObterCliente(documento, cancelamento).ConfigureAwait(false) is { } cliente)
@@ -563,10 +565,25 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         foreach (var consentimento in item.Consentimentos)
         {
             var ajuste = await repositorio.ObterAjuste(AlvoDoConsentimento(consentimento.ConsentId), cancelamento).ConfigureAwait(false);
-            consentimentos.Add(ajuste is null ? consentimento : consentimento with { Estado = ajuste.Estado!, RejeitadoPor = ajuste.RejeitadoPor });
+            consentimentos.Add(ajuste is null ? consentimento : consentimento with
+            {
+                Estado = ajuste.Estado ?? consentimento.Estado,
+                RejeitadoPor = ajuste.RejeitadoPor,
+                Razao = ajuste.Razao,
+                ExpiraEm = ajuste.ExpiraEm ?? consentimento.ExpiraEm,
+                AtualizadoEm = ajuste.AtualizadoEm,
+                Extensoes = ajuste.Extensoes,
+            });
         }
 
-        return item with { Consentimentos = consentimentos };
+        var recursos = new List<Recurso>();
+        foreach (var recurso in item.Recursos)
+        {
+            var ajuste = await repositorio.ObterAjuste(AlvoDoRecurso(recurso.ResourceId), cancelamento).ConfigureAwait(false);
+            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado } : recurso);
+        }
+
+        return item with { Consentimentos = consentimentos, Recursos = recursos };
     }
 
     private async Task<MassaGerada?> ItemVirtual(long indice, CancellationToken cancelamento)
@@ -654,7 +671,7 @@ internal sealed class ServicoDoMundo(IRepositorioDeMassa repositorio, BaseDaMass
 }
 
 /// <summary>Ajustes sobre dado calculado (RN53).</summary>
-internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMassa baseDaMassa, ConsultaDeMassa consulta)
+internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMassa baseDaMassa, ConsultaDeMassa consulta, TimeProvider relogio)
 {
     public async Task<Resultado<Ajuste>> Criar(PedidoDeAjuste pedido, string? autor, CancellationToken cancelamento)
     {
@@ -708,7 +725,76 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
             return Resultados.Invalido<Ajuste>("só consentimento virtual recebe ajuste");
         }
 
-        return Resultados.Ok(new Ajuste(ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId), pedido.Tipo, DoMundo: true, Estado: pedido.Estado, RejeitadoPor: "USER", Banco: consentimento.Banco));
+        return Resultados.Ok(new Ajuste(ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId), pedido.Tipo, DoMundo: true, Estado: pedido.Estado, RejeitadoPor: "USER", Banco: consentimento.Banco, Razao: "CUSTOMER_MANUALLY_REVOKED", AtualizadoEm: relogio.GetUtcNow()));
+    }
+}
+
+/// <summary>Mudanças pedidas pela spec 004 sobre consentimentos e recursos.</summary>
+internal sealed class EscritaDeMassa(
+    IRepositorioDeMassa repositorio,
+    IAmbienteDaMassa ambiente,
+    BaseDaMassa baseDaMassa,
+    ConsultaDeMassa consulta,
+    TimeProvider relogio) : IEscritaDeMassa
+{
+    public async Task<string?> NovoConsentId(CancellationToken cancelamento) =>
+        await baseDaMassa.Reservar(1, cancelamento).ConfigureAwait(false) is { } posicao
+            ? ambiente.ConsentId(Naturezas.Persistido, $"c{Base36.Codificar(posicao)}x0")
+            : null;
+
+    public Task InserirConsentimento(Consentimento consentimento, CancellationToken cancelamento) =>
+        repositorio.SalvarConsentimento(consentimento, cancelamento);
+
+    public Task AtualizarConsentimento(Consentimento consentimento, CancellationToken cancelamento) =>
+        consentimento.Natureza == Naturezas.Virtual
+            ? repositorio.SalvarAjuste(
+                new Ajuste(
+                    ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId),
+                    "consentimento",
+                    DoMundo: true,
+                    Estado: consentimento.Estado,
+                    RejeitadoPor: consentimento.RejeitadoPor,
+                    Banco: consentimento.Banco,
+                    Razao: consentimento.Razao,
+                    ExpiraEm: consentimento.ExpiraEm,
+                    AtualizadoEm: consentimento.AtualizadoEm,
+                    Extensoes: consentimento.Extensoes),
+                cancelamento)
+            : repositorio.SalvarConsentimento(consentimento, cancelamento);
+
+    public Task MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento) =>
+        recurso.Natureza == Naturezas.Virtual
+            ? repositorio.SalvarAjuste(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco), cancelamento)
+            : repositorio.SalvarRecurso(recurso with { Estado = estado }, cancelamento);
+
+    public async Task<Recurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento)
+    {
+        var massa = await consulta.ObterCliente(documento, cancelamento).ConfigureAwait(false);
+        if (massa is null || massa.Cliente.Natureza == Naturezas.Virtual
+            || await baseDaMassa.Reservar(1, cancelamento).ConfigureAwait(false) is not { } posicao)
+        {
+            return null;
+        }
+
+        var perfis = await baseDaMassa.Perfis(cancelamento).ConfigureAwait(false);
+        var perfil = perfis[massa.Recursos.Count > 0 ? massa.Recursos[0].Perfil : PerfisProntos.Padrao];
+        var recurso = new Recurso(
+            ambiente.Identificador(Naturezas.Persistido, $"r{Base36.Codificar(posicao)}a0"),
+            documento,
+            banco,
+            Produtos.TipoDe(produto),
+            produto,
+            estado,
+            perfil.Nome,
+            perfil.SaldoInicial,
+            Sorteio.Derivar(posicao, "dados", posicao, banco, produto),
+            relogio.GetUtcNow(),
+            baseDaMassa.Hoje.AddMonths(-BaseDaMassa.HistoricoPadraoMeses),
+            ambiente.Marca,
+            Naturezas.Persistido,
+            massa.Cliente.LoteId);
+        await repositorio.SalvarRecurso(recurso, cancelamento).ConfigureAwait(false);
+        return recurso;
     }
 }
 

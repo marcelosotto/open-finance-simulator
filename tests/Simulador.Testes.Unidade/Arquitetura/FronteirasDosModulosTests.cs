@@ -1,5 +1,6 @@
 using System.Reflection;
 using Simulador.Catalogo.Contratos;
+using Simulador.Consentimentos.Contratos;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Marcacao.Contratos;
 using Simulador.Massa.Contratos;
@@ -9,13 +10,14 @@ namespace Simulador.Testes.Unidade.Arquitetura;
 /// <summary>FR-024 e ADR-007: cada módulo só expõe <c>Contratos</c> e não depende de outro módulo.</summary>
 public class FronteirasDosModulosTests
 {
-    public static TheoryData<string> Modulos() => ["Simulador.Catalogo", "Simulador.Instituicoes", "Simulador.Marcacao", "Simulador.Massa"];
+    public static TheoryData<string> Modulos() => ["Simulador.Catalogo", "Simulador.Consentimentos", "Simulador.Instituicoes", "Simulador.Marcacao", "Simulador.Massa"];
 
     private static Assembly Modulo(string nome) => nome switch
     {
         "Simulador.Catalogo" => typeof(ICatalogo).Assembly,
         "Simulador.Instituicoes" => typeof(Instituicao).Assembly,
         "Simulador.Massa" => typeof(MassaGerada).Assembly,
+        "Simulador.Consentimentos" => typeof(Receptora).Assembly,
         _ => typeof(IMarcador).Assembly,
     };
 

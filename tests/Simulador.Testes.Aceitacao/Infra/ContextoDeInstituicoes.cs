@@ -19,7 +19,7 @@ public sealed class ContextoDeInstituicoes : IDisposable
 
     public string? BancoAtual { get; set; }
 
-    public FabricaDoSimulador Fabrica => _fabrica ??= new FabricaDoSimulador(Marca)
+    public FabricaDoSimulador Fabrica => _fabrica ??= new FabricaDoSimulador(Marca).SemPortao()
         .ComMongo()
         .ComServicos(s => s.AddSingleton<IConsultaDeClientes>(Clientes));
 

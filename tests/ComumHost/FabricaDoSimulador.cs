@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
 using Simulador.Comum.Aleatorio;
+using Simulador.Consentimentos.Contratos;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Massa.Contratos;
 using Simulador.Testes.Infra;
@@ -58,6 +59,9 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         return this;
     }
 
+    /// <summary>Sem o portão de segurança, para os testes de rota e marcação.</summary>
+    public FabricaDoSimulador SemPortao() => ComServicos(s => s.RemoveAll<Simulador.Catalogo.Contratos.IPortaoDeOperacao>());
+
     public HttpClient ClienteOpenFinance() => Cliente(PortaOpenFinance);
 
     public HttpClient ClienteAdministracao() => Cliente(PortaAdministracao);
@@ -85,6 +89,8 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
                 servicos.AddSingleton<IRepositorioDeInstituicoes>(new RepositorioEmMemoria());
                 servicos.RemoveAll<IRepositorioDeMassa>();
                 servicos.AddSingleton<IRepositorioDeMassa>(Massa);
+                servicos.RemoveAll<IRepositorioDeReceptoras>();
+                servicos.AddSingleton<IRepositorioDeReceptoras>(new RepositorioDeReceptorasEmMemoria());
             }
 
             foreach (var registrar in _servicos)
