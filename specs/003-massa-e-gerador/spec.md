@@ -145,6 +145,9 @@ Como operador, quero escolher o que apagar, ver antes o que será removido e con
 - Filtro por banco fora da distribuição do mundo: lista vazia.
 - Mesma semente com configuração ou versão de gerador diferente: não há garantia de dado igual ([RN54](../../docs/01-requisitos/regras-de-negocio.md#rn54), [ADR-004](../../docs/05-adr/ADR-004-semente-e-ajustes.md)).
 - Ajuste sobre item que não existe no mundo atual: recusado.
+- Pedido além do saldo de documentos ([RN57](../../docs/01-requisitos/regras-de-negocio.md#rn57)): recusado.
+- Limpeza total com lote em andamento: recusada até que ele termine ou seja cancelado.
+- Limpeza total com mundo definido: instituições e perfis criados que o mundo usa ficam, para a definição não apontar para algo apagado.
 
 ## Requirements *(mandatory)*
 
@@ -163,7 +166,7 @@ Como operador, quero escolher o que apagar, ver antes o que será removido e con
 - **FR-006**: Massa persistida e mundo virtual MUST usar o mesmo gerador ([RN52](../../docs/01-requisitos/regras-de-negocio.md#rn52)), com a versão dele gravada no lote ([ADR-004](../../docs/05-adr/ADR-004-semente-e-ajustes.md)).
 - **FR-007**: CPFs e CNPJs gerados MUST ter dígitos válidos, incluindo CNPJ alfanumérico, e todo CPF gerado MUST começar com 9 ([RN57](../../docs/01-requisitos/regras-de-negocio.md#rn57)). Documentos MUST NOT se repetir dentro do ambiente, entre massa persistida e mundo virtual.
 - **FR-008**: Todo dado gerado MUST carregar marca e natureza nos identificadores e no nome do cliente, reutilizando a marcação da spec 001; a marca é aplicada na criação e não muda ([RN60](../../docs/01-requisitos/regras-de-negocio.md#rn60) a [RN66](../../docs/01-requisitos/regras-de-negocio.md#rn66)).
-- **FR-009**: Transações MUST ser calculadas a partir de recurso, dia e semente, nunca gravadas uma a uma ([RN51](../../docs/01-requisitos/regras-de-negocio.md#rn51)), com histórico padrão de 12 meses e opção de histórico maior ([RN59](../../docs/01-requisitos/regras-de-negocio.md#rn59)). Saldo, extrato, limite e faturas MUST ser coerentes ([RN46](../../docs/01-requisitos/regras-de-negocio.md#rn46)).
+- **FR-009**: Transações MUST ser calculadas a partir de recurso, dia e semente, nunca gravadas uma a uma ([RN51](../../docs/01-requisitos/regras-de-negocio.md#rn51)), com histórico padrão de 12 meses e opção de histórico maior ([RN59](../../docs/01-requisitos/regras-de-negocio.md#rn59)). Saldo e extrato MUST ser coerentes ([RN46](../../docs/01-requisitos/regras-de-negocio.md#rn46)); limite e faturas de cartão saem dessas transações na spec 005.
 
 **Cliente simulado**
 
@@ -173,7 +176,7 @@ Como operador, quero escolher o que apagar, ver antes o que será removido e con
 **Lote**
 
 - **FR-012**: O operador MUST poder gerar lote informando quantidade (obrigatória), distribuição, consentimentos por cliente (padrão 1), permissões e semente ([UC07](../../docs/01-requisitos/casos-de-uso/README.md#uc07), [RN56](../../docs/01-requisitos/regras-de-negocio.md#rn56)). Sem distribuição informada, MUST valer 100% no Banco Estável, 100% em `cliente-comum` e 0% de PJ; sem permissões informadas, todas as válidas para o tipo de pessoa.
-- **FR-013**: A geração MUST ocorrer em segundo plano, com progresso, situação (em andamento, concluído, cancelado, parcial) e resumo com clientes, consentimentos e recursos criados.
+- **FR-013**: A geração MUST ocorrer em segundo plano, com progresso, situação (em andamento, concluído ou parcial, com o motivo cancelado, interrompido ou falha) e resumo com clientes, consentimentos e recursos criados.
 - **FR-014**: O operador MUST poder cancelar um lote; o que foi criado permanece, marcado como parcial.
 - **FR-015**: Consentimentos gerados MUST nascer `AUTHORISED` ([RN80](../../docs/01-requisitos/regras-de-negocio.md#rn80)), e sem validade informada têm prazo indeterminado ([RN85](../../docs/01-requisitos/regras-de-negocio.md#rn85)). Eles MUST nascer sem receptora fixa; a ligação vem do token, na spec 004. Cada consentimento MUST sortear seu banco pela distribuição, usando a semente; o cliente tem produtos em cada banco sorteado, e o banco pode se repetir ([RN49](../../docs/01-requisitos/regras-de-negocio.md#rn49)).
 - **FR-016**: Dois lotes com a mesma semente no mesmo ambiente MUST diferir em documentos e IDs e ser iguais no restante; o primeiro lote de uma semente em ambiente limpo MUST reproduzir os mesmos documentos e IDs de outro ambiente limpo ([RN54](../../docs/01-requisitos/regras-de-negocio.md#rn54)).
