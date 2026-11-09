@@ -7,6 +7,7 @@ using Simulador.Cenarios.Dominio;
 using Simulador.Comum.Comportamento;
 using Simulador.Comum.Erros;
 using Simulador.Consentimentos.Contratos;
+using Simulador.Dados.Contratos;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Limites.Contratos;
 
@@ -55,11 +56,14 @@ internal sealed class FiltroDaChamada(InstituicoesDaChamada instituicoes, HoraRe
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var contexto = context.HttpContext;
-        if (contexto.Request.RouteValues["banco"] is string banco
-            && (await instituicoes.Obter(banco, contexto.RequestAborted).ConfigureAwait(false))?.Relogio is { } relogio)
+        var real = hora.Relogio.GetUtcNow();
+        var relogio = contexto.Request.RouteValues["banco"] is string banco
+            ? (await instituicoes.Obter(banco, contexto.RequestAborted).ConfigureAwait(false))?.Relogio
+            : null;
+        var instante = relogio?.Agora(real) ?? real;
+        contexto.Items[RelogioDaChamada.ItemDoInstante] = instante;
+        if (relogio is not null)
         {
-            var instante = relogio.Agora(hora.Relogio.GetUtcNow());
-            contexto.Items[RelogioDaChamada.ItemDoInstante] = instante;
             contexto.Response.Headers[CabecalhoDoRelogio] = instante.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
         }
 
@@ -80,6 +84,11 @@ internal sealed class ResultadoCorrompido(IResult original, string falha) : IRes
         await original.ExecuteAsync(httpContext).ConfigureAwait(false);
         httpContext.Response.Body = destino;
         var corpo = memoria.ToArray();
+        if (corpo.Length == 0)
+        {
+            return;
+        }
+
         if (falha == Efeitos.CorpoTruncado)
         {
             httpContext.Response.ContentLength = corpo.Length;
@@ -89,7 +98,7 @@ internal sealed class ResultadoCorrompido(IResult original, string falha) : IRes
             return;
         }
 
-        var quebrado = corpo.Length == 0 ? Encoding.UTF8.GetBytes("{") : corpo.AsMemory(0, corpo.Length - 1);
+        var quebrado = corpo.AsMemory(0, corpo.Length - 1);
         httpContext.Response.ContentLength = quebrado.Length;
         await destino.WriteAsync(quebrado).ConfigureAwait(false);
     }
@@ -100,15 +109,15 @@ internal sealed class ComportamentoDaChamada(
     InstituicoesDaChamada instituicoes,
     ICenarios cenarios,
     ICatalogo catalogo,
-    IEsperaDaChamada espera,
     TimeProvider relogio,
     IHttpContextAccessor acesso) : IComportamentoDaChamada
 {
     private const string ParametroDoConsentimento = "consentId";
+    private const string ParametroDaNota = "brokerNoteId";
     private const int MuitasChamadas = 429;
     private readonly ConcurrentDictionary<string, IReadOnlySet<int>> _declarados = new(StringComparer.Ordinal);
 
-    public async Task<IResult?> Aplicar(HttpContext contexto)
+    public async Task<DesfechoDoComportamento?> Decidir(HttpContext contexto)
     {
         ArgumentNullException.ThrowIfNull(contexto);
         if (Operacao(contexto) is not { } operacao || await Instituicao(contexto).ConfigureAwait(false) is not { } instituicao)
@@ -116,26 +125,18 @@ internal sealed class ComportamentoDaChamada(
             return null;
         }
 
-        var cancelamento = contexto.RequestAborted;
-        var decisao = await cenarios.Decidir(Chamada(contexto, operacao, Recurso(contexto, operacao)), Perfil(instituicao.Comportamento, operacao), relogio.GetUtcNow(), Declarados(operacao), cancelamento).ConfigureAwait(false);
-        if (decisao.Espera > TimeSpan.Zero)
-        {
-            await espera.Aguardar(decisao.Espera, cancelamento).ConfigureAwait(false);
-        }
-
+        var decisao = await cenarios.Decidir(Chamada(contexto, operacao, RecursoDaChamada(contexto, operacao)), Perfil(instituicao.Comportamento, operacao), relogio.GetUtcNow(), Declarados(operacao), contexto.RequestAborted).ConfigureAwait(false);
         if (decisao.Transporte == Efeitos.ConexaoCortada)
         {
-            contexto.Abort();
-            return Results.Empty;
+            return new DesfechoDoComportamento(decisao.Espera, Cortar: true);
         }
 
         if (decisao.Transporte is { } falha)
         {
             contexto.Items[FiltroDaChamada.ItemDaFalha] = falha;
-            return null;
         }
 
-        return decisao.Status is { } status ? Erro(contexto, status, operacao, instituicao.Limites) : null;
+        return new DesfechoDoComportamento(decisao.Espera, decisao.Status is { } status ? Erro(contexto, status, operacao, instituicao.Limites) : null);
     }
 
     public async Task<bool> RecursoIndisponivel(HttpContext contexto)
@@ -146,14 +147,14 @@ internal sealed class ComportamentoDaChamada(
             && cenarios.Sorteio() * 100 < (double)instituicao.Comportamento.RecursoIndisponivelPct;
     }
 
-    public async Task<string> EstadoDoRecurso(string resourceId, string estado, CancellationToken cancelamento)
+    public async Task<string> EstadoDoRecurso(string resourceId, string estado, DateTimeOffset? instante, CancellationToken cancelamento)
     {
         if (acesso.HttpContext is not { } contexto || Operacao(contexto) is not { } operacao)
         {
             return estado;
         }
 
-        return await cenarios.EstadoSobreposto(Chamada(contexto, operacao, resourceId), relogio.GetUtcNow(), cancelamento).ConfigureAwait(false) ?? estado;
+        return await cenarios.EstadoSobreposto(Chamada(contexto, operacao, resourceId), instante ?? relogio.GetUtcNow(), cancelamento).ConfigureAwait(false) ?? estado;
     }
 
     private static OperacaoDoCatalogo? Operacao(HttpContext contexto) => contexto.Items[OperacaoDoCatalogo.ItemDaChamada] as OperacaoDoCatalogo;
@@ -164,10 +165,11 @@ internal sealed class ComportamentoDaChamada(
         new(Banco(contexto), operacao.OperationId, ExtensoesDosConsentimentos.ConsentimentoDaChamada(contexto)?.Cliente, recurso);
 
     /// <summary>O primeiro parâmetro do caminho que não é o consentimento.</summary>
-    private static string? Recurso(HttpContext contexto, OperacaoDoCatalogo operacao)
+    internal static string? RecursoDaChamada(HttpContext contexto, OperacaoDoCatalogo operacao)
     {
-        var parametro = operacao.Caminho.Split('/').FirstOrDefault(s => s.StartsWith('{') && s != "{" + ParametroDoConsentimento + "}");
-        return parametro is null ? null : contexto.Request.RouteValues[parametro.Trim('{', '}')] as string;
+        var parametro = operacao.Caminho.Split('/').FirstOrDefault(s => s.StartsWith('{') && s != "{" + ParametroDoConsentimento + "}")?.Trim('{', '}');
+        var valor = parametro is null ? null : contexto.Request.RouteValues[parametro] as string;
+        return parametro == ParametroDaNota && valor is not null ? IdentificadoresDeDados.RecursoDaNota(valor) : valor;
     }
 
     private static string? NomeDaClasse(ClasseDoEndpoint? classe) => classe?.Frequencia switch

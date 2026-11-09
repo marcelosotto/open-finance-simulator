@@ -34,7 +34,7 @@ internal sealed class AmbienteDosConsentimentos(
         await consulta.ObterConsentimento(consentId, cancelamento).ConfigureAwait(false) is { } c ? Mapear(c) : null;
 
     public async Task<DadosDoRecurso?> Recurso(string resourceId, CancellationToken cancelamento) =>
-        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) with { Estado = await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, cancelamento).ConfigureAwait(false) } : null;
+        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) with { Estado = await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, null, cancelamento).ConfigureAwait(false) } : null;
 
     public Task<string?> NovoConsentId(CancellationToken cancelamento) => escrita.NovoConsentId(cancelamento);
 

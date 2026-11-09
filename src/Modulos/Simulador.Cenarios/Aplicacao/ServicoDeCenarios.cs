@@ -46,6 +46,9 @@ internal sealed class ServicoDeCenarios(
     private readonly Lock _trava = new();
     private IReadOnlyList<RegraDeCenario>? _ativas;
     private DateTimeOffset _validoAte;
+    private long _geracao;
+    private Task<IReadOnlyList<RegraDeCenario>>? _carga;
+    private long _geracaoDaCarga = -1;
 
     public double Sorteio() => aleatorio.ProximoInteiro(Escala) / (double)Escala;
 
@@ -197,30 +200,55 @@ internal sealed class ServicoDeCenarios(
         lock (_trava)
         {
             _ativas = null;
+            _geracao++;
         }
     }
 
+    /// <summary>
+    /// Regras em cache por até 5 s (RNF12). Chamadas simultâneas esperam a mesma leitura, e uma leitura
+    /// que começou antes de uma escrita não é guardada: a próxima chamada lê de novo.
+    /// </summary>
     private async Task<IReadOnlyList<RegraDeCenario>> Ativas(CancellationToken cancelamento)
     {
         var agora = hora.Relogio.GetUtcNow();
+        Task<IReadOnlyList<RegraDeCenario>> carga;
+        long geracao;
         lock (_trava)
         {
             if (_ativas is not null && agora < _validoAte)
             {
                 return _ativas;
             }
+
+            if (_carga is null || _geracaoDaCarga != _geracao)
+            {
+                _carga = Carregar();
+                _geracaoDaCarga = _geracao;
+            }
+
+            carga = _carga;
+            geracao = _geracaoDaCarga;
         }
 
-        var regras = await repositorio.ListarRegras(cancelamento).ConfigureAwait(false);
-        var ligados = (await repositorio.ListarPacotes(cancelamento).ConfigureAwait(false)).Where(p => p.Ligado).Select(p => p.Nome).ToHashSet(StringComparer.Ordinal);
-        IReadOnlyList<RegraDeCenario> ativas = [.. regras.Where(r => r.Ligada && (r.Pacote is null || ligados.Contains(r.Pacote)))];
+        var ativas = await carga.WaitAsync(cancelamento).ConfigureAwait(false);
         lock (_trava)
         {
-            _ativas = ativas;
-            _validoAte = agora + ValidadeDoCache;
+            if (geracao == _geracao && ReferenceEquals(carga, _carga))
+            {
+                _ativas = ativas;
+                _validoAte = agora + ValidadeDoCache;
+                _carga = null;
+            }
         }
 
         return ativas;
+    }
+
+    private async Task<IReadOnlyList<RegraDeCenario>> Carregar()
+    {
+        var regras = await repositorio.ListarRegras(CancellationToken.None).ConfigureAwait(false);
+        var ligados = (await repositorio.ListarPacotes(CancellationToken.None).ConfigureAwait(false)).Where(p => p.Ligado).Select(p => p.Nome).ToHashSet(StringComparer.Ordinal);
+        return [.. regras.Where(r => r.Ligada && (r.Pacote is null || ligados.Contains(r.Pacote)))];
     }
 
     private async Task<bool> Dispara(RegraDeCenario regra, CancellationToken cancelamento)

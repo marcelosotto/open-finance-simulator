@@ -136,9 +136,10 @@ internal static class AvaliacaoDoPerfil
     private static DecisaoDeComportamento DoPerfil(PerfilDaChamada perfil, int? latenciaMs, DateTimeOffset instante, IReadOnlySet<int> declarados, Func<double> sorteio)
     {
         var porcentagem = 100d;
-        if (latenciaMs is null && JanelaAtiva(perfil.JanelaDuracaoMin, perfil.JanelaIntervaloMin, instante))
+        TimeSpan Latencia() => latenciaMs is { } fixa ? TimeSpan.FromMilliseconds(fixa) : Amostra(perfil.TipicoMs, perfil.VariacaoMs, sorteio());
+        if (JanelaAtiva(perfil.JanelaDuracaoMin, perfil.JanelaIntervaloMin, instante))
         {
-            return new DecisaoDeComportamento(Amostra(perfil.TipicoMs, perfil.VariacaoMs, sorteio()), ForaDoAr);
+            return new DecisaoDeComportamento(Latencia(), ForaDoAr);
         }
 
         if (latenciaMs is null && sorteio() * porcentagem < (double)perfil.CaudaLentaPct)
@@ -146,7 +147,7 @@ internal static class AvaliacaoDoPerfil
             return new DecisaoDeComportamento(TimeSpan.FromMilliseconds(EsperaOficialMs), TempoEsgotado);
         }
 
-        var espera = latenciaMs is { } fixa ? TimeSpan.FromMilliseconds(fixa) : Amostra(perfil.TipicoMs, perfil.VariacaoMs, sorteio());
+        var espera = Latencia();
         if (sorteio() * porcentagem >= (double)perfil.TaxaDeErroPct || Sorteado(perfil.Pesos, declarados, sorteio) is not { } status)
         {
             return new DecisaoDeComportamento(espera);

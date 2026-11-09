@@ -384,9 +384,10 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
                 statusCode: StatusCodes.Status423Locked);
         }
 
-        if (await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+        var desfecho = await EtapaDeComportamento.Decidir(contexto).ConfigureAwait(false);
+        if (desfecho is { Segue: false })
         {
-            return desvio;
+            return (await EtapaDeComportamento.Concluir(contexto, desfecho).ConfigureAwait(false))!;
         }
 
         JsonNode? dados;
@@ -420,6 +421,8 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             await cota.Contar(contexto.RequestAborted).ConfigureAwait(false);
         }
 
+        // A cota é contada antes da espera simulada, para não alargar a corrida (ADR-008).
+        await EtapaDeComportamento.Esperar(contexto, desfecho).ConfigureAwait(false);
         return resposta;
     }
 

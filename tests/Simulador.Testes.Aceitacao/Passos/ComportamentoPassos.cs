@@ -57,7 +57,7 @@ public sealed class ContextoDeComportamento : IDisposable
         _ => "banco-azul",
     };
 
-    public async Task Preparar(string nome, bool semErros = true)
+    public async Task Preparar(string nome, bool semErros = true, int contasExtras = 0, DateTimeOffset? expiraEm = null)
     {
         Banco = Endereco(nome);
         if (Banco == "banco-azul")
@@ -68,7 +68,16 @@ public sealed class ContextoDeComportamento : IDisposable
 
         if (semErros)
         {
-            await Configurar(new { comportamento = new { taxaDeErroPct = 0m, recursoIndisponivelPct = 0m } });
+            var semCauda = new { caudaLentaPct = 0m };
+            await Configurar(new
+            {
+                comportamento = new
+                {
+                    taxaDeErroPct = 0m,
+                    recursoIndisponivelPct = 0m,
+                    latenciaPorClasse = new Dictionary<string, object> { ["alta"] = semCauda, ["media-alta"] = semCauda, ["media"] = semCauda, ["baixa"] = semCauda },
+                },
+            });
         }
 
         var massa = new AdminDaMassa(Admin);
@@ -77,9 +86,19 @@ public sealed class ContextoDeComportamento : IDisposable
         var cliente = await massa.Enviar<MassaGerada>(HttpMethod.Post, "/clientes", new { tipo = "PF", bancos = new[] { Banco }, perfil = Perfil });
         Documento = cliente.Cliente.Documento;
         Conta = cliente.Recursos.First(r => r.Tipo == "ACCOUNT").ResourceId;
+        for (var i = 0; i < contasExtras; i++)
+        {
+            await AdicionarProduto("contas");
+        }
+
         using var resposta = await AtalhosDeConsentimento.Chamar(Api, HttpMethod.Post, AtalhosDeConsentimento.Caminho(Banco, "consents", "/consents"), await NovoToken("consents"), new
         {
-            data = new { loggedUser = new { document = new { identification = Documento, rel = "CPF" } }, permissions = Permissoes.Para("PF", null) },
+            data = new
+            {
+                loggedUser = new { document = new { identification = Documento, rel = "CPF" } },
+                permissions = Permissoes.Para("PF", null),
+                expirationDateTime = expiraEm?.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture),
+            },
         });
         Assert.True(resposta.StatusCode == HttpStatusCode.Created, await resposta.Content.ReadAsStringAsync());
         using var corpo = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync());
@@ -91,6 +110,15 @@ public sealed class ContextoDeComportamento : IDisposable
     }
 
     public async Task RenovarToken() => Token = await NovoToken($"consent:{ConsentId}");
+
+    /// <summary>Adiciona um produto ao cliente pela administração e devolve o recurso.</summary>
+    public async Task<string> AdicionarProduto(string produto)
+    {
+        using var resposta = await Admin.PostAsJsonAsync(new Uri($"/admin/clientes/{Documento}/produtos", UriKind.Relative), new { banco = Banco, produto });
+        Assert.True(resposta.IsSuccessStatusCode, await resposta.Content.ReadAsStringAsync());
+        using var corpo = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync());
+        return corpo.RootElement.GetProperty("resourceId").GetString()!;
+    }
 
     public async Task Configurar(object alteracao)
     {
@@ -146,6 +174,29 @@ public sealed class ContextoDeComportamento : IDisposable
         Corpo = await Resposta.Content.ReadAsStringAsync();
     }
 
+    /// <summary>Verdadeiro quando a última chamada só respondeu depois de liberada a espera.</summary>
+    public bool SegurouAteLiberar { get; private set; }
+
+    /// <summary>Segura a espera da etapa, confere que a resposta não saiu e só então libera.</summary>
+    public async Task ChamarSegurando(Uri caminho)
+    {
+        await RenovarToken();
+        Fabrica.Esperas.Segurar = true;
+        using var requisicao = Pedido(caminho);
+        var envio = Api.SendAsync(requisicao);
+        for (var i = 0; i < 500 && Fabrica.Esperas.Duracoes.IsEmpty && !envio.IsCompleted; i++)
+        {
+            await Task.Delay(10);
+        }
+
+        SegurouAteLiberar = !Fabrica.Esperas.Duracoes.IsEmpty && !envio.IsCompleted;
+        Fabrica.Esperas.Segurar = false;
+        Fabrica.Esperas.Liberar();
+        Resposta?.Dispose();
+        Resposta = await envio;
+        Corpo = await Resposta.Content.ReadAsStringAsync();
+    }
+
     public void Status(int esperado) => Assert.True((int)Resposta!.StatusCode == esperado, $"esperado {esperado}, veio {(int)Resposta.StatusCode}: {Corpo}");
 
     public void Dispose()
@@ -154,7 +205,7 @@ public sealed class ContextoDeComportamento : IDisposable
         Fabrica.Dispose();
     }
 
-    private async Task<string> NovoToken(string escopo)
+    public async Task<string> NovoToken(string escopo)
     {
         using var resposta = await AtalhosDeConsentimento.PedirToken(Api, Banco, Usuario, Senha, escopo);
         resposta.EnsureSuccessStatusCode();
@@ -170,6 +221,7 @@ public sealed partial class ComportamentoPassos(ContextoDeComportamento c)
 {
     private const int TotalDeChamadas = 10_000;
     private readonly List<int> _status = [];
+    private readonly List<double> _tempos = [];
     private string _fixadoEm = string.Empty;
     private bool _preparado;
     private string _falha = string.Empty;
@@ -205,18 +257,28 @@ public sealed partial class ComportamentoPassos(ContextoDeComportamento c)
     {
         await c.Preparar(banco, semErros: false);
         await c.Configurar(new { limites = new { capacidadeTps = 100_000_000, limiteOperacionalLigado = false, tpm = new { alta = 100_000_000 } } });
+        c.Fabrica.Esperas.Avancar = c.Fabrica.Relogio;
         for (var i = 0; i < TotalDeChamadas; i++)
         {
+            if (i % 100 == 0)
+            {
+                await c.RenovarToken();
+            }
+
+            var inicio = c.Fabrica.Relogio.GetUtcNow();
             await c.Chamar(c.Saldos, renovar: false);
+            _tempos.Add((c.Fabrica.Relogio.GetUtcNow() - inicio).TotalMilliseconds);
             _status.Add((int)c.Resposta!.StatusCode);
         }
+
+        c.Fabrica.Esperas.Avancar = null;
     }
 
     [Then(@"^o p95 deve ficar (abaixo|acima) de 1\.500 ms$")]
     public void P95(string lado)
     {
-        var ordenadas = c.Fabrica.Esperas.Duracoes.Select(d => d.TotalMilliseconds).Order().ToList();
-        Assert.True(ordenadas.Count > TotalDeChamadas * 0.95, $"esperas: {ordenadas.Count}");
+        var ordenadas = _tempos.Order().ToList();
+        Assert.Equal(TotalDeChamadas, ordenadas.Count);
         var p95 = ordenadas[(int)Math.Ceiling(0.95 * ordenadas.Count) - 1];
         Assert.True(lado == "abaixo" ? p95 < 1500 : p95 > 1500, $"p95 = {p95}");
     }
@@ -229,11 +291,15 @@ public sealed partial class ComportamentoPassos(ContextoDeComportamento c)
     {
         await c.Preparar(banco);
         await c.Configurar(new { comportamento = new { latenciaPorClasse = new { alta = new { caudaLentaPct = 100m } } } });
-        await c.Chamar(c.Saldos);
+        await c.ChamarSegurando(c.Saldos);
     }
 
     [Then(@"^a resposta só deve terminar depois de 15 segundos$")]
-    public void DepoisDe15() => Assert.Equal(TimeSpan.FromSeconds(15), c.Fabrica.Esperas.Duracoes.Last());
+    public void DepoisDe15()
+    {
+        Assert.True(c.SegurouAteLiberar, "a resposta saiu antes de terminar a espera");
+        Assert.Equal(TimeSpan.FromSeconds(15), c.Fabrica.Esperas.Duracoes.Last());
+    }
 
     [Then(@"^a resposta deve ter status (\d+)$")]
     public void StatusDaResposta(int status) => c.Status(status);

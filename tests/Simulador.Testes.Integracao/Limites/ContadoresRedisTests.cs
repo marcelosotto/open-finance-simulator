@@ -19,7 +19,7 @@ public sealed class ContadoresRedisTests : IAsyncLifetime
 
     public async ValueTask DisposeAsync() => await _redis.DisposeAsync();
 
-    private ContadoresRedis Novo() => new(_redis.GetConnectionString(), NullLogger<ContadoresRedis>.Instance, TimeProvider.System);
+    private ContadoresRedis Novo() => new(_redis.GetConnectionString(), NullLogger<ContadoresRedis>.Instance, TimeProvider.System, TimeSpan.FromSeconds(5));
 
     [Fact]
     public async Task Duas_instancias_somam_no_mesmo_total()

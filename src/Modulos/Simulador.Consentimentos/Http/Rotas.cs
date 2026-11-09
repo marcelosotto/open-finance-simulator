@@ -683,12 +683,12 @@ internal static class Rotas
     }
 
     /// <summary>Liga o recurso ao consentimento vigente, sem desfazer o que outra chamada gravou.</summary>
-    private static async Task<bool> Anexar(IAmbienteDosConsentimentos ambiente, string consentId, string resourceId, TimeProvider relogio, CancellationToken cancelamento)
+    private static async Task<bool> Anexar(IAmbienteDosConsentimentos ambiente, string consentId, string resourceId, CancellationToken cancelamento)
     {
         for (var tentativa = 0; tentativa < TentativasDeEscrita; tentativa++)
         {
             var atual = await ambiente.Consentimento(consentId, cancelamento).ConfigureAwait(false);
-            if (atual is null || Ciclo.Efetivo(atual, relogio.GetUtcNow()).Estado != Ciclo.Autorizado
+            if (atual is null || Ciclo.Efetivo(atual, await ambiente.AgoraNoBanco(atual.Banco, cancelamento).ConfigureAwait(false)).Estado != Ciclo.Autorizado
                 || await ambiente.Atualizar(atual with { Recursos = [.. atual.Recursos, resourceId] }, cancelamento).ConfigureAwait(false))
             {
                 return true;
@@ -698,7 +698,7 @@ internal static class Rotas
         return false;
     }
 
-    private static async Task<IResult> AdicionarProduto(string documento, PedidoDeProduto pedido, HttpContext contexto, IAmbienteDosConsentimentos ambiente, TimeProvider relogio)
+    private static async Task<IResult> AdicionarProduto(string documento, PedidoDeProduto pedido, HttpContext contexto, IAmbienteDosConsentimentos ambiente)
     {
         var cancelamento = contexto.RequestAborted;
         if (await ambiente.Cliente(documento, cancelamento).ConfigureAwait(false) is not { } cliente)
@@ -722,7 +722,7 @@ internal static class Rotas
         {
             foreach (var consentId in cliente.Consentimentos.Where(c => c.Banco == banco && Permissoes.Cobre(recurso.Tipo, c.Permissoes)).Select(c => c.ConsentId))
             {
-                if (!await Anexar(ambiente, consentId, recurso.ResourceId, relogio, cancelamento).ConfigureAwait(false))
+                if (!await Anexar(ambiente, consentId, recurso.ResourceId, cancelamento).ConfigureAwait(false))
                 {
                     return ErroAdmin(StatusCodes.Status409Conflict, "consentimento em alteração");
                 }

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Time.Testing;
 using Simulador.Cenarios.Contratos;
 using Simulador.Comum.Comportamento;
 
@@ -8,23 +9,47 @@ namespace Simulador.Testes.Host;
 /// <summary>Sem latência e sem sorteio: o padrão das suítes de outras specs.</summary>
 public sealed class ComportamentoNulo : IComportamentoDaChamada
 {
-    public Task<IResult?> Aplicar(HttpContext contexto) => Task.FromResult<IResult?>(null);
+    public Task<DesfechoDoComportamento?> Decidir(HttpContext contexto) => Task.FromResult<DesfechoDoComportamento?>(null);
 
     public Task<bool> RecursoIndisponivel(HttpContext contexto) => Task.FromResult(false);
 
-    public Task<string> EstadoDoRecurso(string resourceId, string estado, CancellationToken cancelamento) => Task.FromResult(estado);
+    public Task<string> EstadoDoRecurso(string resourceId, string estado, DateTimeOffset? instante, CancellationToken cancelamento) => Task.FromResult(estado);
 }
 
-/// <summary>Registra as esperas sem esperar de verdade.</summary>
+/// <summary>Registra as esperas; pode avançar o relógio falso, segurar a resposta e observar o momento da espera.</summary>
 public sealed class EsperasRegistradas : IEsperaDaChamada
 {
+    private TaskCompletionSource _liberacao = NovaLiberacao();
+
     public ConcurrentQueue<TimeSpan> Duracoes { get; } = new();
 
-    public Task Aguardar(TimeSpan duracao, CancellationToken cancelamento)
+    /// <summary>Avança este relógio pela duração de cada espera.</summary>
+    public FakeTimeProvider? Avancar { get; set; }
+
+    /// <summary>Segura cada espera até <see cref="Liberar"/>.</summary>
+    public bool Segurar { get; set; }
+
+    /// <summary>Chamado no início de cada espera.</summary>
+    public Action? AoEsperar { get; set; }
+
+    public async Task Aguardar(TimeSpan duracao, CancellationToken cancelamento)
     {
+        AoEsperar?.Invoke();
         Duracoes.Enqueue(duracao);
-        return Task.CompletedTask;
+        Avancar?.Advance(duracao);
+        if (Segurar)
+        {
+            await _liberacao.Task.WaitAsync(cancelamento).ConfigureAwait(false);
+        }
     }
+
+    public void Liberar()
+    {
+        _liberacao.TrySetResult();
+        _liberacao = NovaLiberacao();
+    }
+
+    private static TaskCompletionSource NovaLiberacao() => new(TaskCreationOptions.RunContinuationsAsynchronously);
 }
 
 /// <summary>Regras e pacotes em memória.</summary>
