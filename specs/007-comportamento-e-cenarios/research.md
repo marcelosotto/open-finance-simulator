@@ -39,6 +39,7 @@
 - **Rationale**: decisão de Marcelo na 3ª revisão, revendo a Q7 só nesse ponto. Com a hora do banco dos dois lados, o banco fixado ou retrocedido fazia o ajuste novo aparecer na página seguinte.
 - **Ajuste antigo, sem hora real**: usa a hora gravada. Antes da 007 ela era a hora real.
 - **Chave sem hora real**: é inválida e segue a RN36, como uma chave expirada. Chaves duram 60 minutos, e recusar evita comparar hora do banco com hora real.
+- **Versão da chave**: o corpo assinado começa por `v2`. Assim qualquer formato anterior é recusado pela estrutura, e não pelo acaso dos campos: uma chave de lista anterior com o conjunto em base64url só de dígitos seria lida como hora real perto de 1970.
 - **Estado do recurso**: não guarda mais estados anteriores. A lista de recursos congela pelo conjunto da emissão (RN37), e nada mais lia esse histórico.
 
 ## R09. Latência
