@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft (aguardando as respostas de [perguntas.md](perguntas.md))
+**Status**: Aprovada
 
 **Input**: User description: "Consentimento no painel: UC10 e UC11, com menu de criação e múltiplas alçadas. Usar docs/ e consentimento-no-painel.feature. Nome curto: consentimento-no-painel"
 
@@ -12,7 +12,20 @@
 
 ## Clarifications
 
-Pendente. As perguntas Q1 a Q9 estão em [perguntas.md](perguntas.md). Os requisitos abaixo seguem a opção A de cada uma e serão revistos com as respostas; cada (Qn) aponta a decisão.
+### Session 2026-11-10
+
+Marcelo aprovou a opção A de Q1 a Q9 ("siga as recomendações"), repassada pela sessão controladora. Decisões registradas em `docs/` (RN95, nova RN96, nova RN97, RN98, nova RN99, UC10, UC11, linha 010 de `sequencia-de-specs.md`, modelo de domínio e modelo de dados). Evidências em [perguntas.md](perguntas.md). Cada (Qn) nos requisitos aponta a decisão.
+
+- Q1: painel → API de administração; telas UI10, UI13 e UI14 na 010.
+- Q2: recurso pendente → estado no consentimento calculado na leitura (RN97).
+- Q3: alçada recusada ou vencida → consentimento segue `AUTHORISED`; só os recursos vão para `UNAVAILABLE`.
+- Q4: pedido → permissões soltas validadas como na API, `RESOURCES_READ` sempre; seleção ausente = todas, vazia = recusa (RN96).
+- Q5: prazo → meses de 1 a 12; sem prazo, indeterminado.
+- Q6: receptora → obrigatória, ligada ao consentimento.
+- Q7: alçadas → só PJ, 1 a 10, 15 dias, 409 fora de hora, decisões gravadas (RN99).
+- Q8: origem → "pelo menos uma" só quando há opção; cliente sem produto no banco é recusado (RN95).
+- Q9: erros → 422 da administração com códigos oficiais e próprios.
+- RNs da 008: RN96, RN97 e RN99. A 009 usa RN116 a RN119.
 
 ## User Scenarios & Testing *(mandatory)*
 

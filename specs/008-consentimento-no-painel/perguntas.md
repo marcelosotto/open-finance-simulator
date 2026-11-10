@@ -1,6 +1,6 @@
 # Spec 008: divergências e perguntas
 
-**Aguardando respostas.** Recomendação sempre na opção A.
+**Respondidas em 2026-11-10.** Aprovada a opção A de todas as perguntas. Decisões na seção Clarifications da [spec](spec.md). A 009 usa RN116 a RN119.
 
 Conferência de `docs/` e de `consentimento-no-painel.feature` contra os contratos `consents-3.3.1.yml` e `resources-3.1.0.yml` em `.specs/7bdb9c1a6c4c265d7aabcdbc662f94c61718135e/contracts/expansion/snapshots/`. Os números de linha são desses arquivos, de `docs/` e de `src/` no commit `087cc0f`.
 

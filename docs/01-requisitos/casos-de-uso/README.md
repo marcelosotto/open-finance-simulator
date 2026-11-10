@@ -211,8 +211,9 @@ Todos começam como **Rascunho**.
 - **Objetivo:** criar um consentimento por um menu, sem login no banco.
 - **Pré-condição:** cliente simulado com produto na instituição ([UC06](#uc06)).
 - **Fluxo principal:** 1. Escolhe o cliente. 2. Escolhe a instituição e a receptora. 3. Escolhe as permissões, as contas e os cartões, e o prazo. 4. Confirma, e o consentimento nasce `AUTHORISED`.
-- **Exceções:** combinação de permissões inválida ou nenhuma origem selecionada → a tela não deixa confirmar.
-- **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN49](../regras-de-negocio.md#rn49), [RN80](../regras-de-negocio.md#rn80), [RN83](../regras-de-negocio.md#rn83) a [RN85](../regras-de-negocio.md#rn85), [RN95](../regras-de-negocio.md#rn95).
+- **Exceções:** combinação de permissões inválida ou nenhuma origem selecionada → a tela não deixa confirmar, e a administração responde 422 ([RN96](../regras-de-negocio.md#rn96)).
+- **Observação:** a tela é da spec 010; a spec 008 entrega a API de administração que ela usa.
+- **Regras:** [RN08](../regras-de-negocio.md#rn08), [RN49](../regras-de-negocio.md#rn49), [RN80](../regras-de-negocio.md#rn80), [RN83](../regras-de-negocio.md#rn83) a [RN85](../regras-de-negocio.md#rn85), [RN95](../regras-de-negocio.md#rn95), [RN96](../regras-de-negocio.md#rn96).
 
 ### <a id="uc11"></a>UC11 — Múltiplas alçadas (PJ)
 - **Status:** Aprovado
@@ -220,7 +221,7 @@ Todos começam como **Rascunho**.
 - **Fluxo principal:** 1. Ao criar o consentimento da Indústria Aurora, marca "exige múltiplas alçadas" e informa quantas aprovações faltam. 2. O consentimento fica `AUTHORISED`, e os recursos, `PENDING_AUTHORISATION`. 3. Aprova no painel quantas vezes for preciso. 4. Os recursos vão para `AVAILABLE`.
 - **Fluxo alternativo — recusa:** recusa no painel, e os recursos vão para `UNAVAILABLE`.
 - **Fluxo alternativo — prazo:** sem aprovação em até 15 dias, os recursos vão para `UNAVAILABLE`.
-- **Regras:** [RN98](../regras-de-negocio.md#rn98), [RN107](../regras-de-negocio.md#rn107).
+- **Regras:** [RN97](../regras-de-negocio.md#rn97) a [RN99](../regras-de-negocio.md#rn99), [RN107](../regras-de-negocio.md#rn107).
 
 ### <a id="uc12"></a>UC12 — Consultar e revogar consentimento
 - **Status:** Aprovado
