@@ -7,6 +7,10 @@
   "engines": {
     "node": ">=22"
   },
+  "jestSonar": {
+    "reportPath": "relatorios",
+    "reportFile": "sonar.xml"
+  },
   "scripts": {
     "dev": "webpack serve --config webpack/webpack.dev.ts",
     "build": "webpack --config webpack/webpack.prod.ts",
