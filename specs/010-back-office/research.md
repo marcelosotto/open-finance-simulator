@@ -36,3 +36,12 @@
 
 ## R10. Playwright (Q10)
 - **Decision**: `front/e2e/` com `@playwright/test`, base `SIM_BACKOFFICE_URL` (padrão `http://localhost:8081`). Cada teste cria seus dados pela administração (receptora, cliente PF e PJ) com nomes únicos, para não depender de ordem. Cenários: os 9 de `consentimento-no-painel.feature` e "Ambiente visível nas telas". "Fim do prazo da alçada" usa o relógio do banco fixado 16 dias à frente (UC28), num banco criado pelo teste.
+
+## R11. Injeção sem decorators de parâmetro
+- **Decision**: o container do tsyringe recebe cada caso de uso pronto (`registerInstance`), montado em `main/registros.ts` com o repositório HTTP da área. As classes não usam `@inject`. O Babel continua com `@babel/plugin-proposal-decorators` e o `reflect-metadata` é importado uma vez, como pede o guia.
+- **Rationale**: o Babel não transpila decorator de parâmetro (`@inject` no construtor) sem um plugin fora da stack (`babel-plugin-transform-typescript-metadata`), e biblioteca nova exige ADR. Montar por fábrica dá o mesmo desacoplamento, e a `presentation` continua recebendo tudo pelo container (`useCaso`).
+- **Alternatives**: acrescentar o plugin com uma ADR; usar `ts-loader` (o guia escolhe `babel-loader`).
+
+## R12. Ferramentas que não existem na versão pedida
+- `ts-jest` não tem versão 30; a 29.4 é a que suporta o Jest 30. O guia foi corrigido.
+- O msw 2 depende de pacotes publicados só em ESM: o Jest transforma os `.mjs` de `node_modules` com o `babel-jest` do próprio Jest. O jsdom recebe do Node `fetch`, `Request`, `Response` e streams, e o `MessageChannel` é removido para o scheduler do React não segurar o Jest aberto.
