@@ -237,24 +237,26 @@ internal static class JanelaDeDatas
     }
 }
 
-/// <summary>O que uma chave válida leva: o instante de emissão e, nas listas de recursos, o conjunto da emissão.</summary>
-internal sealed record LeituraDaChave(DateTimeOffset Emissao, string? Recursos);
+/// <summary>
+/// O que uma chave válida leva: o instante de emissão no banco, o instante real da emissão e,
+/// nas listas de recursos, o conjunto da emissão.
+/// </summary>
+internal sealed record LeituraDaChave(DateTimeOffset Emissao, DateTimeOffset EmissaoReal, string? Recursos);
 
-/// <summary>Chave de paginação assinada: instante, consulta e, nas listas de recursos, o conjunto da emissão, sem gravar nada (RN35 a RN37).</summary>
+/// <summary>
+/// Chave de paginação assinada: instante do banco, instante real, consulta e, nas listas de recursos,
+/// o conjunto da emissão, sem gravar nada (RN35 a RN37). Chave sem o instante real é inválida (RN36).
+/// </summary>
 internal static class ChaveDePaginacao
 {
     private const char Separador = '.';
 
-    public static string Emitir(DateTimeOffset instante, string consulta, byte[] segredo, string? recursos = null)
+    public static string Emitir(DateTimeOffset instante, DateTimeOffset real, string consulta, byte[] segredo, string? recursos = null)
     {
-        var corpo = instante.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
+        var corpo = string.Create(CultureInfo.InvariantCulture, $"{instante.ToUnixTimeMilliseconds()}{Separador}{real.ToUnixTimeMilliseconds()}");
         corpo = recursos is null ? corpo : $"{corpo}{Separador}{recursos}";
         return $"{corpo}{Separador}{Assinar(corpo, consulta, segredo)}";
     }
-
-    /// <summary>O instante de emissão, ou nulo se a chave for inválida ou expirada.</summary>
-    public static DateTimeOffset? Ler(string? texto, string consulta, byte[] segredo, DateTimeOffset agora, int validadeMin) =>
-        Abrir(texto, consulta, segredo, agora, validadeMin)?.Emissao;
 
     /// <summary>O que a chave leva, ou nulo se ela for inválida ou expirada.</summary>
     public static LeituraDaChave? Abrir(string? texto, string consulta, byte[] segredo, DateTimeOffset agora, int validadeMin)
@@ -263,16 +265,19 @@ internal static class ChaveDePaginacao
         var fim = chave.LastIndexOf(Separador);
         var corpo = fim < 0 ? string.Empty : chave[..fim];
         var partes = corpo.Split(Separador);
-        if (fim < 0 || partes.Length > 2 || !long.TryParse(partes[0], NumberStyles.None, CultureInfo.InvariantCulture, out var milissegundos)
-            || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(chave[(fim + 1)..]), Encoding.UTF8.GetBytes(Assinar(corpo, consulta, segredo)))
-            || milissegundos > DateTimeOffset.MaxValue.ToUnixTimeMilliseconds())
+        if (fim < 0 || partes.Length is < 2 or > 3 || Instante(partes[0]) is not { } emissao || Instante(partes[1]) is not { } real
+            || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(chave[(fim + 1)..]), Encoding.UTF8.GetBytes(Assinar(corpo, consulta, segredo))))
         {
             return null;
         }
 
-        var emissao = DateTimeOffset.FromUnixTimeMilliseconds(milissegundos);
-        return agora <= emissao.AddMinutes(validadeMin) ? new LeituraDaChave(emissao, partes.Length == 2 ? partes[1] : null) : null;
+        return agora <= emissao.AddMinutes(validadeMin) ? new LeituraDaChave(emissao, real, partes.Length == 3 ? partes[2] : null) : null;
     }
+
+    private static DateTimeOffset? Instante(string texto) =>
+        long.TryParse(texto, NumberStyles.None, CultureInfo.InvariantCulture, out var milissegundos) && milissegundos <= DateTimeOffset.MaxValue.ToUnixTimeMilliseconds()
+            ? DateTimeOffset.FromUnixTimeMilliseconds(milissegundos)
+            : null;
 
     private static string Assinar(string corpo, string consulta, byte[] segredo) =>
         Base64Url.EncodeToString(HMACSHA256.HashData(segredo, Encoding.UTF8.GetBytes($"{corpo}|{consulta}")));

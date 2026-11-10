@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Time.Testing;
+using Simulador.Comum.Comportamento;
 using Simulador.Dados.Aplicacao;
 using Simulador.Dados.Contratos;
 
@@ -22,7 +23,7 @@ public class FiltroSemGerarTests
     [Fact]
     public async Task Item_fora_do_filtro_nao_e_gerado()
     {
-        var servico = new ServicoDeDados(new Ambiente(), new FakeTimeProvider(Agora), new SegredoDaChave([1, 2, 3]));
+        var servico = new ServicoDeDados(new Ambiente(), new FakeTimeProvider(Agora), new HoraReal(new FakeTimeProvider(Agora)), new SegredoDaChave([1, 2, 3]));
         var contexto = new DefaultHttpContext();
         contexto.Request.Path = "/banco/accounts/v2/accounts/r1/transactions";
         contexto.Request.QueryString = new QueryString("?creditDebitIndicator=NENHUM");
@@ -45,7 +46,7 @@ public class FiltroSemGerarTests
 
         public Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) => Task.FromResult<ClienteDeDados?>(null);
 
-        public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento) =>
+        public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset corte, CancellationToken cancelamento) =>
             Task.FromResult<IReadOnlyList<TransacaoDeDados>>([new("t1", de, 1, 10m, true, "PIX", "n", "TRANSACAO_EFETIVADA")]);
 
         public Task<decimal> Saldo(string resourceId, CancellationToken cancelamento) => Task.FromResult(0m);

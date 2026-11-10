@@ -135,21 +135,32 @@ public class DominioDosDadosTests
     [Fact]
     public void Chave_valida_devolve_a_emissao()
     {
-        var chave = ChaveDePaginacao.Emitir(Agora, "c", Segredo);
-        Assert.Equal(Agora, ChaveDePaginacao.Ler(chave, "c", Segredo, Agora.AddMinutes(60), 60));
+        var real = Agora.AddHours(3);
+        var chave = ChaveDePaginacao.Emitir(Agora, real, "c", Segredo);
+        Assert.Equal(new LeituraDaChave(Agora, real, null), ChaveDePaginacao.Abrir(chave, "c", Segredo, Agora.AddMinutes(60), 60));
     }
 
     [Fact]
     public void Chave_recusada()
     {
-        var chave = ChaveDePaginacao.Emitir(Agora, "c", Segredo);
-        Assert.Null(ChaveDePaginacao.Ler(chave, "c", Segredo, Agora.AddMinutes(61), 60));
-        Assert.Null(ChaveDePaginacao.Ler(chave, "outra", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Ler(null, "c", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Ler("x.y", "c", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Ler("1.y", "c", Segredo, Agora, 60));
-        var imensa = ChaveDePaginacao.Emitir(Agora, "c", Segredo).Split('.')[1];
-        Assert.Null(ChaveDePaginacao.Ler($"9999999999999999.{imensa}", "c", Segredo, Agora, 60));
+        var chave = ChaveDePaginacao.Emitir(Agora, Agora, "c", Segredo);
+        Assert.Null(ChaveDePaginacao.Abrir(chave, "c", Segredo, Agora.AddMinutes(61), 60));
+        Assert.Null(ChaveDePaginacao.Abrir(chave, "outra", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir(null, "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir("x.1.y", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir("1.x.y", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir("1.1.y", "c", Segredo, Agora, 60));
+        var partes = chave.Split('.');
+        Assert.Null(ChaveDePaginacao.Abrir($"9999999999999999.{partes[1]}.{partes[2]}", "c", Segredo, Agora, 60));
+    }
+
+    /// <summary>Chave no formato anterior, sem o instante real, é inválida (RN36, RN37).</summary>
+    [Fact]
+    public void Chave_sem_hora_real_e_recusada()
+    {
+        var corpo = Agora.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var assinatura = System.Buffers.Text.Base64Url.EncodeToString(System.Security.Cryptography.HMACSHA256.HashData(Segredo, System.Text.Encoding.UTF8.GetBytes($"{corpo}|c")));
+        Assert.Null(ChaveDePaginacao.Abrir($"{corpo}.{assinatura}", "c", Segredo, Agora, 60));
     }
 
     [Fact]

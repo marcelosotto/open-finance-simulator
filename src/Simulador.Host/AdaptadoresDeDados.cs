@@ -38,8 +38,8 @@ internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, ICons
             ? new ClienteDeDados(m.Cliente.Documento, m.Cliente.Nome, m.Cliente.Natureza)
             : null;
 
-    public async Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento) =>
-        [.. (await consulta.TransacoesEm(resourceId, de, ate, instante, cancelamento).ConfigureAwait(false) ?? [])
+    public async Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset corte, CancellationToken cancelamento) =>
+        [.. (await consulta.TransacoesEm(resourceId, de, ate, instante, corte, cancelamento).ConfigureAwait(false) ?? [])
             .Select(t => new TransacaoDeDados(t.Id, t.Dia, t.Posicao, t.Valor, t.Direcao == "CREDITO", t.Tipo, t.Nome, t.Estado))];
 
     public async Task<decimal> Saldo(string resourceId, CancellationToken cancelamento) =>
