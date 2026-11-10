@@ -110,14 +110,15 @@ export class CriarInstituicao {
 - Relatórios: `jest-html-reporter` e `jest-sonar-reporter`.
 
 ## Qualidade e commits
-- **Husky** roda `lint-staged` no pre-commit (ESLint e Prettier nos arquivos alterados de `front/`) e `commitlint` no commit-msg.
+- **Husky** roda `lint-staged` no pre-commit (ESLint e Prettier nos arquivos alterados de `front/`) e `commitlint` no commit-msg. Os ganchos não são ativados sozinhos pelo `npm install`, porque `core.hooksPath` vale para todas as worktrees e para os commits só de .NET: quem quiser roda `npm run ganchos` uma vez em `front/`.
 - **Commits** que alteram `front/` seguem Conventional Commits, por exemplo: `feat(front): cria tela de bancos`. Commits só de documentação ou de back-end não passam pelo commitlint.
-- O CI roda lint, checagem de tipos, testes com threshold de cobertura e build de produção.
+- O CI roda, no job `front`, lint, checagem de tipos, testes com threshold de cobertura e build de produção; o job `painel` roda o Playwright contra o simulador do Compose. Sem Node na máquina, os mesmos comandos rodam pela imagem `node:22` no Docker.
 
 ## Variáveis de ambiente
 Lidas pelo `dotenv-webpack` e validadas com zod ao subir:
 
 | Variável | Uso |
 |---|---|
-| `SIM_ADMIN_API_URL` | Endereço da API de administração |
-| `SIM_AMBIENTE` | `dev` ou `hml`, para a faixa de ambiente |
+| `SIM_ADMIN_API_URL` | Endereço da API de administração. Vazio por padrão: o front é servido pelo próprio simulador na porta de administração e chama `/admin/...` na mesma origem. |
+
+A marca do ambiente **não** é variável do front: a tela lê `GET /admin/ambiente`, que devolve a mesma `Simulador:MarcaDoAmbiente` do simulador (RN66, RN72). Valor livre; vazio, a tela não mostra marca. A cor vem de uma lista fixa para `dev`, `hml` e `stage`, com uma cor neutra para qualquer outro valor ([UI01](../01-requisitos/interface.md#ui01)).

@@ -1,6 +1,8 @@
 # Spec 010: divergências e perguntas
 
-**Aguardando respostas.** Conferi `docs/` (em especial [interface.md](../../docs/01-requisitos/interface.md), o [guia de front-end](../../docs/08-front-end/README.md) e a [ADR-010](../../docs/05-adr/ADR-010-front-end-react.md)) contra os contratos de administração das specs 002 a 009 e contra `src/` no commit `0292043`.
+**Respondidas em 2026-11-10.** Marcelo aprovou a opção A de Q1 a Q10 ("Siga as recomendações"), repassada pela sessão controladora. Decisões na seção Clarifications da [spec](spec.md).
+
+Conferi `docs/` (em especial [interface.md](../../docs/01-requisitos/interface.md), o [guia de front-end](../../docs/08-front-end/README.md) e a [ADR-010](../../docs/05-adr/ADR-010-front-end-react.md)) contra os contratos de administração das specs 002 a 009 e contra `src/` no commit `0292043`.
 
 ## Divergências e lacunas
 

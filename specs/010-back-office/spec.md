@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-10
 
-**Status**: Draft (aguardando respostas de [perguntas.md](perguntas.md))
+**Status**: Aprovada
 
 **Input**: User description: "Back-office: telas de bancos, massa e cenários. Usar docs/, interface.md e docs/08-front-end/README.md. Nome curto: back-office"
 
@@ -12,7 +12,20 @@
 
 ## Clarifications
 
-Pendentes. As dúvidas, com opções e recomendação, estão em [perguntas.md](perguntas.md). Os pontos marcados com **(Qn)** abaixo dependem da resposta.
+### Session 2026-11-10
+
+Marcelo aprovou a opção A de Q1 a Q10 ("Siga as recomendações"), repassada pela sessão controladora. Evidências em [perguntas.md](perguntas.md). Registradas em `docs/`: UI01 e UI06 em `interface.md`, variáveis de ambiente, Husky e CI no guia de front-end. Os marcadores **(Qn)** abaixo apontam para a decisão.
+
+- Q1: bancos, consentimento e receptoras (P1); massa e cenários (P2). Ficam fora: mundo virtual, ajustes, transações de recurso, estado de recurso, produto de cliente e histórico da massa.
+- Q2: marca lida de `GET /admin/ambiente` (rota nova); sem `SIM_AMBIENTE`; cor fixa para `dev`, `hml`, `stage` e neutra para o resto.
+- Q3: o simulador serve o build do front na porta de administração, na mesma origem; sem CORS e sem contêiner novo.
+- Q4: job `front` no CI; aqui, pela imagem `node:22`; Husky configurado, mas sem ativar `core.hooksPath`.
+- Q5: cria com nome e perfil e abre a edição preenchida pelo servidor.
+- Q6: grupos abríveis, permissões marcadas e desmarcáveis; `RESOURCES_READ` fixa.
+- Q7: busca por `consentId`, logo depois de criar e pela tela do cliente; sem rota nova.
+- Q8: campo "Seu nome" no topo, guardado no navegador, enviado em `x-sim-autor`.
+- Q9: rota nova `GET /admin/cenarios/regras/vencedora`, com `SelecaoDeRegras`; frequência não entra.
+- Q10: Playwright em `front/e2e/` contra o Compose, com job próprio no CI.
 
 ## User Scenarios & Testing *(mandatory)*
 
