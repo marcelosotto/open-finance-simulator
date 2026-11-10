@@ -64,10 +64,10 @@ export const EdicaoDoBanco = () => {
   const obter = useCaso(TOKENS_DAS_INSTITUICOES.Obter);
   const consulta = useConsulta(CHAVES.detalhe(endereco), () => obter.executar(endereco));
   return (
-    <Resultado consulta={consulta}>
+    <Resultado consulta={consulta} seInexistente={t('instituicoes.inexistente', { endereco })}>
       {(banco) => (
         <>
-          <Titulo acoes={<Acoes banco={banco} />}>
+          <Titulo ajuda="banco" acoes={<Acoes banco={banco} />}>
             {banco.nome}{' '}
             <span className="text-sm font-normal text-slate-500">({t(`instituicoes.situacao.${banco.situacao}`)})</span>
           </Titulo>

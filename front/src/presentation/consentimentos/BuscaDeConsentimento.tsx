@@ -12,7 +12,7 @@ export const BuscaDeConsentimento = () => {
   const [id, setId] = useState('');
   return (
     <>
-      <Titulo>{t('consentimentos.busca.titulo')}</Titulo>
+      <Titulo ajuda="consentimentos">{t('consentimentos.busca.titulo')}</Titulo>
       <Secao titulo={t('consentimentos.busca.titulo')}>
         <form
           className="flex max-w-xl items-end gap-2"

@@ -83,6 +83,10 @@ const repositorioFalso = () => ({
   criarCliente: jest.fn().mockResolvedValue(left(recusa)),
   obterCliente: jest.fn().mockResolvedValue(right(massa)),
   limpar: jest.fn().mockResolvedValue(right(limpeza)),
+  clientesDoBanco: jest
+    .fn()
+    .mockResolvedValue(right({ clientes: [massa.cliente], inicio: 0, quantidade: 10, temMais: false })),
+  resumo: jest.fn().mockResolvedValue(right({ clientes: 1, consentimentos: 0, recursos: 2, lotes: 0 })),
 });
 
 const montar = () => {

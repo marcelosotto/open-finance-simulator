@@ -1,6 +1,8 @@
 export const textosDasInstituicoes = {
   titulo: 'Bancos',
   novo: 'Novo banco',
+  inexistente:
+    'Não há banco com o endereço {{endereco}}. Ele pode ter sido apagado. Volte à lista de bancos ou crie um em Novo banco.',
   colunas: { nome: 'Nome', endereco: 'Endereço', perfil: 'Perfil', situacao: 'Situação', avisos: 'Avisos' },
   situacao: { ativa: 'Ativa', inativa: 'Inativa' },
   avisoDeAnomalia: 'Anomalias ligadas: {{nomes}}',

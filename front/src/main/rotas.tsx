@@ -1,6 +1,7 @@
-import { Navigate, type RouteObject } from 'react-router-dom';
+import type { RouteObject } from 'react-router-dom';
 import { Layout } from '@/presentation/layout/Layout';
 import { NaoEncontrada } from '@/presentation/layout/NaoEncontrada';
+import { PrimeirosPassos } from '@/presentation/inicio/PrimeirosPassos';
 import { rotasDasInstituicoes } from '@/presentation/instituicoes/rotas';
 import { rotasDosConsentimentos } from '@/presentation/consentimentos/rotas';
 import { rotasDaMassa } from '@/presentation/massa/rotas';
@@ -11,7 +12,8 @@ export const rotas: RouteObject[] = [
     path: '/',
     element: <Layout />,
     children: [
-      { index: true, element: <Navigate to="/bancos" replace /> },
+      { index: true, element: <PrimeirosPassos /> },
+      { path: 'primeiros-passos', element: <PrimeirosPassos /> },
       ...rotasDasInstituicoes,
       ...rotasDosConsentimentos,
       ...rotasDaMassa,

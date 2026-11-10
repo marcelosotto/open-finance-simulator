@@ -2,9 +2,16 @@ import { screen, within } from '@testing-library/react';
 import { abrir } from '../../apoio/renderizar';
 import { capturar, comAmbiente, responder } from '../../apoio/api';
 import { massaDaMariana, perfisProntos } from '../../infrastructure/massa/dados';
+import { resumo } from '../../apoio/dados';
 
 describe('Clientes da massa (US3, cenário 3)', () => {
-  beforeEach(() => comAmbiente());
+  beforeEach(() => {
+    comAmbiente();
+    responder('get', '/admin/instituicoes', [
+      resumo('banco-estavel', 'Banco Estável'),
+      resumo('banco-lento', 'Banco Lento'),
+    ]);
+  });
 
   it('mostra recursos e consentimentos, com link para a visão do consentimento', async () => {
     responder('get', '/admin/massa/clientes/12345678909', massaDaMariana);
@@ -37,18 +44,28 @@ describe('Clientes da massa (US3, cenário 3)', () => {
     expect(screen.getByText('Nenhum recurso.')).toBeInTheDocument();
   });
 
-  it('mostra o 404 da API', async () => {
+  it('404 diz o que faltou e como resolver (UI19)', async () => {
     responder('get', '/admin/massa/clientes/0', { erros: ['cliente não encontrado'] }, 404);
     abrir('/massa/clientes/0');
-    expect(await screen.findByRole('alert')).toHaveTextContent('cliente não encontrado');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Não há cliente com o documento 0 na massa. Escolha o cliente na lista',
+    );
   });
 
-  it('busca por documento', async () => {
+  it('abre o cliente escolhido na lista do banco (UI19)', async () => {
     responder('get', '/admin/massa/perfis', perfisProntos);
+    const listas = capturar('get', '/admin/massa/clientes', {
+      clientes: [massaDaMariana.cliente],
+      inicio: 0,
+      quantidade: 1000,
+      temMais: false,
+    });
     responder('get', '/admin/massa/clientes/12345678909', massaDaMariana);
     const { usuario } = abrir('/massa/clientes');
 
-    await usuario.type(await screen.findByRole('textbox', { name: 'Documento (CPF ou CNPJ)' }), '12345678909');
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Cliente' }), '12345678909');
+    expect(listas.at(-1)?.url.searchParams.get('banco')).toBe('banco-estavel');
     await usuario.click(screen.getByRole('button', { name: 'Abrir cliente' }));
 
     expect(await screen.findByRole('heading', { name: 'Cliente 12345678909' })).toBeInTheDocument();
@@ -61,7 +78,7 @@ describe('Clientes da massa (US3, cenário 3)', () => {
     const { usuario } = abrir('/massa/clientes');
 
     await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Perfil de dados' }), 'sem-movimento');
-    await usuario.type(screen.getByRole('textbox', { name: /^Bancos/ }), 'banco-estavel, banco-lento');
+    await usuario.selectOptions(screen.getByRole('listbox', { name: /^Bancos/ }), ['banco-estavel', 'banco-lento']);
     await usuario.type(screen.getByRole('textbox', { name: 'Nome (opcional)' }), 'Mariana Alves');
     await usuario.click(screen.getByRole('button', { name: 'Criar' }));
 
@@ -76,12 +93,12 @@ describe('Clientes da massa (US3, cenário 3)', () => {
 
   it('mostra a recusa da API ao criar', async () => {
     responder('get', '/admin/massa/perfis', perfisProntos);
-    responder('post', '/admin/massa/clientes', { erros: ['banco desconhecido: banco-x'] }, 422);
+    responder('post', '/admin/massa/clientes', { erros: ['perfil desconhecido: x'] }, 422);
     const { usuario } = abrir('/massa/clientes');
 
-    await usuario.type(await screen.findByRole('textbox', { name: /^Bancos/ }), 'banco-x');
+    await usuario.selectOptions(await screen.findByRole('listbox', { name: /^Bancos/ }), 'banco-estavel');
     await usuario.click(screen.getByRole('button', { name: 'Criar' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('banco desconhecido: banco-x');
+    expect(await screen.findByRole('alert')).toHaveTextContent('perfil desconhecido: x');
   });
 });

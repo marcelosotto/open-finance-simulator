@@ -223,6 +223,26 @@ export const CONTAGENS_DA_LIMPEZA = [
   'instituicoes',
 ] as const;
 
+/** Uma página de clientes persistidos de um banco (UI19). */
+export interface PaginaDeClientes {
+  readonly clientes: readonly ClienteDaMassa[];
+  readonly inicio: number;
+  readonly quantidade: number;
+  readonly temMais: boolean;
+}
+
+/** O que já existe na massa persistida, para Primeiros passos (UI18). */
+export interface ResumoDaMassa {
+  readonly clientes: number;
+  readonly consentimentos: number;
+  readonly recursos: number;
+  readonly lotes: number;
+}
+
+/** Rótulo do cliente nas listas de escolha: nome, documento e PF ou PJ (UI19). */
+export const rotuloDoCliente = (cliente: Pick<ClienteDaMassa, 'nome' | 'documento' | 'tipo'>): string =>
+  `${cliente.nome} — ${cliente.documento} (${cliente.tipo})`;
+
 export interface RepositorioDaMassa {
   perfis(): Promise<Either<Falha, readonly PerfilDeDados[]>>;
   salvarPerfil(perfil: PerfilDeDados): Promise<Either<Falha, PerfilDeDados>>;
@@ -237,5 +257,8 @@ export interface RepositorioDaMassa {
   clientesDoLote(id: string, pagina: Pagina): Promise<Either<Falha, readonly ClienteDaMassa[]>>;
   criarCliente(pedido: PedidoDeCliente): Promise<Either<Falha, MassaDoCliente>>;
   obterCliente(documento: string): Promise<Either<Falha, MassaDoCliente>>;
+  /** Sem banco, todos os persistidos. */
+  clientesDoBanco(banco: string | null, pagina: Pagina): Promise<Either<Falha, PaginaDeClientes>>;
+  resumo(): Promise<Either<Falha, ResumoDaMassa>>;
   limpar(pedido: PedidoDeLimpeza, confirmar: boolean): Promise<Either<Falha, ResultadoDaLimpeza>>;
 }

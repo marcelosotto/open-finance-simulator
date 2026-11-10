@@ -30,7 +30,7 @@ export const NovoBanco = () => {
 
   return (
     <>
-      <Titulo>{t('instituicoes.criar.titulo')}</Titulo>
+      <Titulo ajuda="novoBanco">{t('instituicoes.criar.titulo')}</Titulo>
       <Secao titulo={t('instituicoes.criar.titulo')}>
         <p className="mb-3 text-sm text-slate-600">{t('instituicoes.criar.explicacao')}</p>
         <Resultado consulta={consulta}>

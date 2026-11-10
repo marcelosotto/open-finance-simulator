@@ -157,6 +157,7 @@ export const Lote = () => {
   return (
     <>
       <Titulo
+        ajuda="lote"
         acoes={
           <Link className={classeDoLink} to="/massa/lotes">
             {t('massa.lote.voltar')}
@@ -165,7 +166,7 @@ export const Lote = () => {
       >
         {t('massa.lote.titulo', { id })}
       </Titulo>
-      <Resultado consulta={consulta}>
+      <Resultado consulta={consulta} seInexistente={t('massa.lote.inexistente', { id })}>
         {(lote) => (
           <>
             <Andamento lote={lote} />

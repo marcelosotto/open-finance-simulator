@@ -90,6 +90,8 @@ export const textosDaMassa = {
     progresso: '{{processados}} de {{quantidade}}',
   },
   lote: {
+    inexistente:
+      'Não há lote {{id}}. Ele pode ter sido apagado na limpeza. Veja os lotes em Massa → Lotes ou gere um novo.',
     titulo: 'Lote {{id}}',
     andamento: 'Andamento',
     progresso: 'Progresso do lote',
@@ -114,16 +116,20 @@ export const textosDaMassa = {
   clientes: {
     titulo: 'Clientes',
     buscar: 'Buscar cliente',
-    documento: 'Documento (CPF ou CNPJ)',
+    banco: 'Banco',
+    todosOsBancos: 'Todos os bancos',
+    cliente: 'Cliente',
     abrir: 'Abrir cliente',
     criar: 'Criar cliente avulso',
     tipo: 'Tipo de pessoa',
     perfil: 'Perfil de dados',
-    bancos: 'Bancos (endereços separados por vírgula)',
+    bancos: 'Bancos onde o cliente tem produtos (Ctrl para escolher mais de um)',
     nome: 'Nome (opcional)',
     semente: 'Semente (opcional)',
   },
   cliente: {
+    inexistente:
+      'Não há cliente com o documento {{documento}} na massa. Escolha o cliente na lista em Massa → Clientes, ou gere clientes em Massa → Lotes.',
     titulo: 'Cliente {{documento}}',
     dados: 'Dados do cliente',
     documento: 'Documento',

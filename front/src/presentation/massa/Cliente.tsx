@@ -122,8 +122,8 @@ export const Cliente = () => {
   const consulta = useConsulta(CHAVES.cliente(documento), () => obter.executar(documento));
   return (
     <>
-      <Titulo>{t('massa.cliente.titulo', { documento })}</Titulo>
-      <Resultado consulta={consulta}>
+      <Titulo ajuda="cliente">{t('massa.cliente.titulo', { documento })}</Titulo>
+      <Resultado consulta={consulta} seInexistente={t('massa.cliente.inexistente', { documento })}>
         {(massa) => (
           <>
             <Dados massa={massa} />

@@ -16,6 +16,7 @@ export const ListaDeBancos = () => {
   return (
     <>
       <Titulo
+        ajuda="bancos"
         acoes={
           <Link className="rounded bg-teal-700 px-3 py-1.5 text-sm font-medium text-white" to="/bancos/novo">
             {t('instituicoes.novo')}

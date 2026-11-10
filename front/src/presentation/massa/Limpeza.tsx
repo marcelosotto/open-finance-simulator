@@ -70,7 +70,7 @@ export const Limpeza = () => {
 
   return (
     <>
-      <Titulo>{t('massa.limpeza.titulo')}</Titulo>
+      <Titulo ajuda="limpeza">{t('massa.limpeza.titulo')}</Titulo>
       <Secao titulo={t('massa.limpeza.titulo')}>
         <p className="mb-3 text-sm text-slate-600">{t('massa.limpeza.explicacao')}</p>
         <form

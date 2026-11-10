@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import type { Falha } from '@/core/comum/falha';
@@ -30,11 +31,24 @@ export const ListaDeErros = ({ falha }: { readonly falha: Falha | null }) => {
   );
 };
 
-export const ErroComNovaTentativa = ({ falha, aoTentar }: { readonly falha: Falha; readonly aoTentar: () => void }) => {
+interface PropsDoErro {
+  readonly falha: Falha;
+  readonly aoTentar: () => void;
+  /** Texto da tela dizendo o que faltou e como resolver (UI19). */
+  readonly explicacao?: ReactNode;
+}
+
+export const ErroComNovaTentativa = ({ falha, aoTentar, explicacao }: PropsDoErro) => {
   const { t } = useTranslation();
   return (
     <div className="space-y-2">
-      <ListaDeErros falha={falha} />
+      {explicacao === undefined ? (
+        <ListaDeErros falha={falha} />
+      ) : (
+        <div role="alert" className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+          {explicacao}
+        </div>
+      )}
       <Botao variante="secundario" onClick={aoTentar}>
         {t('comum.tentarDeNovo')}
       </Botao>

@@ -91,10 +91,13 @@ export const Consentimento = () => {
   const obter = useCaso(TOKENS_DOS_CONSENTIMENTOS.Obter);
   const consulta = useConsulta(CHAVES.visao(consentId), () => obter.executar(consentId));
   return (
-    <Resultado consulta={consulta}>
+    <Resultado consulta={consulta} seInexistente={t('consentimentos.visao.inexistente', { id: consentId })}>
       {(visao) => (
         <>
-          <Titulo acoes={podeRevogar(visao) ? <Revogacao consentId={visao.consentId} /> : undefined}>
+          <Titulo
+            ajuda="consentimento"
+            acoes={podeRevogar(visao) ? <Revogacao consentId={visao.consentId} /> : undefined}
+          >
             {t('consentimentos.visao.titulo', { id: visao.consentId })}
           </Titulo>
           <Secao titulo={t('consentimentos.visao.estado')}>

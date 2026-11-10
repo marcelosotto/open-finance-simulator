@@ -4,7 +4,7 @@ import { castDraft } from 'immer';
 import { rascunhoVazio, type Rascunho } from '@/core/consentimentos/consentimento';
 
 // Passo e rascunho do menu (estado da tela, Zustand com Immer). As opções ficam no TanStack Query.
-export const PASSOS = ['cliente', 'banco-e-receptora', 'permissoes', 'prazo', 'confirmacao'] as const;
+export const PASSOS = ['banco-e-cliente', 'permissoes', 'prazo', 'confirmacao'] as const;
 export type Passo = (typeof PASSOS)[number];
 
 interface EstadoDoMenu {

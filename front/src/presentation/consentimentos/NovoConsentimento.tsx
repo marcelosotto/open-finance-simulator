@@ -1,4 +1,5 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { TOKENS_DOS_CONSENTIMENTOS } from '@/application/consentimentos/casos';
 import { TOKENS_DAS_INSTITUICOES } from '@/application/instituicoes/casos';
@@ -13,6 +14,7 @@ import {
   PERMISSAO_DE_RECURSOS,
   type OpcoesDoMenu,
   type Origem,
+  type Receptora,
 } from '@/core/consentimentos/consentimento';
 import { useCaso } from '../comum/casos';
 import { Resultado, useAcao, useConsulta } from '../comum/consultas';
@@ -22,6 +24,7 @@ import { ListaDeErros } from '../comum/estado';
 import { Secao, Titulo } from '../comum/titulo';
 import { PASSOS, useMenu } from './menu';
 import { CHAVES } from './chaves';
+import { SeletorDeCliente } from '../massa/SeletorDeCliente';
 
 const Navegacao = ({ podeAvancar, aoAvancar }: { readonly podeAvancar: boolean; readonly aoAvancar?: () => void }) => {
   const { t } = useTranslation();
@@ -40,26 +43,51 @@ const Navegacao = ({ podeAvancar, aoAvancar }: { readonly podeAvancar: boolean; 
   );
 };
 
-const PassoCliente = () => {
+/** Com uma receptora só, ela é usada direto; com mais de uma, Bruno escolhe (RN124, UI10). */
+const EscolhaDaReceptora = ({ receptoras }: { readonly receptoras: readonly Receptora[] }) => {
   const { t } = useTranslation();
   const { rascunho, atualizar } = useMenu();
+  const unica = receptoras.length === 1 ? receptoras[0] : undefined;
+  useEffect(() => {
+    if (unica !== undefined && rascunho.receptora !== unica.organisationId) {
+      atualizar((r) => ({ ...r, receptora: unica.organisationId }));
+    }
+  }, [unica, rascunho.receptora, atualizar]);
+
+  if (receptoras.length === 0) {
+    return (
+      <p role="alert" className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+        {t('consentimentos.menu.semReceptora')}{' '}
+        <Link className="font-medium underline" to="/receptoras">
+          {t('nav.receptoras')}
+        </Link>
+      </p>
+    );
+  }
+  if (unica !== undefined) {
+    return <p className="text-sm">{t('consentimentos.menu.receptoraUnica', { nome: unica.nome })}</p>;
+  }
   return (
-    <>
-      <Campo
-        className="max-w-md"
-        rotulo={t('consentimentos.menu.documento')}
-        value={rascunho.cliente}
-        onChange={(e) => {
-          const cliente = e.target.value;
-          atualizar((r) => ({ ...r, cliente, permissoes: [], invertidas: [] }));
-        }}
-      />
-      <Navegacao podeAvancar={rascunho.cliente.trim() !== ''} />
-    </>
+    <Selecao
+      rotulo={t('consentimentos.menu.receptora')}
+      value={rascunho.receptora}
+      onChange={(e) => {
+        const receptora = e.target.value;
+        atualizar((r) => ({ ...r, receptora }));
+      }}
+    >
+      <option value="">{t('consentimentos.menu.escolha')}</option>
+      {receptoras.map((r) => (
+        <option key={r.organisationId} value={r.organisationId}>
+          {r.nome}
+        </option>
+      ))}
+    </Selecao>
   );
 };
 
-const PassoBancoEReceptora = () => {
+/** Passo 1: banco, cliente da lista do banco (UI19) e receptora. */
+const PassoBancoClienteEReceptora = () => {
   const { t } = useTranslation();
   const { rascunho, atualizar } = useMenu();
   const bancos = useCaso(TOKENS_DAS_INSTITUICOES.Listar);
@@ -67,52 +95,40 @@ const PassoBancoEReceptora = () => {
   const consultaDeBancos = useConsulta(['instituicoes'], () => bancos.executar());
   const consultaDeReceptoras = useConsulta(CHAVES.receptoras, () => receptoras.executar());
   return (
-    <div className="grid max-w-md gap-3">
+    <div className="grid max-w-xl gap-3">
       <Resultado consulta={consultaDeBancos}>
-        {(lista) => (
-          <Selecao
-            rotulo={t('consentimentos.menu.banco')}
-            value={rascunho.banco}
-            onChange={(e) => {
-              const banco = e.target.value;
-              atualizar((r) => ({ ...r, banco, permissoes: [], invertidas: [] }));
-            }}
-          >
-            <option value="">{t('consentimentos.menu.escolha')}</option>
-            {lista
-              .filter((b) => b.situacao === 'ativa')
-              .map((b) => (
-                <option key={b.endereco} value={b.endereco}>
-                  {b.nome}
-                </option>
-              ))}
-          </Selecao>
-        )}
+        {(lista) => {
+          const ativos = lista.filter((b) => b.situacao === 'ativa');
+          return (
+            <>
+              <Selecao
+                rotulo={t('consentimentos.menu.banco')}
+                value={rascunho.banco}
+                onChange={(e) => {
+                  const banco = e.target.value;
+                  atualizar((r) => ({ ...r, banco, cliente: '', permissoes: [], invertidas: [] }));
+                }}
+              >
+                <option value="">{t('consentimentos.menu.escolha')}</option>
+                {ativos.map((b) => (
+                  <option key={b.endereco} value={b.endereco}>
+                    {b.nome}
+                  </option>
+                ))}
+              </Selecao>
+              <SeletorDeCliente
+                banco={rascunho.banco}
+                nomeDoBanco={ativos.find((b) => b.endereco === rascunho.banco)?.nome}
+                rotulo={t('consentimentos.menu.cliente')}
+                valor={rascunho.cliente}
+                aoMudar={(cliente) => atualizar((r) => ({ ...r, cliente, permissoes: [], invertidas: [] }))}
+              />
+            </>
+          );
+        }}
       </Resultado>
-      <Resultado consulta={consultaDeReceptoras}>
-        {(lista) =>
-          lista.length === 0 ? (
-            <p role="alert">{t('consentimentos.menu.semReceptora')}</p>
-          ) : (
-            <Selecao
-              rotulo={t('consentimentos.menu.receptora')}
-              value={rascunho.receptora}
-              onChange={(e) => {
-                const receptora = e.target.value;
-                atualizar((r) => ({ ...r, receptora }));
-              }}
-            >
-              <option value="">{t('consentimentos.menu.escolha')}</option>
-              {lista.map((r) => (
-                <option key={r.organisationId} value={r.organisationId}>
-                  {r.nome}
-                </option>
-              ))}
-            </Selecao>
-          )
-        }
-      </Resultado>
-      <Navegacao podeAvancar={rascunho.banco !== '' && rascunho.receptora !== ''} />
+      <Resultado consulta={consultaDeReceptoras}>{(lista) => <EscolhaDaReceptora receptoras={lista} />}</Resultado>
+      <Navegacao podeAvancar={rascunho.banco !== '' && rascunho.cliente.trim() !== '' && rascunho.receptora !== ''} />
     </div>
   );
 };
@@ -296,7 +312,7 @@ const PassosComOpcoes = ({ passo }: { readonly passo: (typeof PASSOS)[number] })
   );
   return (
     <>
-      <Resultado consulta={consulta}>
+      <Resultado consulta={consulta} seInexistente={t('consentimentos.menu.opcoesInexistentes')}>
         {(valor) => {
           if (passo === 'permissoes') return <PassoPermissoes opcoes={valor} />;
           if (passo === 'prazo') return <PassoPrazo opcoes={valor} />;
@@ -312,14 +328,15 @@ const PassosComOpcoes = ({ passo }: { readonly passo: (typeof PASSOS)[number] })
   );
 };
 
-/** UI10: cliente; banco e receptora; permissões e origem; prazo e alçadas; confirmação. */
+/** UI10: banco, cliente e receptora; permissões e origem; prazo e alçadas; confirmação. */
 export const NovoConsentimento = () => {
   const { t } = useTranslation();
   const { passo, recomecar } = useMenu();
-  const nome = PASSOS[passo] ?? 'cliente';
+  const nome = PASSOS[passo] ?? 'banco-e-cliente';
   return (
     <>
       <Titulo
+        ajuda="novoConsentimento"
         acoes={
           <Botao variante="secundario" onClick={recomecar}>
             {t('consentimentos.menu.recomecar')}
@@ -346,9 +363,7 @@ export const NovoConsentimento = () => {
           nome: t(`consentimentos.menu.passos.${nome}`),
         })}
       >
-        {nome === 'cliente' && <PassoCliente />}
-        {nome === 'banco-e-receptora' && <PassoBancoEReceptora />}
-        {nome !== 'cliente' && nome !== 'banco-e-receptora' && <PassosComOpcoes passo={nome} />}
+        {nome === 'banco-e-cliente' ? <PassoBancoClienteEReceptora /> : <PassosComOpcoes passo={nome} />}
       </Secao>
     </>
   );

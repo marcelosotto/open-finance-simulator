@@ -207,7 +207,7 @@ export const Distribuicoes = () => {
 
   return (
     <>
-      <Titulo>{t('massa.distribuicoes.titulo')}</Titulo>
+      <Titulo ajuda="distribuicoes">{t('massa.distribuicoes.titulo')}</Titulo>
       <Secao titulo={t('massa.distribuicoes.lista')}>
         <ListaDeErros falha={acaoDeApagar.falha} />
         <Resultado consulta={consulta}>

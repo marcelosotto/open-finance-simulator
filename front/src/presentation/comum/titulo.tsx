@@ -1,10 +1,22 @@
 import type { ReactNode } from 'react';
+import { Ajuda } from '../ajuda/Ajuda';
+import type { TelaComAjuda } from '../ajuda/textos';
 
-export const Titulo = ({ children, acoes }: { readonly children: ReactNode; readonly acoes?: ReactNode }) => (
-  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-    <h1 className="text-xl font-semibold">{children}</h1>
-    {acoes !== undefined && <div className="flex gap-2">{acoes}</div>}
-  </div>
+interface PropsDoTitulo {
+  readonly children: ReactNode;
+  readonly acoes?: ReactNode;
+  /** A ajuda do topo da tela (UI17). */
+  readonly ajuda?: TelaComAjuda;
+}
+
+export const Titulo = ({ children, acoes, ajuda }: PropsDoTitulo) => (
+  <>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <h1 className="text-xl font-semibold">{children}</h1>
+      {acoes !== undefined && <div className="flex gap-2">{acoes}</div>}
+    </div>
+    {ajuda !== undefined && <Ajuda tela={ajuda} />}
+  </>
 );
 
 export const Secao = ({ titulo, children }: { readonly titulo: string; readonly children: ReactNode }) => (

@@ -21,7 +21,7 @@ describe('Distribuições (UI07, RN56)', () => {
     expect(screen.getByText('Soma dos bancos: 60%')).toBeInTheDocument();
     expect(screen.getByText('Soma dos perfis: 100%')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Salvar' })).toBeDisabled();
-    expect(screen.getByText(/precisam somar 100%/)).toBeInTheDocument();
+    expect(screen.getByText(/cada porcentagem fica entre 0 e 100/)).toBeInTheDocument();
 
     await usuario.click(screen.getByRole('button', { name: 'Adicionar linha em Bancos' }));
     await usuario.type(screen.getByRole('textbox', { name: 'Endereço do banco 2' }), 'banco-lento');
@@ -33,7 +33,7 @@ describe('Distribuições (UI07, RN56)', () => {
 
     expect(screen.getByText('Soma dos bancos: 100%')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Salvar' })).toBeEnabled();
-    expect(screen.queryByText(/precisam somar 100%/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/cada porcentagem fica entre 0 e 100/)).not.toBeInTheDocument();
   });
 
   it('salva a distribuição com o PUT do contrato', async () => {

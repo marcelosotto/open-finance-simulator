@@ -16,10 +16,12 @@ import {
   type MassaDoCliente,
   type Pagina,
   type PedidoDeCliente,
+  type PaginaDeClientes,
   type PedidoDeLote,
   type PerfilDeDados,
   type RepositorioDaMassa,
   type ResultadoDaLimpeza,
+  type ResumoDaMassa,
 } from '@/core/massa/massa';
 import { token } from '../tokens';
 
@@ -156,7 +158,31 @@ export class ConfirmarLimpeza {
   }
 }
 
+/** Clientes persistidos de um banco, ou de todos sem banco, para escolher sem digitar (UI19). */
+export class ClientesDoBanco {
+  constructor(private readonly repositorio: RepositorioDaMassa) {}
+  executar(pedido: {
+    readonly banco: string | null;
+    readonly pagina: Pagina;
+  }): Promise<Either<Falha, PaginaDeClientes>> {
+    if (!paginaValida(pedido.pagina) || pedido.pagina.quantidade > 1000) {
+      return Promise.resolve(left(falhaDeValidacao('PAGINA_INVALIDA')));
+    }
+    const banco = pedido.banco?.trim() ?? '';
+    return this.repositorio.clientesDoBanco(banco === '' ? null : banco, pedido.pagina);
+  }
+}
+
+export class ResumoDaMassaPersistida {
+  constructor(private readonly repositorio: RepositorioDaMassa) {}
+  executar(): Promise<Either<Falha, ResumoDaMassa>> {
+    return this.repositorio.resumo();
+  }
+}
+
 export const TOKENS_DA_MASSA = {
+  ClientesDoBanco: token<ClientesDoBanco>('ClientesDoBanco'),
+  Resumo: token<ResumoDaMassaPersistida>('ResumoDaMassaPersistida'),
   Perfis: token<ListarPerfisDeDados>('ListarPerfisDeDados'),
   SalvarPerfil: token<SalvarPerfilDeDados>('SalvarPerfilDeDados'),
   ApagarPerfil: token<ApagarPerfilDeDados>('ApagarPerfilDeDados'),
@@ -192,4 +218,6 @@ export const casosDaMassa = (repositorio: RepositorioDaMassa) =>
     [TOKENS_DA_MASSA.Cliente, new ObterClienteDaMassa(repositorio)],
     [TOKENS_DA_MASSA.PreverLimpeza, new PreverLimpeza(repositorio)],
     [TOKENS_DA_MASSA.ConfirmarLimpeza, new ConfirmarLimpeza(repositorio)],
+    [TOKENS_DA_MASSA.ClientesDoBanco, new ClientesDoBanco(repositorio)],
+    [TOKENS_DA_MASSA.Resumo, new ResumoDaMassaPersistida(repositorio)],
   ] as const;

@@ -20,6 +20,7 @@ import type { ResumoDeInstituicao } from '@/core/instituicoes/instituicao';
 import { useCaso } from '../comum/casos';
 import { Resultado, useAcao, useConsulta } from '../comum/consultas';
 import { Campo, Selecao } from '../comum/campo';
+import { SeletorDeCliente } from '../massa/SeletorDeCliente';
 import { Botao } from '../comum/botao';
 import { ListaDeErros } from '../comum/estado';
 import { Secao, Titulo } from '../comum/titulo';
@@ -75,7 +76,7 @@ const FormularioDaRegra = ({ inicial, opcoes, ocupado, falha, aoSalvar }: PropsD
   const { t } = useTranslation();
   const idDaLigada = useId();
   const endpoints = useSugestoesDeEndpoint();
-  const { register, handleSubmit, watch } = useForm<FormularioDeRegra>({ defaultValues: inicial });
+  const { register, handleSubmit, watch, setValue } = useForm<FormularioDeRegra>({ defaultValues: inicial });
   const tipo = watch('tipo');
   const defeito = watch('defeito');
   const nomesDosBancos = new Map(opcoes.bancos.map((banco) => [banco.endereco, banco.nome]));
@@ -102,7 +103,14 @@ const FormularioDaRegra = ({ inicial, opcoes, ocupado, falha, aoSalvar }: PropsD
             ))}
           </Selecao>
           <Campo rotulo={f('endpoint')} list={endpoints.lista} {...register('endpoint')} />
-          <Campo rotulo={f('cliente')} {...register('cliente')} />
+          <SeletorDeCliente
+            opcional
+            banco={watch('instituicao')}
+            nomeDoBanco={nomesDosBancos.get(watch('instituicao'))}
+            rotulo={f('cliente')}
+            valor={watch('cliente')}
+            aoMudar={(documento) => setValue('cliente', documento)}
+          />
           <Campo rotulo={f('recurso')} {...register('recurso')} />
           {endpoints.sugestoes}
         </div>
@@ -229,7 +237,7 @@ export const NovaRegra = () => {
   });
   return (
     <>
-      <Titulo>{t('cenarios.formulario.tituloNova')}</Titulo>
+      <Titulo ajuda="regra">{t('cenarios.formulario.tituloNova')}</Titulo>
       <ComOpcoes>
         {(opcoes) => (
           <FormularioDaRegra
@@ -262,7 +270,7 @@ export const EdicaoDeRegra = () => {
     <Resultado consulta={consulta}>
       {(regra) => (
         <>
-          <Titulo>{t('cenarios.formulario.tituloEdicao', { regra: descricao.rotulo(regra) })}</Titulo>
+          <Titulo ajuda="regra">{t('cenarios.formulario.tituloEdicao', { regra: descricao.rotulo(regra) })}</Titulo>
           <ComOpcoes>
             {(opcoes) => (
               <FormularioDaRegra

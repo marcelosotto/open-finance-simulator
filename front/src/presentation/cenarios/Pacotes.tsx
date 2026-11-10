@@ -33,6 +33,7 @@ export const Pacotes = () => {
   return (
     <>
       <Titulo
+        ajuda="pacotes"
         acoes={
           <Link className="rounded border border-slate-300 bg-white px-3 py-1.5 text-sm" to="/cenarios">
             {t('cenarios.pacote.voltar')}

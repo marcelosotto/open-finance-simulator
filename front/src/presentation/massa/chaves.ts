@@ -6,6 +6,8 @@ export const CHAVES = {
   lote: (id: string) => ['massa', 'lotes', id] as const,
   clientesDoLote: (id: string, inicio: number) => ['massa', 'lotes', id, 'clientes', inicio] as const,
   cliente: (documento: string) => ['massa', 'clientes', documento] as const,
+  clientesDoBanco: (banco: string) => ['massa', 'clientes-do-banco', banco] as const,
+  resumo: ['massa', 'resumo'] as const,
 };
 
 /** "a, b , c" → ["a", "b", "c"]. */

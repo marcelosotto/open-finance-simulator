@@ -20,12 +20,22 @@ export const useConsulta = <T,>(
 interface PropsDoResultado<T> {
   readonly consulta: { readonly data?: Either<Falha, T> | undefined; readonly refetch: () => unknown };
   readonly children: (valor: T) => ReactNode;
+  /** O que faltou e como resolver quando a administração responde 404 (UI19): nunca só "não encontrado". */
+  readonly seInexistente?: ReactNode;
 }
 
-export const Resultado = <T,>({ consulta, children }: PropsDoResultado<T>) => {
+export const Resultado = <T,>({ consulta, children, seInexistente }: PropsDoResultado<T>) => {
   const dado = consulta.data;
   if (dado === undefined) return <Carregando />;
-  if (dado.isLeft()) return <ErroComNovaTentativa falha={dado.value} aoTentar={() => consulta.refetch()} />;
+  if (dado.isLeft()) {
+    return (
+      <ErroComNovaTentativa
+        falha={dado.value}
+        explicacao={dado.value.tipo === 'inexistente' ? seInexistente : undefined}
+        aoTentar={() => consulta.refetch()}
+      />
+    );
+  }
   return <>{children(dado.value)}</>;
 };
 

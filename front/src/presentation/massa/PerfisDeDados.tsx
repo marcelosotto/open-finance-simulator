@@ -91,7 +91,7 @@ export const PerfisDeDados = () => {
 
   return (
     <>
-      <Titulo>{t('massa.perfis.titulo')}</Titulo>
+      <Titulo ajuda="perfis">{t('massa.perfis.titulo')}</Titulo>
       <Secao titulo={t('massa.perfis.lista')}>
         <ListaDeErros falha={acaoDeApagar.falha} />
         {aviso !== null && (

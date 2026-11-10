@@ -15,7 +15,7 @@ export const IndiceDaMassa = () => {
   const { t } = useTranslation();
   return (
     <>
-      <Titulo>{t('massa.titulo')}</Titulo>
+      <Titulo ajuda="massa">{t('massa.titulo')}</Titulo>
       <Secao titulo={t('massa.titulo')}>
         <p className="mb-3 text-sm text-slate-600">{t('massa.explicacao')}</p>
         <ul className="list-disc space-y-1 pl-6">

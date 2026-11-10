@@ -101,7 +101,7 @@ export const Lotes = () => {
   const consulta = useConsulta(CHAVES.lotes, () => listar.executar());
   return (
     <>
-      <Titulo>{t('massa.lotes.titulo')}</Titulo>
+      <Titulo ajuda="lotes">{t('massa.lotes.titulo')}</Titulo>
       <Secao titulo={t('massa.lotes.lista')}>
         <Resultado consulta={consulta}>
           {(lotes) =>

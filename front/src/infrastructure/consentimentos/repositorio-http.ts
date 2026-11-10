@@ -66,6 +66,7 @@ const Visao = z.object({
 });
 
 const Criada = ReceptoraDto.extend({ usuario: z.string(), senha: z.string() });
+const ReceptoraListada = ReceptoraDto.extend({ usuario: z.string().optional(), senha: z.string().optional() });
 const Qualquer = z.unknown();
 
 const base = (consentId: string) => `/admin/consentimentos/${encodeURIComponent(consentId)}`;
@@ -94,7 +95,7 @@ export class RepositorioDeConsentimentosHttp implements RepositorioDeConsentimen
   }
 
   receptoras(): Promise<Either<Falha, readonly Receptora[]>> {
-    return this.cliente.get('/admin/receptoras', z.array(ReceptoraDto));
+    return this.cliente.get('/admin/receptoras', z.array(ReceptoraListada));
   }
 
   criarReceptora(nome: string): Promise<Either<Falha, ReceptoraCriada>> {

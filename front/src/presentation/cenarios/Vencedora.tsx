@@ -9,6 +9,7 @@ import type { RegraDeCenario, Vencedoras } from '@/core/cenarios/regra';
 import { useCaso } from '../comum/casos';
 import { useAcao, useConsulta } from '../comum/consultas';
 import { Campo, Selecao } from '../comum/campo';
+import { SeletorDeCliente } from '../massa/SeletorDeCliente';
 import { Botao } from '../comum/botao';
 import { ListaDeErros } from '../comum/estado';
 import { Secao, Tabela } from '../comum/titulo';
@@ -54,7 +55,7 @@ export const PainelDaVencedora = () => {
   const endpoints = useSugestoesDeEndpoint();
   const [resultado, setResultado] = useState<Vencedoras | null>(null);
   const acao = useAcao((dados: Formulario) => vencedora.executar(dados), { aoTerminar: setResultado });
-  const { register, handleSubmit } = useForm<Formulario>({
+  const { register, handleSubmit, watch, setValue } = useForm<Formulario>({
     defaultValues: { instituicao: '', endpoint: '', cliente: '', recurso: '' },
   });
   const lista = bancos.data?.isRight() ? bancos.data.value : [];
@@ -78,7 +79,14 @@ export const PainelDaVencedora = () => {
           ))}
         </Selecao>
         <Campo rotulo={t('cenarios.vencedora.endpoint')} list={endpoints.lista} {...register('endpoint')} />
-        <Campo rotulo={t('cenarios.vencedora.cliente')} {...register('cliente')} />
+        <SeletorDeCliente
+          opcional
+          banco={watch('instituicao')}
+          nomeDoBanco={lista.find((b) => b.endereco === watch('instituicao'))?.nome}
+          rotulo={t('cenarios.vencedora.cliente')}
+          valor={watch('cliente')}
+          aoMudar={(documento) => setValue('cliente', documento)}
+        />
         <Campo rotulo={t('cenarios.vencedora.recurso')} {...register('recurso')} />
         <div>
           <Botao type="submit" disabled={acao.ocupado}>

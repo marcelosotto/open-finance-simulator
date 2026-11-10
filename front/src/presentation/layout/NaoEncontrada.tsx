@@ -5,9 +5,9 @@ export const NaoEncontrada = () => {
   const { t } = useTranslation();
   return (
     <div>
-      <h1 className="text-xl font-semibold">{t('falhas.inexistente')}</h1>
-      <Link className="text-teal-800 underline" to="/bancos">
-        {t('nav.bancos')}
+      <h1 className="text-xl font-semibold">{t('layout.paginaInexistente')}</h1>
+      <Link className="text-teal-800 underline" to="/primeiros-passos">
+        {t('nav.primeirosPassos')}
       </Link>
     </div>
   );

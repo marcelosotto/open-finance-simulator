@@ -27,7 +27,7 @@ export const Receptoras = () => {
   });
   return (
     <>
-      <Titulo>{t('consentimentos.receptoras.titulo')}</Titulo>
+      <Titulo ajuda="receptoras">{t('consentimentos.receptoras.titulo')}</Titulo>
       <Secao titulo={t('consentimentos.receptoras.criar')}>
         <form
           className="flex max-w-xl items-end gap-2"

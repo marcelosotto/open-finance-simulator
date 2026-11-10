@@ -96,7 +96,7 @@ describe('Nova regra (UC21)', () => {
     const criacao = capturar('post', '/admin/cenarios/regras', regra(), 201);
     const { usuario } = await abrirNova();
 
-    await usuario.type(campo('Cliente'), '76109277673');
+    await usuario.type(campo('Documento do cliente'), '76109277673');
     await usuario.selectOptions(lista('Tipo de efeito'), 'Falha de transporte');
     await usuario.selectOptions(lista('Falha'), 'JSON inválido');
     await usuario.click(screen.getByRole('checkbox', { name: 'Regra ligada' }));

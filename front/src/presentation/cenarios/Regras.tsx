@@ -106,6 +106,7 @@ export const Regras = () => {
   return (
     <>
       <Titulo
+        ajuda="cenarios"
         acoes={
           <>
             <Link className={`${link} border border-slate-300 bg-white text-slate-800`} to="/cenarios/pacotes">

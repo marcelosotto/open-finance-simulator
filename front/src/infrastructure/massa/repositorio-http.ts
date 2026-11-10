@@ -7,12 +7,14 @@ import type {
   Lote,
   MassaDoCliente,
   Pagina,
+  PaginaDeClientes,
   PedidoDeCliente,
   PedidoDeLimpeza,
   PedidoDeLote,
   PerfilDeDados,
   RepositorioDaMassa,
   ResultadoDaLimpeza,
+  ResumoDaMassa,
 } from '@/core/massa/massa';
 import type { ClienteAdmin } from '../http/cliente-admin';
 
@@ -85,6 +87,20 @@ const Consentimento = z.object({
     .string()
     .nullish()
     .transform((data) => data ?? null),
+});
+
+const PaginaDeClientesDto = z.object({
+  clientes: z.array(Cliente),
+  inicio: z.number(),
+  quantidade: z.number(),
+  temMais: z.boolean(),
+});
+
+const ResumoDto = z.object({
+  clientes: z.number(),
+  consentimentos: z.number(),
+  recursos: z.number(),
+  lotes: z.number(),
 });
 
 const Massa = z.object({
@@ -171,6 +187,18 @@ export class RepositorioDaMassaHttp implements RepositorioDaMassa {
 
   obterCliente(documento: string): Promise<Either<Falha, MassaDoCliente>> {
     return this.cliente.get(nomeado('clientes', documento), Massa);
+  }
+
+  clientesDoBanco(banco: string | null, pagina: Pagina): Promise<Either<Falha, PaginaDeClientes>> {
+    return this.cliente.get(`${BASE}/clientes`, PaginaDeClientesDto, {
+      banco: banco ?? undefined,
+      inicio: pagina.inicio,
+      quantidade: pagina.quantidade,
+    });
+  }
+
+  resumo(): Promise<Either<Falha, ResumoDaMassa>> {
+    return this.cliente.get(`${BASE}/resumo`, ResumoDto);
   }
 
   /** Sem `confirmar: true` a administração só devolve a prévia. */

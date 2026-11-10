@@ -17,6 +17,9 @@ export interface OrigemDoMenu {
 export interface Receptora {
   readonly organisationId: string;
   readonly nome: string;
+  /** Credenciais de teste (RN123): vêm na lista da administração, não nas opções do menu. */
+  readonly usuario?: string;
+  readonly senha?: string;
 }
 
 export interface ReceptoraCriada extends Receptora {

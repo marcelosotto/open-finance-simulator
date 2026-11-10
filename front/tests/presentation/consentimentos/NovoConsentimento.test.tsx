@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { abrir } from '../../apoio/renderizar';
 import { capturar, comAmbiente, responder } from '../../apoio/api';
 import { resumo } from '../../apoio/dados';
@@ -7,16 +7,36 @@ import { useMenu } from '@/presentation/consentimentos/menu';
 
 type Usuario = ReturnType<typeof abrir>['usuario'];
 
-const chegarAsPermissoes = async (usuario: Usuario, documento = '95000000080') => {
-  await usuario.type(await screen.findByRole('textbox', { name: /Documento do cliente/ }), documento);
-  await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
+const XP = { organisationId: 'hml-p-receptora-padrao', nome: 'XP', usuario: 'teste-1', senha: 'teste-senha-1' };
+const MARIANA = {
+  documento: '95000000080',
+  tipo: 'PF',
+  nome: '[HML] Mariana Alves',
+  marca: 'hml',
+  natureza: 'persistido',
+  loteId: null,
+};
+const AURORA = {
+  documento: 'P0000001000182',
+  tipo: 'PJ',
+  nome: '[HML] Indústria Aurora',
+  marca: 'hml',
+  natureza: 'persistido',
+  loteId: null,
+};
+
+const comClientes = (...clientes: object[]) =>
+  responder('get', '/admin/massa/clientes', { clientes, inicio: 0, quantidade: 1000, temMais: false });
+
+/** Passo 1: banco, cliente da lista e receptora (UI10, UI19); para nas permissões. */
+const chegarAsPermissoes = async (usuario: Usuario, cliente = MARIANA.documento) => {
   await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
-  await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Receptora' }), 'hml-p-org');
+  await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Cliente' }), cliente);
   await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
   await screen.findByRole('group', { name: 'Permissões de contas-saldos' });
 };
 
-describe('Novo consentimento (UI10, UI13)', () => {
+describe('Novo consentimento (UI10, UI13, UI19)', () => {
   beforeEach(() => {
     useMenu.getState().recomecar();
     comAmbiente();
@@ -24,11 +44,12 @@ describe('Novo consentimento (UI10, UI13)', () => {
       resumo('banco-estavel', 'Banco Estável'),
       resumo('velho', 'Velho', [], 'inativa'),
     ]);
-    responder('get', '/admin/receptoras', [{ organisationId: 'hml-p-org', nome: 'Coletor' }]);
+    responder('get', '/admin/receptoras', [XP]);
     responder('get', '/admin/consentimentos/opcoes', opcoesPF);
+    comClientes(MARIANA, AURORA);
   });
 
-  it('cria em passos com contas, cartões e 12 meses, e abre a visão em AUTHORISED (RN80, RN95)', async () => {
+  it('escolhe banco e cliente na lista, usa a receptora única e cria com contas, cartões e 12 meses (RN80, RN95, RN124)', async () => {
     const criados = capturar(
       'post',
       '/admin/consentimentos',
@@ -38,11 +59,23 @@ describe('Novo consentimento (UI10, UI13)', () => {
     responder('get', '/admin/consentimentos/urn%3Ahml%3Ap-c5x0', visaoPJ(0, { alcada: null }));
     const { usuario } = abrir('/consentimentos/novo');
 
-    expect(await screen.findByText('1. Cliente')).toHaveAttribute('aria-current', 'step');
-    await chegarAsPermissoes(usuario);
+    expect(await screen.findByText('1. Banco, cliente e receptora')).toHaveAttribute('aria-current', 'step');
+    expect(screen.getByRole('complementary', { name: 'Primeiros passos' })).toHaveTextContent(
+      'Precisa existir antes: um banco e clientes nesse banco',
+    );
+    expect(await screen.findByRole('combobox', { name: 'Cliente' })).toBeDisabled();
+    expect(screen.getByText('Receptora: XP (a única cadastrada).')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Receptora' })).not.toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Velho' })).not.toBeInTheDocument();
 
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo contas-saldos' }));
+    await usuario.selectOptions(screen.getByRole('combobox', { name: 'Banco' }), 'banco-estavel');
+    expect(await screen.findByRole('option', { name: '[HML] Mariana Alves — 95000000080 (PF)' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: '[HML] Indústria Aurora — P0000001000182 (PJ)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Avançar' })).toBeDisabled();
+    await usuario.selectOptions(screen.getByRole('combobox', { name: 'Cliente' }), MARIANA.documento);
+    await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
+
+    await usuario.click(await screen.findByRole('checkbox', { name: 'Grupo contas-saldos' }));
     await usuario.click(screen.getByRole('checkbox', { name: 'Grupo cartoes-limites' }));
     expect(screen.getByRole('checkbox', { name: 'hml-p-r0x1' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'hml-p-r0x0' })).toBeChecked();
@@ -58,7 +91,7 @@ describe('Novo consentimento (UI10, UI13)', () => {
     expect(criados[0]!.corpo).toEqual({
       cliente: '95000000080',
       banco: 'banco-estavel',
-      receptora: 'hml-p-org',
+      receptora: 'hml-p-receptora-padrao',
       permissoes: [
         'ACCOUNTS_READ',
         'ACCOUNTS_BALANCES_READ',
@@ -70,6 +103,29 @@ describe('Novo consentimento (UI10, UI13)', () => {
       cartoes: ['hml-p-r0x0'],
       prazoMeses: 12,
     });
+  });
+
+  it('com mais de uma receptora, pede a escolha', async () => {
+    responder('get', '/admin/receptoras', [XP, { organisationId: 'org-2', nome: 'Outro app' }]);
+    const { usuario } = abrir('/consentimentos/novo');
+
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Cliente' }), MARIANA.documento);
+    expect(screen.getByRole('button', { name: 'Avançar' })).toBeDisabled();
+    await usuario.selectOptions(screen.getByRole('combobox', { name: 'Receptora' }), 'org-2');
+    expect(screen.getByRole('button', { name: 'Avançar' })).toBeEnabled();
+  });
+
+  it('banco sem clientes manda gerar massa (UI19)', async () => {
+    comClientes();
+    const { usuario } = abrir('/consentimentos/novo');
+
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
+
+    const aviso = await screen.findByRole('alert');
+    expect(aviso).toHaveTextContent('O Banco Estável ainda não tem clientes.');
+    expect(screen.getByRole('link', { name: 'Gerar massa de clientes' })).toHaveAttribute('href', '/massa/lotes');
+    expect(screen.getByRole('button', { name: 'Avançar' })).toBeDisabled();
   });
 
   it('sem prazo vai sem data final (RN85)', async () => {
@@ -141,7 +197,7 @@ describe('Novo consentimento (UI10, UI13)', () => {
     const criados = capturar('post', '/admin/consentimentos', visaoPJ(2), 201);
     responder('get', '/admin/consentimentos/urn%3Ahml%3Ap-c5x0', visaoPJ(2));
     const { usuario } = abrir('/consentimentos/novo');
-    await chegarAsPermissoes(usuario, 'P0000001000182');
+    await chegarAsPermissoes(usuario, AURORA.documento);
 
     expect(screen.getByText('Cliente PJ')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'CUSTOMERS_BUSINESS_IDENTIFICATIONS_READ' })).toBeInTheDocument();
@@ -153,7 +209,7 @@ describe('Novo consentimento (UI10, UI13)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Criar consentimento' }));
 
     expect(await screen.findByText('Faltam 2 aprovações')).toBeInTheDocument();
-    expect(criados[0]!.corpo).toEqual(expect.objectContaining({ aprovacoesPendentes: 2 }));
+    expect(criados[0]!.corpo).toEqual(expect.objectContaining({ cliente: AURORA.documento, aprovacoesPendentes: 2 }));
   });
 
   it('alçada fora da faixa é barrada na tela (RN99)', async () => {
@@ -168,16 +224,16 @@ describe('Novo consentimento (UI10, UI13)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Alçadas só em PJ, de 1 a 10 aprovações (RN99).');
   });
 
-  it('cliente inexistente: mostra o erro e deixa voltar', async () => {
-    responder('get', '/admin/consentimentos/opcoes', { erros: ['cliente não encontrado'] }, 404);
+  it('documento digitado que não está na massa: diz o que faltou e deixa voltar', async () => {
+    responder('get', '/admin/consentimentos/opcoes', '', 404);
     const { usuario } = abrir('/consentimentos/novo');
-    await usuario.type(await screen.findByRole('textbox', { name: /Documento do cliente/ }), '000');
-    await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
-    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Receptora' }), 'hml-p-org');
+    await usuario.type(await screen.findByRole('textbox', { name: 'Documento do cliente' }), '12345678900');
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('cliente não encontrado');
+    const aviso = await screen.findByRole('alert');
+    expect(aviso).toHaveTextContent('Esse cliente não existe na massa deste banco');
+    expect(aviso).not.toHaveTextContent('HTTP_404');
     await usuario.click(screen.getByRole('button', { name: 'Voltar' }));
     expect(await screen.findByRole('combobox', { name: 'Banco' })).toBeInTheDocument();
   });
@@ -185,24 +241,25 @@ describe('Novo consentimento (UI10, UI13)', () => {
   it('cliente sem produto no banco é avisado antes das permissões (RN95)', async () => {
     responder('get', '/admin/consentimentos/opcoes', { ...opcoesPF, semProduto: true });
     const { usuario } = abrir('/consentimentos/novo');
-    await usuario.type(await screen.findByRole('textbox', { name: /Documento do cliente/ }), '1');
-    await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
-    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Receptora' }), 'hml-p-org');
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Cliente' }), MARIANA.documento);
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('O cliente não tem produto neste banco (RN95).');
     expect(screen.getByRole('button', { name: 'Avançar' })).toBeDisabled();
   });
 
-  it('sem receptora, avisa; recomeçar volta ao primeiro passo', async () => {
+  it('sem receptora, avisa com link; recomeçar limpa a escolha', async () => {
     responder('get', '/admin/receptoras', []);
     const { usuario } = abrir('/consentimentos/novo');
-    await usuario.type(await screen.findByRole('textbox', { name: /Documento do cliente/ }), '1');
-    await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Nenhuma receptora.');
+    await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
+    expect(await screen.findByText(/Nenhuma receptora cadastrada/)).toBeInTheDocument();
+    expect(within(screen.getByRole('alert')).getByRole('link', { name: 'Receptoras' })).toHaveAttribute(
+      'href',
+      '/receptoras',
+    );
 
     await usuario.click(screen.getByRole('button', { name: 'Recomeçar' }));
-    await waitFor(() => expect(screen.getByRole('textbox', { name: /Documento do cliente/ })).toHaveValue(''));
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Banco' })).toHaveValue(''));
   });
 });

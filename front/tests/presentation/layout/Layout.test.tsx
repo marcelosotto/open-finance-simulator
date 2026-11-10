@@ -53,6 +53,8 @@ describe('Layout (UI01, UI16)', () => {
   it('rota desconhecida', async () => {
     comAmbiente();
     abrir('/nao-existe');
-    expect(await screen.findByRole('heading', { name: 'Não encontrado.' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Esta página não existe. Comece por Primeiros passos.' }),
+    ).toBeInTheDocument();
   });
 });

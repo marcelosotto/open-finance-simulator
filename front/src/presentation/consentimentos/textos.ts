@@ -2,18 +2,20 @@ export const textosDosConsentimentos = {
   menu: {
     titulo: 'Novo consentimento',
     passos: {
-      cliente: 'Cliente',
-      'banco-e-receptora': 'Banco e receptora',
+      'banco-e-cliente': 'Banco, cliente e receptora',
       permissoes: 'Permissões',
       prazo: 'Prazo',
       confirmacao: 'Confirmação',
     },
     passoAtual: 'Passo {{numero}} de {{total}}: {{nome}}',
-    documento: 'Documento do cliente (CPF ou CNPJ simulado)',
+    cliente: 'Cliente',
+    receptoraUnica: 'Receptora: {{nome}} (a única cadastrada).',
+    opcoesInexistentes:
+      'Esse cliente não existe na massa deste banco, ou o banco foi apagado. Volte e escolha o cliente na lista; se a lista estiver vazia, gere massa em Massa → Lotes.',
     banco: 'Banco',
     receptora: 'Receptora',
     escolha: 'Escolha…',
-    semReceptora: 'Nenhuma receptora. Crie uma em Receptoras.',
+    semReceptora: 'Nenhuma receptora cadastrada. Crie uma em',
     tipo: 'Cliente {{tipo}}',
     grupos: 'Grupos de permissões',
     grupo: 'Grupo {{nome}}',
@@ -33,6 +35,8 @@ export const textosDosConsentimentos = {
     indeterminado: 'Indeterminado',
   },
   visao: {
+    inexistente:
+      'Não há consentimento {{id}}. Confira o identificador, abra o cliente em Massa → Clientes para ver os consentimentos dele, ou crie um em Novo consentimento.',
     titulo: 'Consentimento {{id}}',
     estado: 'Estado',
     cliente: 'Cliente',

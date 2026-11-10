@@ -214,6 +214,8 @@ describe('Novo banco e edição (UI03 a UI05)', () => {
   it('banco inexistente mostra o erro', async () => {
     responder('get', '/admin/instituicoes/sumiu', { erros: ['instituição não encontrada'] }, 404);
     abrir('/bancos/sumiu');
-    expect(await screen.findByRole('alert')).toHaveTextContent('instituição não encontrada');
+    const aviso = await screen.findByRole('alert');
+    expect(aviso).toHaveTextContent('Não há banco com o endereço sumiu.');
+    expect(aviso).not.toHaveTextContent('instituição não encontrada');
   });
 });

@@ -16,6 +16,7 @@ const CORES: Readonly<Record<CorDaMarca, string>> = {
 };
 
 const LINKS = [
+  ['/primeiros-passos', 'nav.primeirosPassos'],
   ['/bancos', 'nav.bancos'],
   ['/consentimentos/novo', 'nav.novoConsentimento'],
   ['/consentimentos', 'nav.consentimentos'],

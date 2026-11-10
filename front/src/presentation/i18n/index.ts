@@ -5,6 +5,8 @@ import { textosDasInstituicoes } from '../instituicoes/textos';
 import { textosDosConsentimentos } from '../consentimentos/textos';
 import { textosDaMassa } from '../massa/textos';
 import { textosDosCenarios } from '../cenarios/textos';
+import { textosDaAjuda } from '../ajuda/textos';
+import { textosDoInicio } from '../inicio/textos';
 
 export const recursos = {
   ...comum,
@@ -12,6 +14,8 @@ export const recursos = {
   consentimentos: textosDosConsentimentos,
   massa: textosDaMassa,
   cenarios: textosDosCenarios,
+  ajuda: textosDaAjuda,
+  inicio: textosDoInicio,
 };
 
 /** Só pt-BR, como pede o guia. Síncrono, para a primeira renderização já ter os textos. */
