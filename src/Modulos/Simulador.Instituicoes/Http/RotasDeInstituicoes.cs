@@ -19,9 +19,16 @@ internal static class RotasDeInstituicoes
     {
         administracao.MapGet("/admin/perfis-de-comportamento", () => Json(CatalogoDePerfis.Todos()));
 
-        administracao.MapGet(Base, async (CadastroDeInstituicoes cadastro, CancellationToken cancelamento) =>
-            Json((await cadastro.Listar(cancelamento).ConfigureAwait(false))
-                .Select(i => new { i.Endereco, i.Nome, i.Perfil, i.Situacao })));
+        administracao.MapGet(Base, async (CadastroDeInstituicoes cadastro, IConsultaDeAnomalias anomalias, CancellationToken cancelamento) =>
+        {
+            var lista = new List<object>();
+            foreach (var i in await cadastro.Listar(cancelamento).ConfigureAwait(false))
+            {
+                lista.Add(new { i.Endereco, i.Nome, i.Perfil, i.Situacao, AnomaliasLigadas = await anomalias.Ligadas(i.Endereco, cancelamento).ConfigureAwait(false) });
+            }
+
+            return Json(lista);
+        });
 
         administracao.MapPost(Base, async (HttpContext contexto, CadastroDeInstituicoes cadastro) =>
         {
@@ -40,10 +47,17 @@ internal static class RotasDeInstituicoes
                 : Responder(await cadastro.Criar(pedido, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false), StatusCodes.Status201Created);
         });
 
-        administracao.MapGet(Base + "/{endereco}", async (string endereco, CadastroDeInstituicoes cadastro, CancellationToken cancelamento) =>
-            await cadastro.Obter(endereco, cancelamento).ConfigureAwait(false) is { } instituicao
-                ? Results.Json(Visao(instituicao), JsonDasInstituicoes.Opcoes)
-                : Responder(ResultadoDoCadastro.NaoEncontrada));
+        administracao.MapGet(Base + "/{endereco}", async (string endereco, CadastroDeInstituicoes cadastro, IConsultaDeAnomalias anomalias, CancellationToken cancelamento) =>
+        {
+            if (await cadastro.Obter(endereco, cancelamento).ConfigureAwait(false) is not { } instituicao)
+            {
+                return Responder(ResultadoDoCadastro.NaoEncontrada);
+            }
+
+            var visao = Visao(instituicao);
+            visao["anomaliasLigadas"] = JsonSerializer.SerializeToNode(await anomalias.Ligadas(endereco, cancelamento).ConfigureAwait(false), JsonDasInstituicoes.Opcoes);
+            return Results.Json(visao, JsonDasInstituicoes.Opcoes);
+        });
 
         administracao.MapPatch(Base + "/{endereco}", async (string endereco, HttpContext contexto, CadastroDeInstituicoes cadastro) =>
         {

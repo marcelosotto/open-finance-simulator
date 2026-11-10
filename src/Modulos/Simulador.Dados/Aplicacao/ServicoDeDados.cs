@@ -83,6 +83,16 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         var emissao = operacao.TemChave
             ? ChaveDePaginacao.Abrir(query["pagination-key"], consulta, segredo.Valor, agora, limites.ValidadeDaChaveMin)
             : null;
+        if (emissao is not null)
+        {
+            contexto.Items[EtapaDeComportamento.ItemDaPaginaSeguinte] = true;
+        }
+        else if (operacao.TemChave && !string.IsNullOrEmpty(query["pagination-key"]) && await Anomalias.Ligada(contexto, Anomalias.ChaveRecusadaCom422).ConfigureAwait(false))
+        {
+            // Anomalia: a chave ruim é recusada na etapa de parâmetros, antes da cota (RN36, RN39, RN113).
+            return Erro422("PARAMETRO_INVALIDO");
+        }
+
         var instante = emissao?.Emissao ?? agora;
         var corte = emissao?.EmissaoReal ?? hora.Relogio.GetUtcNow();
 

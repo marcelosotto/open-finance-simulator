@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Simulador.Catalogo.Contratos;
 using Simulador.Cenarios.Contratos;
 using Simulador.Cenarios.Dominio;
@@ -51,6 +53,7 @@ internal sealed class EsperaReal(HoraReal hora) : IEsperaDaChamada
 internal sealed class FiltroDaChamada(InstituicoesDaChamada instituicoes, HoraReal hora) : IEndpointFilter
 {
     public const string ItemDaFalha = "sim:falha-no-corpo";
+    public const string ItemDoDefeito = "sim:defeito";
     private const string CabecalhoDoRelogio = "x-sim-clock";
 
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
@@ -68,7 +71,18 @@ internal sealed class FiltroDaChamada(InstituicoesDaChamada instituicoes, HoraRe
         }
 
         var resultado = await next(context).ConfigureAwait(false);
-        return contexto.Items[ItemDaFalha] is string falha && resultado is IResult original ? new ResultadoCorrompido(original, falha) : resultado;
+        if (resultado is not IResult saida)
+        {
+            return resultado;
+        }
+
+        // O defeito vem antes, e a falha de transporte corrompe o corpo já alterado (RN116).
+        if (contexto.Items[ItemDoDefeito] is DefeitoDaChamada defeito && contexto.Items[OperacaoDoCatalogo.ItemDaChamada] is OperacaoDoCatalogo operacao)
+        {
+            saida = new ResultadoComDefeito(saida, defeito, operacao, instante);
+        }
+
+        return contexto.Items[ItemDaFalha] is string falha ? new ResultadoCorrompido(saida, falha) : saida;
     }
 }
 
@@ -104,6 +118,144 @@ internal sealed class ResultadoCorrompido(IResult original, string falha) : IRes
     }
 }
 
+/// <summary>Executa o resultado num buffer e aplica o defeito ao corpo 2XX em JSON (RN111, RN117).</summary>
+internal sealed class ResultadoComDefeito(IResult original, DefeitoDaChamada defeito, OperacaoDoCatalogo operacao, DateTimeOffset instante) : IResult
+{
+    private static readonly ConcurrentDictionary<(string, string), JsonObject?> Schemas = new();
+
+    public async Task ExecuteAsync(HttpContext httpContext)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+        var destino = httpContext.Response.Body;
+        byte[] corpo;
+        await using (var memoria = new MemoryStream())
+        {
+            httpContext.Response.Body = memoria;
+            try
+            {
+                await original.ExecuteAsync(httpContext).ConfigureAwait(false);
+            }
+            finally
+            {
+                httpContext.Response.Body = destino;
+            }
+
+            corpo = memoria.ToArray();
+        }
+
+        var saida = Alterado(httpContext, corpo) ?? corpo;
+        if (saida.Length > 0)
+        {
+            httpContext.Response.ContentLength = saida.Length;
+            await destino.WriteAsync(saida).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// O nó lido por <c>JsonNode.Parse</c> monta os filhos na primeira
+    /// leitura, sem trava. O schema fica no cache para chamadas simultâneas, então a árvore é montada inteira antes de
+    /// ser publicada; depois disso, só há leitura.
+    /// </summary>
+    private static JsonObject? Materializado(JsonNode? no)
+    {
+        Percorrer(no);
+        return no as JsonObject;
+    }
+
+    private static void Percorrer(JsonNode? no)
+    {
+        switch (no)
+        {
+            case JsonObject objeto:
+                foreach (var (_, filho) in objeto)
+                {
+                    Percorrer(filho);
+                }
+
+                break;
+            case JsonArray lista:
+                foreach (var filho in lista)
+                {
+                    Percorrer(filho);
+                }
+
+                break;
+        }
+    }
+
+    private byte[]? Alterado(HttpContext contexto, byte[] corpo)
+    {
+        var status = contexto.Response.StatusCode;
+        if (status is < 200 or > 299 || corpo.Length == 0)
+        {
+            return null;
+        }
+
+        var codigo = status.ToString(CultureInfo.InvariantCulture);
+        var schema = Schemas.GetOrAdd((operacao.OperationId, codigo), _ => operacao.Respostas.TryGetValue(codigo, out var texto) ? Materializado(JsonNode.Parse(texto)) : null);
+        JsonObject? json;
+        try
+        {
+            json = JsonNode.Parse(corpo) as JsonObject;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+
+        var paginaSeguinte = contexto.Items[EtapaDeComportamento.ItemDaPaginaSeguinte] is true;
+        return json is not null && schema is not null && AplicacaoDeDefeito.Aplicar(json, schema, defeito, instante, paginaSeguinte)
+            ? Encoding.UTF8.GetBytes(json.ToJsonString(EnvelopeDeErro.OpcoesJson))
+            : null;
+    }
+}
+
+/// <summary>
+/// Anomalias do banco pelo cache de Cenários (RN113). Se a leitura falha ou demora mais que <see cref="EsperaMaxima"/>
+/// (MongoDB fora, que o driver só acusa depois de ~30 s), a anomalia conta como desligada: o 401 do portão segue 401
+/// e a chave segue o caminho normal, sem virar 500 e sem segurar a chamada (RN12). A falha fica guardada por
+/// <see cref="PausaDepoisDaFalha"/>: nesse tempo, nenhuma consulta espera de novo, nem a segunda do mesmo portão.
+/// </summary>
+internal sealed partial class AnomaliasDaChamada(ICenarios cenarios, ILogger<AnomaliasDaChamada> registro) : IAnomaliasDaChamada
+{
+    public static readonly TimeSpan EsperaMaxima = TimeSpan.FromSeconds(1);
+    public static readonly TimeSpan PausaDepoisDaFalha = TimeSpan.FromSeconds(5);
+
+    private long _semLeituraAte = long.MinValue;
+
+    public async Task<bool> Ligada(string instituicao, string nome, CancellationToken cancelamento)
+    {
+        if (Environment.TickCount64 < Volatile.Read(ref _semLeituraAte))
+        {
+            return false;
+        }
+
+        try
+        {
+            var ligadas = await cenarios.AnomaliasLigadas(instituicao, cancelamento).WaitAsync(EsperaMaxima, TimeProvider.System, cancelamento).ConfigureAwait(false);
+            return ligadas.Contains(nome);
+        }
+        catch (Exception erro) when (erro is MongoDB.Driver.MongoException or TimeoutException)
+        {
+            Volatile.Write(ref _semLeituraAte, Environment.TickCount64 + (long)PausaDepoisDaFalha.TotalMilliseconds);
+            LeituraFalhou(registro, nome, instituicao, erro);
+            return false;
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Anomalia {Nome} do banco {Banco} sem leitura; segue desligada.")]
+    private static partial void LeituraFalhou(ILogger registro, string nome, string banco, Exception erro);
+}
+
+/// <summary>Anomalias ligadas, para a lista de instituições (RN114).</summary>
+internal sealed class ConsultaDeAnomalias(ICenarios cenarios) : IConsultaDeAnomalias, ILimpezaDeAnomalias
+{
+    public async Task<IReadOnlyList<string>> Ligadas(string endereco, CancellationToken cancelamento) =>
+        [.. (await cenarios.AnomaliasLigadas(endereco, cancelamento).ConfigureAwait(false)).Order(StringComparer.Ordinal)];
+
+    public Task Apagar(string endereco, CancellationToken cancelamento) => cenarios.ApagarAnomalias(endereco, cancelamento);
+}
+
 /// <summary>Etapa de regra de cenário e perfil (RN39), com a instituição já lida na chamada.</summary>
 internal sealed class ComportamentoDaChamada(
     InstituicoesDaChamada instituicoes,
@@ -129,6 +281,11 @@ internal sealed class ComportamentoDaChamada(
         if (decisao.Transporte == Efeitos.ConexaoCortada)
         {
             return new DesfechoDoComportamento(decisao.Espera, Cortar: true);
+        }
+
+        if (decisao.Defeito is { } defeito)
+        {
+            contexto.Items[FiltroDaChamada.ItemDoDefeito] = defeito;
         }
 
         if (decisao.Transporte is { } falha)
@@ -218,8 +375,11 @@ internal sealed class AmbienteDosCenarios(IAmbienteDasInstituicoes instituicoes,
 
     public Task<long> ProximaPosicao(string chave, CancellationToken cancelamento) => contadores.Somar(chave, ValidadeDaSequencia, cancelamento);
 
+    public async Task<bool> InstituicaoExiste(string instituicao, CancellationToken cancelamento) =>
+        await repositorio.Obter(instituicao, cancelamento).ConfigureAwait(false) is not null;
+
     public Task RegistrarHistorico(string alvo, string? autor, string acao, string? antes, string? depois, CancellationToken cancelamento) =>
-        repositorio.AcrescentarHistorico(new EntradaDeHistorico(alvo, hora.Relogio.GetUtcNow(), string.IsNullOrWhiteSpace(autor) ? "operador" : autor, acao, [new Mudanca("regra", antes, depois)]), cancelamento);
+        repositorio.AcrescentarHistorico(new EntradaDeHistorico(alvo, hora.Relogio.GetUtcNow(), string.IsNullOrWhiteSpace(autor) ? "operador" : autor, acao, [new Mudanca(acao.StartsWith("anomalia", StringComparison.Ordinal) ? "anomalia" : "regra", antes, depois)]), cancelamento);
 }
 
 internal static class ExtensoesDosAdaptadoresDeCenarios
@@ -231,6 +391,10 @@ internal static class ExtensoesDosAdaptadoresDeCenarios
         servicos.AddSingleton<IEsperaDaChamada, EsperaReal>();
         servicos.AddSingleton<RelogioDosBancos>();
         servicos.AddSingleton<FiltroDaChamada>();
+        servicos.AddSingleton<IAnomaliasDaChamada, AnomaliasDaChamada>();
+        servicos.AddSingleton<ConsultaDeAnomalias>();
+        servicos.AddSingleton<IConsultaDeAnomalias>(p => p.GetRequiredService<ConsultaDeAnomalias>());
+        servicos.AddSingleton<ILimpezaDeAnomalias>(p => p.GetRequiredService<ConsultaDeAnomalias>());
         return servicos;
     }
 }

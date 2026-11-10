@@ -35,6 +35,9 @@ public interface IComportamentoDaChamada
 /// <summary>Acesso à etapa pelos módulos que respondem às operações.</summary>
 public static class EtapaDeComportamento
 {
+    /// <summary>Item da chamada que veio com <c>pagination-key</c> válida: a página seguinte (RN115).</summary>
+    public const string ItemDaPaginaSeguinte = "sim:pagina-seguinte";
+
     public static Task<DesfechoDoComportamento?> Decidir(HttpContext contexto)
     {
         ArgumentNullException.ThrowIfNull(contexto);

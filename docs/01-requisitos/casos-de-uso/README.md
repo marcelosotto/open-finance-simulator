@@ -297,8 +297,11 @@ Todos começam como **Rascunho**.
 - **Status:** Aprovado
 - **Ator:** QA
 - **Objetivo:** ver como a receptora reage a dado ruim e a desvio de protocolo. O simulador não valida o resultado ([PR04](../../00-visao-geral/premissas.md#pr04)).
-- **Fluxo principal:** 1. Escolhe no catálogo um defeito ou anomalia. 2. Define alcance e taxa. 3. Confere o resultado na aplicação que consome.
-- **Regras:** [RN110](../regras-de-negocio.md#rn110) a [RN115](../regras-de-negocio.md#rn115).
+- **Fluxo principal — defeito:** 1. Cria uma regra de cenário com efeito `defeito` e um nome do catálogo ([RN110](../regras-de-negocio.md#rn110)). 2. Define alcance, frequência e, se quiser repetir, semente ([RN111](../regras-de-negocio.md#rn111)). 3. Confere o resultado na aplicação que consome.
+- **Fluxo alternativo — anomalia:** liga uma anomalia do catálogo na instituição ([RN113](../regras-de-negocio.md#rn113)). A lista de bancos passa a mostrar o aviso ([RN114](../regras-de-negocio.md#rn114)). Desligar volta ao comportamento oficial.
+- **Fluxo alternativo — dado mudando na paginação:** usa o defeito `dado-muda-na-paginacao` com `quantidade` ([RN115](../regras-de-negocio.md#rn115)).
+- **Exceções:** nome fora do catálogo ou banco inexistente → recusado.
+- **Regras:** [RN110](../regras-de-negocio.md#rn110) a [RN117](../regras-de-negocio.md#rn117).
 
 ### <a id="uc23"></a>UC23 — Marcar os dados
 - **Status:** Aprovado

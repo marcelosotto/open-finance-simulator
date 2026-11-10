@@ -1,8 +1,6 @@
 # language: pt
 # Caso de uso: UC22 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 009: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-009
 Funcionalidade: Injetar defeitos e anomalias
   Como QA
   Quero respostas fora do padrão
