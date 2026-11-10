@@ -68,7 +68,12 @@ public sealed record DadosDoConsentimento(
     string? UsuarioLogado,
     int AprovacoesPendentes,
     IReadOnlyList<DadosDaExtensao> Extensoes,
-    int Versao = 0);
+    int Versao = 0,
+    bool AlcadaRecusada = false,
+    IReadOnlyList<DadosDaDecisao>? Decisoes = null);
+
+/// <summary>Uma aprovação ou recusa de múltipla alçada (RN99).</summary>
+public sealed record DadosDaDecisao(string Autor, string Decisao, DateTimeOffset Em);
 
 /// <summary>Recurso como este módulo o enxerga.</summary>
 public sealed record DadosDoRecurso(string ResourceId, string Cliente, string Banco, string Tipo, string Estado, string Natureza, int Versao = 0);
@@ -94,6 +99,9 @@ public interface IAmbienteDosConsentimentos
     Task<DadosDoConsentimento?> Consentimento(string consentId, CancellationToken cancelamento);
 
     Task<DadosDoRecurso?> Recurso(string resourceId, CancellationToken cancelamento);
+
+    /// <summary>O recurso com o estado naquele consentimento, antes da regra de cenário (RN97).</summary>
+    Task<DadosDoRecurso?> RecursoNoConsentimento(string resourceId, DadosDoConsentimento consentimento, DateTimeOffset agora, CancellationToken cancelamento);
 
     Task<string?> NovoConsentId(CancellationToken cancelamento);
 

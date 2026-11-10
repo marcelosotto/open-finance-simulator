@@ -34,6 +34,10 @@ public static class ExtensoesDosConsentimentos
     public static string? ReceptoraDaChamada(HttpContext contexto) =>
         (contexto.Items[PortaoDeSeguranca.ItemDoToken] as TokenDeAcesso)?.OrganisationId;
 
+    /// <summary>O estado do recurso naquele consentimento, antes da regra de cenário (RN97).</summary>
+    public static string EstadoNoConsentimento(DadosDoConsentimento consentimento, string estadoGravado, DateTimeOffset agora) =>
+        Alcadas.EstadoNoConsentimento(consentimento, estadoGravado, agora);
+
     public static IServiceCollection AddConsentimentos(this IServiceCollection servicos, IConfiguration configuracao)
     {
         servicos.AddSingleton<IRepositorioDeReceptoras>(_ => new RepositorioMongo(

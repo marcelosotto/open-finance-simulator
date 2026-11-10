@@ -81,7 +81,12 @@ public sealed record Consentimento(
     string? UsuarioLogado = null,
     int AprovacoesPendentes = 0,
     IReadOnlyList<Extensao>? Extensoes = null,
-    int Versao = 0);
+    int Versao = 0,
+    bool AlcadaRecusada = false,
+    IReadOnlyList<DecisaoDeAlcada>? Decisoes = null);
+
+/// <summary>Uma aprovação ou recusa de múltipla alçada (RN99).</summary>
+public sealed record DecisaoDeAlcada(string Autor, string Decisao, DateTimeOffset Em);
 
 /// <summary>Uma renovação do consentimento (RN87).</summary>
 public sealed record Extensao(

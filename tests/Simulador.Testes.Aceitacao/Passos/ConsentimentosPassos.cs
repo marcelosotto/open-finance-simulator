@@ -278,7 +278,24 @@ public sealed class ConsentimentosPassos : IDisposable
     }
 
     [When(@"^Ana tenta renovar o consentimento$")]
+    [When(@"^Ana tenta renovar$")]
     public Task TentaRenovar() => Renovar(_fabrica.Relogio.GetUtcNow().AddDays(60));
+
+    [Given(@"^um consentimento da Indústria Aurora com duas aprovadoras$")]
+    public async Task AuroraComDuasAprovadoras()
+    {
+        var receptora = await AtalhosDeConsentimento.CriarReceptora(_admin);
+        (_usuario, _senha) = (receptora.Usuario, receptora.Senha);
+        var aurora = await CriarCliente("PJ");
+        _documento = await CriarCliente();
+        using var resposta = await _admin.PostAsJsonAsync(
+            new Uri("/admin/consentimentos", UriKind.Relative),
+            new { cliente = aurora, banco = _banco, receptora = receptora.OrganisationId, permissoes = Contas, aprovacoesPendentes = 2 });
+        Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
+        using var corpo = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync());
+        _consentId = corpo.RootElement.GetProperty("consentId").GetString()!;
+        _tokenDoConsentimento = await Pedir($"consent:{_consentId}");
+    }
 
     [Given(@"^um banco que ""(.*)""$")]
     public async Task UmBancoQue(string oferta)

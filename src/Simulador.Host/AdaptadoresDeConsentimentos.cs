@@ -36,6 +36,11 @@ internal sealed class AmbienteDosConsentimentos(
     public async Task<DadosDoRecurso?> Recurso(string resourceId, CancellationToken cancelamento) =>
         await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) with { Estado = await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, cancelamento).ConfigureAwait(false) } : null;
 
+    public async Task<DadosDoRecurso?> RecursoNoConsentimento(string resourceId, DadosDoConsentimento consentimento, DateTimeOffset agora, CancellationToken cancelamento) =>
+        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r
+            ? Mapear(r) with { Estado = await comportamento.EstadoDoRecurso(r.ResourceId, ExtensoesDosConsentimentos.EstadoNoConsentimento(consentimento, r.Estado, agora), cancelamento).ConfigureAwait(false) }
+            : null;
+
     public Task<string?> NovoConsentId(CancellationToken cancelamento) => escrita.NovoConsentId(cancelamento);
 
     public Task Inserir(DadosDoConsentimento consentimento, CancellationToken cancelamento) => escrita.InserirConsentimento(Mapear(consentimento), cancelamento);
@@ -65,12 +70,16 @@ internal sealed class AmbienteDosConsentimentos(
     private static DadosDoConsentimento Mapear(Consentimento c) => new(
         c.ConsentId, c.Cliente, c.Banco, c.Estado, c.Permissoes, c.Recursos, c.CriadoEm, c.Marca, c.Natureza, c.LoteId, c.ExpiraEm, c.Receptora, c.RejeitadoPor, c.Razao, c.AtualizadoEm, c.UsuarioLogado, c.AprovacoesPendentes,
         [.. (c.Extensoes ?? []).Select(e => new DadosDaExtensao(e.NovaValidade, e.ValidadeAnterior, e.Documento, e.Rel, e.SolicitadaEm, e.Ip, e.UserAgent))],
-        c.Versao);
+        c.Versao,
+        c.AlcadaRecusada,
+        c.Decisoes is null ? null : [.. c.Decisoes.Select(d => new DadosDaDecisao(d.Autor, d.Decisao, d.Em))]);
 
     private static Consentimento Mapear(DadosDoConsentimento c) => new(
         c.ConsentId, c.Cliente, c.Banco, c.Estado, c.Permissoes, c.Recursos, c.CriadoEm, c.Marca, c.Natureza, c.LoteId, c.ExpiraEm, c.Receptora, c.RejeitadoPor, c.Razao, c.AtualizadoEm, c.UsuarioLogado, c.AprovacoesPendentes,
         [.. c.Extensoes.Select(e => new Extensao(e.NovaValidade, e.ValidadeAnterior, e.Documento, e.Rel, e.SolicitadaEm, e.Ip, e.UserAgent))],
-        c.Versao);
+        c.Versao,
+        c.AlcadaRecusada,
+        c.Decisoes is null ? null : [.. c.Decisoes.Select(d => new DecisaoDeAlcada(d.Autor, d.Decisao, d.Em))]);
 }
 
 /// <summary>Leva a operação do catálogo ao portão do módulo.</summary>
