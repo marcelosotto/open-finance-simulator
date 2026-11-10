@@ -347,7 +347,11 @@ internal sealed class ComportamentoDaChamada(
     }
 
     private IReadOnlySet<int> Declarados(OperacaoDoCatalogo operacao) =>
-        _declarados.GetOrAdd(operacao.OperationId, _ => operacao.Respostas.Keys.Select(k => int.TryParse(k, NumberStyles.None, CultureInfo.InvariantCulture, out var s) ? s : 0).Where(s => s > 0).ToHashSet());
+        _declarados.GetOrAdd(operacao.OperationId, _ => DeclaradosDe(operacao));
+
+    /// <summary>Os status numéricos que a operação declara; a mesma conta vale na chamada e na vencedora da administração.</summary>
+    internal static HashSet<int> DeclaradosDe(OperacaoDoCatalogo operacao) =>
+        operacao.Respostas.Keys.Select(k => int.TryParse(k, NumberStyles.None, CultureInfo.InvariantCulture, out var s) ? s : 0).Where(s => s > 0).ToHashSet();
 
     private IResult Erro(HttpContext contexto, int status, OperacaoDoCatalogo operacao, Instituicoes.Contratos.Limites limites)
     {
@@ -367,11 +371,21 @@ internal sealed class ComportamentoDaChamada(
 internal sealed class AmbienteDosCenarios(IAmbienteDasInstituicoes instituicoes, IRepositorioDeInstituicoes repositorio, ICatalogo catalogo, IContadores contadores, HoraReal hora) : IAmbienteDosCenarios
 {
     private static readonly TimeSpan ValidadeDaSequencia = TimeSpan.FromDays(3650);
-    private readonly Lazy<HashSet<string>> _operacoes = new(() => catalogo.Operacoes.Select(o => o.OperationId).ToHashSet(StringComparer.Ordinal));
+    private readonly Lazy<Dictionary<string, IReadOnlySet<int>>> _operacoes = new(() => catalogo.Operacoes
+        .GroupBy(o => o.OperationId, StringComparer.Ordinal)
+        .ToDictionary(g => g.Key, g => (IReadOnlySet<int>)ComportamentoDaChamada.DeclaradosDe(g.First()), StringComparer.Ordinal));
 
     public IReadOnlySet<int> StatusDeclarados => instituicoes.StatusDeclarados;
 
-    public bool OperacaoExiste(string operationId) => _operacoes.Value.Contains(operationId);
+    public bool OperacaoExiste(string operationId) => _operacoes.Value.ContainsKey(operationId);
+
+    public IReadOnlySet<int>? StatusDeclaradosDe(string operationId) => _operacoes.Value.GetValueOrDefault(operationId);
+
+    public async Task<DateTimeOffset?> HoraDoBanco(string instituicao, CancellationToken cancelamento)
+    {
+        var real = hora.Relogio.GetUtcNow();
+        return await repositorio.Obter(instituicao, cancelamento).ConfigureAwait(false) is { } banco ? banco.Relogio?.Agora(real) ?? real : null;
+    }
 
     public Task<long> ProximaPosicao(string chave, CancellationToken cancelamento) => contadores.Somar(chave, ValidadeDaSequencia, cancelamento);
 

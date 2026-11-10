@@ -22,6 +22,13 @@ internal static class RotasDeCenarios
     public static void Mapear(IEndpointRouteBuilder administracao)
     {
         administracao.MapGet(Regras, async (ServicoDeCenarios servico, CancellationToken t) => Json(await servico.Regras(t).ConfigureAwait(false)));
+        administracao.MapGet(Regras + "/vencedora", async (string? instituicao, string? endpoint, string? cliente, string? recurso, ServicoDeCenarios servico, CancellationToken t) =>
+            await servico.Vencedoras(instituicao, endpoint, cliente, recurso, t).ConfigureAwait(false) switch
+            {
+                { Tipo: TipoDeSaida.Ok } saida => Json(saida.Valor),
+                { Tipo: TipoDeSaida.NaoEncontrado } saida => Erro(StatusCodes.Status404NotFound, [.. saida.Erros!]),
+                var saida => Erro(StatusCodes.Status422UnprocessableEntity, [.. saida.Erros!]),
+            });
         administracao.MapGet(Regras + "/{id}", async (string id, ServicoDeCenarios servico, CancellationToken t) =>
             await servico.Regra(id, t).ConfigureAwait(false) is { } regra ? Json(regra) : Erro(StatusCodes.Status404NotFound, RegraInexistente));
 

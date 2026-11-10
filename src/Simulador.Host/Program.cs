@@ -38,11 +38,13 @@ var app = builder.Build();
 var openFinance = app.MapGroup(string.Empty).RequireHost($"*:{portas.OpenFinance}").ComMarcacao().AddEndpointFilter<RouteGroupBuilder, FiltroDaChamada>();
 var administracao = app.MapGroup(string.Empty).RequireHost($"*:{portas.Administracao}");
 administracao.MapGet("/saude/vivo", () => Results.Ok());
+administracao.MapearAmbiente();
 openFinance.MapearCatalogo(administracao);
 administracao.MapearInstituicoes();
 administracao.MapearCenarios();
 administracao.MapearMassa();
 openFinance.MapearConsentimentos(administracao);
+app.UsarBackOffice(administracao, portas.Administracao);
 
 await app.RunAsync().ConfigureAwait(false);
 

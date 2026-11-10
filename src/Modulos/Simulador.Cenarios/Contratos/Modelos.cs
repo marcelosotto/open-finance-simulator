@@ -37,6 +37,9 @@ public sealed record RegraDeCenario(
 /// <summary>Pacote de cenário (RN19).</summary>
 public sealed record PacoteDeCenario(string Nome, bool Ligado, DateTimeOffset CriadoEm);
 
+/// <summary>A regra que venceria em cada grupo, na hora do banco (UI06).</summary>
+public sealed record VencedorasDaChamada(DateTimeOffset Instante, RegraDeCenario? Comportamento, RegraDeCenario? Estado, RegraDeCenario? Defeito);
+
 /// <summary>O alcance de uma chamada real.</summary>
 public sealed record ChamadaAvaliada(string Instituicao, string Endpoint, string? Cliente, string? Recurso);
 
@@ -98,6 +101,12 @@ public interface IAmbienteDosCenarios
     IReadOnlySet<int> StatusDeclarados { get; }
 
     bool OperacaoExiste(string operationId);
+
+    /// <summary>Status declarados pela operação, como na chamada; nulo se a operação não existe.</summary>
+    IReadOnlySet<int>? StatusDeclaradosDe(string operationId);
+
+    /// <summary>A hora do banco (RN73); nulo se o banco não existe.</summary>
+    Task<DateTimeOffset?> HoraDoBanco(string instituicao, CancellationToken cancelamento);
 
     Task<bool> InstituicaoExiste(string instituicao, CancellationToken cancelamento);
 

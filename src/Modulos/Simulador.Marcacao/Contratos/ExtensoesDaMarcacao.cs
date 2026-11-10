@@ -24,6 +24,14 @@ public static class ExtensoesDaMarcacao
         return servicos;
     }
 
+    /// <summary><c>GET /admin/ambiente</c>: a marca da configuração, para a tela mostrar (UI01, RN72). Vazia em produção.</summary>
+    public static IEndpointRouteBuilder MapearAmbiente(this IEndpointRouteBuilder administracao)
+    {
+        ArgumentNullException.ThrowIfNull(administracao);
+        administracao.MapGet("/admin/ambiente", (MarcaDoAmbiente marca) => Results.Json(new { marca = marca.Valor }));
+        return administracao;
+    }
+
     /// <summary>Aplica os cabeçalhos de marcação a todas as rotas do grupo, inclusive 404 e 501.</summary>
     public static RouteGroupBuilder ComMarcacao(this RouteGroupBuilder grupo)
     {

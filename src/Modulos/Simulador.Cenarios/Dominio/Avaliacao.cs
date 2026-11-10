@@ -33,6 +33,10 @@ internal static class SelecaoDeRegras
     public static RegraDeCenario? VencedoraDeDefeito(IEnumerable<RegraDeCenario> regras, ChamadaAvaliada chamada, DateTimeOffset instante) =>
         Mais(regras.Where(r => r.Efeito.Tipo == Efeitos.Defeito && Casa(r, chamada, instante)));
 
+    /// <summary>As três vencedoras de uma chamada, sem sortear nada (UI06, RN15): comportamento, estado e defeito disputam cada uma no seu grupo.</summary>
+    public static VencedorasDaChamada Vencedoras(IReadOnlyList<RegraDeCenario> regras, ChamadaAvaliada chamada, DateTimeOffset instante, IReadOnlySet<int> declarados) =>
+        new(instante, Vencedora(regras, chamada, instante, declarados), VencedoraDeEstado(regras, chamada, instante), VencedoraDeDefeito(regras, chamada, instante));
+
     /// <summary>Número em [0, 1) da posição na sequência da semente (RN54).</summary>
     public static double SorteioDaSequencia(long semente, long posicao)
     {

@@ -232,6 +232,10 @@ public sealed class RevisaoDaSpec009Tests
 
         public bool OperacaoExiste(string operationId) => true;
 
+        public IReadOnlySet<int>? StatusDeclaradosDe(string operationId) => StatusDeclarados;
+
+        public Task<DateTimeOffset?> HoraDoBanco(string instituicao, CancellationToken cancelamento) => Task.FromResult<DateTimeOffset?>(DateTimeOffset.UnixEpoch);
+
         public Task<bool> InstituicaoExiste(string instituicao, CancellationToken cancelamento) => Task.FromResult(true);
 
         public Task<long> ProximaPosicao(string chave, CancellationToken cancelamento) => Task.FromResult(Interlocked.Increment(ref _posicoes));
