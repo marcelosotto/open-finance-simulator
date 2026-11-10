@@ -38,7 +38,7 @@ public partial class EtiquetasDeSpecTests
             .Select(Path.GetFileName)
             .ToList();
 
-        Assert.Equal(["comportamento.feature", "dados-e-transacoes.feature", "instituicoes.feature", "limites.feature", "marcacao.feature", "massa-e-semente.feature", "recursos.feature", "seguranca.feature"], semEtiqueta.Order(StringComparer.Ordinal));
+        Assert.Equal(["comportamento.feature", "consentimento-api.feature", "consentimento-no-painel.feature", "dados-e-transacoes.feature", "instituicoes.feature", "limites.feature", "marcacao.feature", "massa-e-semente.feature", "recursos.feature", "seguranca.feature"], semEtiqueta.Order(StringComparer.Ordinal));
     }
 
     [GeneratedRegex(@"^(\d{3})-")]

@@ -35,7 +35,7 @@
 ## Phase 5: Polish
 
 - [X] T011 [P] Testes de integração da administração em `tests/Simulador.Testes.Integracao/Consentimentos/PainelTests.cs`: códigos de 422, 404, 409, concorrência, schema oficial de Recursos
-- [ ] T012 Rodar os portões: formatação, build com `-warnaserror`, specs, suíte com cobertura, `cobertura conferir` e `docker build`
+- [X] T012 Rodar os portões: formatação, build com `-warnaserror`, specs, suíte com cobertura, `cobertura conferir` e `docker build`
 
 ## Dependencies
 

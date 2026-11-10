@@ -201,6 +201,7 @@ public class PainelTests
     public void Fim_do_prazo_so_com_alcada()
     {
         Assert.Null(Alcadas.FimDoPrazo(Consentimento()));
+        Assert.Null(Alcadas.FimDoPrazo(Consentimento(decisoes: [])));
         Assert.Equal(Agora.AddDays(15), Alcadas.FimDoPrazo(Consentimento(1)));
         Assert.Equal(Agora.AddDays(15), Alcadas.FimDoPrazo(Consentimento(recusada: true)));
         Assert.Equal(Agora.AddDays(15), Alcadas.FimDoPrazo(Consentimento(decisoes: [new("b", Alcadas.Aprovada, Agora)])));
@@ -241,5 +242,6 @@ public class PainelTests
         var recusado = Alcadas.Recusar(Consentimento(1), "bruno", Agora);
         Assert.True(recusado.AlcadaRecusada);
         Assert.Equal(new DadosDaDecisao("bruno", Alcadas.Recusada, Agora), Assert.Single(recusado.Decisoes!));
+        Assert.Equal(3, Alcadas.Recusar(aprovado, "ana", Agora).Decisoes!.Count);
     }
 }
