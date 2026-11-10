@@ -42,6 +42,9 @@ public sealed class ContextoDeComportamento : IDisposable
 
     public string Token { get; private set; } = string.Empty;
 
+    /// <summary>Recursos dos produtos extras, na ordem pedida.</summary>
+    public List<string> Extras { get; } = [];
+
     public HttpResponseMessage? Resposta { get; private set; }
 
     public string Corpo { get; private set; } = string.Empty;
@@ -58,7 +61,7 @@ public sealed class ContextoDeComportamento : IDisposable
         _ => "banco-azul",
     };
 
-    public async Task Preparar(string nome, bool semErros = true, int contasExtras = 0, DateTimeOffset? expiraEm = null)
+    public async Task Preparar(string nome, bool semErros = true, int contasExtras = 0, DateTimeOffset? expiraEm = null, string[]? produtosExtras = null)
     {
         Banco = Endereco(nome);
         if (Banco == "banco-azul")
@@ -90,6 +93,11 @@ public sealed class ContextoDeComportamento : IDisposable
         for (var i = 0; i < contasExtras; i++)
         {
             await AdicionarProduto("contas");
+        }
+
+        foreach (var produto in produtosExtras ?? [])
+        {
+            Extras.Add(await AdicionarProduto(produto));
         }
 
         using var resposta = await AtalhosDeConsentimento.Chamar(Api, HttpMethod.Post, AtalhosDeConsentimento.Caminho(Banco, "consents", "/consents"), await NovoToken("consents"), new

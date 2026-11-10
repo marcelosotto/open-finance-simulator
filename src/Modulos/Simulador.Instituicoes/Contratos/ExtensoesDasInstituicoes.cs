@@ -17,6 +17,7 @@ public static class ExtensoesDasInstituicoes
             configuracao["Simulador:Mongo:Conexao"] ?? "mongodb://localhost:27017",
             configuracao["Simulador:Mongo:Base"] ?? "simulador"));
         servicos.TryAddSingleton<IConsultaDeClientes, SemClientes>();
+        servicos.TryAddSingleton<IConsultaDeAnomalias, SemAnomalias>();
         servicos.AddSingleton<CadastroDeInstituicoes>();
         servicos.AddSingleton<IConsultaDeInstituicoes>(provedor => provedor.GetRequiredService<CadastroDeInstituicoes>());
         servicos.AddHostedService<Semeadura>();

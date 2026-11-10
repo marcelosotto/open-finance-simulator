@@ -66,6 +66,8 @@ public sealed class RevisaoDaSpec007Tests
 
         public bool OperacaoExiste(string operationId) => true;
 
+        public Task<bool> InstituicaoExiste(string instituicao, CancellationToken cancelamento) => Task.FromResult(true);
+
         public Task<long> ProximaPosicao(string chave, CancellationToken cancelamento) => Task.FromResult(0L);
 
         public Task RegistrarHistorico(string alvo, string? autor, string acao, string? antes, string? depois, CancellationToken cancelamento) => Task.CompletedTask;
@@ -109,5 +111,9 @@ public sealed class RevisaoDaSpec007Tests
         public Task SalvarPacote(PacoteDeCenario pacote, CancellationToken cancelamento) => Task.CompletedTask;
 
         public Task ApagarPacote(string nome, CancellationToken cancelamento) => Task.CompletedTask;
+
+        public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<AnomaliaDaInstituicao>>([]);
+
+        public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento) => Task.CompletedTask;
     }
 }

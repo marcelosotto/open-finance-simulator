@@ -10,6 +10,7 @@ public static class Efeitos
     public const string Indisponibilidade = "indisponibilidade";
     public const string Transporte = "transporte";
     public const string Estado = "estado";
+    public const string Defeito = "defeito";
     public const string Corte = "corte";
     public const string ConexaoCortada = "conexao-cortada";
     public const string CorpoTruncado = "corpo-truncado";
@@ -23,10 +24,14 @@ internal static class SelecaoDeRegras
     private const int StatusForaDoAr = 503;
 
     public static RegraDeCenario? Vencedora(IEnumerable<RegraDeCenario> regras, ChamadaAvaliada chamada, DateTimeOffset instante, IReadOnlySet<int> declarados) =>
-        Mais(regras.Where(r => r.Efeito.Tipo != Efeitos.Estado && Casa(r, chamada, instante) && Age(r.Efeito, declarados)));
+        Mais(regras.Where(r => r.Efeito.Tipo is not (Efeitos.Estado or Efeitos.Defeito) && Casa(r, chamada, instante) && Age(r.Efeito, declarados)));
 
     public static RegraDeCenario? VencedoraDeEstado(IEnumerable<RegraDeCenario> regras, ChamadaAvaliada chamada, DateTimeOffset instante) =>
         Mais(regras.Where(r => r.Efeito.Tipo == Efeitos.Estado && Casa(r, chamada, instante)));
+
+    /// <summary>Regras de defeito disputam só entre si (RN111).</summary>
+    public static RegraDeCenario? VencedoraDeDefeito(IEnumerable<RegraDeCenario> regras, ChamadaAvaliada chamada, DateTimeOffset instante) =>
+        Mais(regras.Where(r => r.Efeito.Tipo == Efeitos.Defeito && Casa(r, chamada, instante)));
 
     /// <summary>Número em [0, 1) da posição na sequência da semente (RN54).</summary>
     public static double SorteioDaSequencia(long semente, long posicao)
@@ -248,6 +253,9 @@ internal static class ValidacaoDeRegra
         Efeitos.Indisponibilidade => efeito.Resultado is { } resultado && Resultados.Contains(resultado),
         Efeitos.Transporte => efeito.Falha is { } falha && Falhas.Contains(falha),
         Efeitos.Estado => efeito.Estado is { } estado && Estados.Contains(estado),
+        Efeitos.Defeito => Defeitos.Existe(efeito.Defeito)
+            && (efeito.Campo is null || Defeitos.DeCampo.Contains(efeito.Defeito!))
+            && (efeito.Quantidade is null || (efeito.Defeito == Defeitos.DadoMudaNaPaginacao && efeito.Quantidade != 0)),
         _ => false,
     };
 }

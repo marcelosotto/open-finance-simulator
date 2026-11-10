@@ -57,6 +57,7 @@ public sealed class RepositorioDeCenariosEmMemoria : IRepositorioDeCenarios
 {
     private readonly ConcurrentDictionary<string, RegraDeCenario> _regras = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, PacoteDeCenario> _pacotes = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<(string, string), AnomaliaDaInstituicao> _anomalias = new();
 
     public Task<IReadOnlyList<RegraDeCenario>> ListarRegras(CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<RegraDeCenario>>([.. _regras.Values]);
 
@@ -89,6 +90,15 @@ public sealed class RepositorioDeCenariosEmMemoria : IRepositorioDeCenarios
     public Task ApagarPacote(string nome, CancellationToken cancelamento)
     {
         _pacotes.TryRemove(nome, out _);
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<AnomaliaDaInstituicao>>([.. _anomalias.Values]);
+
+    public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento)
+    {
+        ArgumentNullException.ThrowIfNull(anomalia);
+        _anomalias[(anomalia.Instituicao, anomalia.Nome)] = anomalia;
         return Task.CompletedTask;
     }
 }

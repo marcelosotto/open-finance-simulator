@@ -32,6 +32,9 @@ internal enum TipoDeSaida
 
 internal sealed record Saida<T>(TipoDeSaida Tipo, T? Valor = default, IReadOnlyList<string>? Erros = null);
 
+/// <summary>O que o cache guarda: regras ativas e anomalias ligadas por banco (RNF12).</summary>
+internal sealed record RetratoDosCenarios(IReadOnlyList<RegraDeCenario> Regras, IReadOnlyDictionary<string, IReadOnlySet<string>> Anomalias);
+
 /// <summary>Regras e pacotes (UC04), e a avaliação na chamada.</summary>
 internal sealed class ServicoDeCenarios(
     IRepositorioDeCenarios repositorio,
@@ -42,12 +45,13 @@ internal sealed class ServicoDeCenarios(
     private const int Escala = 1_000_000;
     private const string AlvoGeral = "cenarios";
     private static readonly TimeSpan ValidadeDoCache = TimeSpan.FromSeconds(5);
+    private static readonly IReadOnlySet<string> Nenhuma = new HashSet<string>(StringComparer.Ordinal);
 
     private readonly Lock _trava = new();
-    private IReadOnlyList<RegraDeCenario>? _ativas;
+    private RetratoDosCenarios? _ativas;
     private DateTimeOffset _validoAte;
     private long _geracao;
-    private Task<IReadOnlyList<RegraDeCenario>>? _carga;
+    private Task<RetratoDosCenarios>? _carga;
     private long _geracaoDaCarga = -1;
     private long _numeroDaCarga;
     private DateTimeOffset _inicioDaCarga;
@@ -56,14 +60,56 @@ internal sealed class ServicoDeCenarios(
 
     public async Task<DecisaoDeComportamento> Decidir(ChamadaAvaliada chamada, PerfilDaChamada perfil, DateTimeOffset instante, IReadOnlySet<int> declarados, CancellationToken cancelamento)
     {
-        var regras = await Ativas(cancelamento).ConfigureAwait(false);
+        var regras = (await Ativas(cancelamento).ConfigureAwait(false)).Regras;
+
+        // O defeito sorteia em toda chamada que chega à etapa, para a sequência não depender do perfil (RN111).
+        var deDefeito = SelecaoDeRegras.VencedoraDeDefeito(regras, chamada, instante);
+        var defeito = deDefeito is not null && await Dispara(deDefeito, cancelamento).ConfigureAwait(false)
+            ? new DefeitoDaChamada(deDefeito.Efeito.Defeito!, deDefeito.Efeito.Campo, deDefeito.Efeito.Quantidade)
+            : null;
         var vencedora = SelecaoDeRegras.Vencedora(regras, chamada, instante, declarados);
         var efeito = vencedora is not null && await Dispara(vencedora, cancelamento).ConfigureAwait(false) ? vencedora.Efeito : null;
-        return AvaliacaoDoPerfil.Decidir(perfil, efeito, instante, declarados, Sorteio);
+        var decisao = AvaliacaoDoPerfil.Decidir(perfil, efeito, instante, declarados, Sorteio);
+        return defeito is not null && decisao.Status is null && decisao.Transporte != Efeitos.ConexaoCortada ? decisao with { Defeito = defeito } : decisao;
     }
 
     public async Task<string?> EstadoSobreposto(ChamadaAvaliada chamada, DateTimeOffset instante, CancellationToken cancelamento) =>
-        SelecaoDeRegras.VencedoraDeEstado(await Ativas(cancelamento).ConfigureAwait(false), chamada, instante)?.Efeito.Estado;
+        SelecaoDeRegras.VencedoraDeEstado((await Ativas(cancelamento).ConfigureAwait(false)).Regras, chamada, instante)?.Efeito.Estado;
+
+    public async Task<IReadOnlySet<string>> AnomaliasLigadas(string instituicao, CancellationToken cancelamento) =>
+        (await Ativas(cancelamento).ConfigureAwait(false)).Anomalias.GetValueOrDefault(instituicao) ?? Nenhuma;
+
+    /// <summary>O estado de cada anomalia no banco, lido do repositório; nulo se o banco não existe (RN113).</summary>
+    public async Task<IReadOnlyList<EstadoDaAnomalia>?> AnomaliasDe(string instituicao, CancellationToken cancelamento)
+    {
+        if (!await ambiente.InstituicaoExiste(instituicao, cancelamento).ConfigureAwait(false))
+        {
+            return null;
+        }
+
+        var ligadas = (await repositorio.ListarAnomalias(cancelamento).ConfigureAwait(false)).Where(a => a.Instituicao == instituicao && a.Ligada).Select(a => a.Nome).ToHashSet(StringComparer.Ordinal);
+        return [.. CatalogoDeAnomalias.Itens.Select(a => new EstadoDaAnomalia(a.Nome, ligadas.Contains(a.Nome)))];
+    }
+
+    /// <summary>Liga ou desliga uma anomalia no banco, com histórico (RN113, PR02).</summary>
+    public async Task<Saida<EstadoDaAnomalia>> LigarAnomalia(string instituicao, string nome, bool ligada, string? autor, CancellationToken cancelamento)
+    {
+        if (!CatalogoDeAnomalias.Existe(nome))
+        {
+            return new Saida<EstadoDaAnomalia>(TipoDeSaida.NaoEncontrado, Erros: ["anomalia não encontrada"]);
+        }
+
+        if (!await ambiente.InstituicaoExiste(instituicao, cancelamento).ConfigureAwait(false))
+        {
+            return new Saida<EstadoDaAnomalia>(TipoDeSaida.NaoEncontrado, Erros: ["instituição não encontrada"]);
+        }
+
+        var antes = (await repositorio.ListarAnomalias(cancelamento).ConfigureAwait(false)).FirstOrDefault(a => a.Instituicao == instituicao && a.Nome == nome);
+        var depois = new AnomaliaDaInstituicao(instituicao, nome, ligada, hora.Relogio.GetUtcNow());
+        await repositorio.SalvarAnomalia(depois, cancelamento).ConfigureAwait(false);
+        await Registrar(instituicao, autor, ligada ? "anomalia-ligada" : "anomalia-desligada", antes, depois, cancelamento).ConfigureAwait(false);
+        return new Saida<EstadoDaAnomalia>(TipoDeSaida.Ok, new EstadoDaAnomalia(nome, ligada));
+    }
 
     public Task<IReadOnlyList<RegraDeCenario>> Regras(CancellationToken cancelamento) => repositorio.ListarRegras(cancelamento);
 
@@ -210,12 +256,12 @@ internal sealed class ServicoDeCenarios(
     /// Regras em cache por até 5 s desde o início da leitura (RNF12). Chamadas simultâneas esperam a mesma
     /// leitura, que guarda o resultado sozinha; quem recebe uma leitura atravessada por escrita lê de novo (R08).
     /// </summary>
-    private async Task<IReadOnlyList<RegraDeCenario>> Ativas(CancellationToken cancelamento)
+    private async Task<RetratoDosCenarios> Ativas(CancellationToken cancelamento)
     {
         while (true)
         {
             var agora = hora.Relogio.GetUtcNow();
-            Task<IReadOnlyList<RegraDeCenario>> carga;
+            Task<RetratoDosCenarios> carga;
             long geracao;
             lock (_trava)
             {
@@ -248,7 +294,7 @@ internal sealed class ServicoDeCenarios(
     }
 
     /// <summary>Uma leitura, iniciada fora da trava; guarda o resultado se ainda for a vez dela, e se descarta ao falhar.</summary>
-    private async Task<IReadOnlyList<RegraDeCenario>> Carga(long numero, long geracao, DateTimeOffset inicio)
+    private async Task<RetratoDosCenarios> Carga(long numero, long geracao, DateTimeOffset inicio)
     {
         await Task.Yield();
         try
@@ -277,11 +323,15 @@ internal sealed class ServicoDeCenarios(
         }
     }
 
-    private async Task<IReadOnlyList<RegraDeCenario>> Carregar()
+    private async Task<RetratoDosCenarios> Carregar()
     {
         var regras = await repositorio.ListarRegras(CancellationToken.None).ConfigureAwait(false);
         var ligados = (await repositorio.ListarPacotes(CancellationToken.None).ConfigureAwait(false)).Where(p => p.Ligado).Select(p => p.Nome).ToHashSet(StringComparer.Ordinal);
-        return [.. regras.Where(r => r.Ligada && (r.Pacote is null || ligados.Contains(r.Pacote)))];
+        var anomalias = (await repositorio.ListarAnomalias(CancellationToken.None).ConfigureAwait(false))
+            .Where(a => a.Ligada)
+            .GroupBy(a => a.Instituicao, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, IReadOnlySet<string> (g) => g.Select(a => a.Nome).ToHashSet(StringComparer.Ordinal), StringComparer.Ordinal);
+        return new RetratoDosCenarios([.. regras.Where(r => r.Ligada && (r.Pacote is null || ligados.Contains(r.Pacote)))], anomalias);
     }
 
     private async Task<bool> Dispara(RegraDeCenario regra, CancellationToken cancelamento)

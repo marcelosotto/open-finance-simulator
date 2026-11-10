@@ -5,13 +5,14 @@ using Simulador.Cenarios.Contratos;
 
 namespace Simulador.Cenarios.Persistencia;
 
-/// <summary>Grava regras e pacotes em <c>cenarios</c>, em JSON.</summary>
+/// <summary>Grava regras, pacotes e anomalias em <c>cenarios</c>, em JSON.</summary>
 internal sealed class RepositorioMongo : IRepositorioDeCenarios, IDisposable
 {
     private const string Id = "_id";
     private const string Conteudo = "doc";
     private const string PrefixoDeRegra = "regra:";
     private const string PrefixoDePacote = "pacote:";
+    private const string PrefixoDeAnomalia = "anomalia:";
 
     private readonly MongoClient _cliente;
     private readonly IMongoCollection<BsonDocument> _cenarios;
@@ -45,6 +46,15 @@ internal sealed class RepositorioMongo : IRepositorioDeCenarios, IDisposable
     }
 
     public Task ApagarPacote(string nome, CancellationToken cancelamento) => Apagar(PrefixoDePacote + nome, cancelamento);
+
+    public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Listar<AnomaliaDaInstituicao>(PrefixoDeAnomalia, cancelamento);
+
+    /// <summary>Um documento por banco e anomalia: ligar duas ao mesmo tempo não perde nenhuma.</summary>
+    public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento)
+    {
+        ArgumentNullException.ThrowIfNull(anomalia);
+        return Salvar($"{PrefixoDeAnomalia}{anomalia.Instituicao}:{anomalia.Nome}", anomalia, cancelamento);
+    }
 
     public void Dispose() => _cliente.Dispose();
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Simulador.Cenarios.Aplicacao;
 using Simulador.Cenarios.Contratos;
+using Simulador.Cenarios.Dominio;
 
 namespace Simulador.Cenarios.Http;
 
@@ -13,6 +14,8 @@ internal static class RotasDeCenarios
     private const string CabecalhoDoAutor = "x-sim-autor";
     private const string Regras = "/admin/cenarios/regras";
     private const string Pacotes = "/admin/cenarios/pacotes";
+    private const string RotaDeDefeitos = "/admin/cenarios/defeitos";
+    private const string RotaDeAnomalias = "/admin/cenarios/anomalias";
     private const string RegraInexistente = "regra não encontrada";
     private const string PacoteInexistente = "pacote não encontrado";
 
@@ -40,6 +43,13 @@ internal static class RotasDeCenarios
         administracao.MapPost(Regras + "/{id}/desligar", async (string id, HttpContext contexto, ServicoDeCenarios servico) =>
             Responder(await servico.Ligar(id, false, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false)));
 
+        administracao.MapGet(RotaDeDefeitos, () => Json(Defeitos.Catalogo));
+        administracao.MapGet(RotaDeAnomalias, () => Json(CatalogoDeAnomalias.Itens));
+        administracao.MapGet(RotaDeAnomalias + "/{banco}", async (string banco, ServicoDeCenarios servico, CancellationToken t) =>
+            await servico.AnomaliasDe(banco, t).ConfigureAwait(false) is { } estados ? Json(estados) : Erro(StatusCodes.Status404NotFound, "instituição não encontrada"));
+        administracao.MapPost(RotaDeAnomalias + "/{banco}/{nome}/ligar", (string banco, string nome, HttpContext contexto, ServicoDeCenarios servico) => LigarAnomalia(banco, nome, true, contexto, servico));
+        administracao.MapPost(RotaDeAnomalias + "/{banco}/{nome}/desligar", (string banco, string nome, HttpContext contexto, ServicoDeCenarios servico) => LigarAnomalia(banco, nome, false, contexto, servico));
+
         administracao.MapGet(Pacotes, async (ServicoDeCenarios servico, CancellationToken t) => Json(await servico.Pacotes(t).ConfigureAwait(false)));
         administracao.MapPut(Pacotes + "/{nome}", async (string nome, HttpContext contexto, ServicoDeCenarios servico) =>
             Json(await servico.CriarPacote(nome, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false)));
@@ -52,6 +62,12 @@ internal static class RotasDeCenarios
                 TipoDeSaida.Conflito => Erro(StatusCodes.Status409Conflict, "pacote tem regras"),
                 _ => Erro(StatusCodes.Status404NotFound, PacoteInexistente),
             });
+    }
+
+    private static async Task<IResult> LigarAnomalia(string banco, string nome, bool ligada, HttpContext contexto, ServicoDeCenarios servico)
+    {
+        var saida = await servico.LigarAnomalia(banco, nome, ligada, Autor(contexto), contexto.RequestAborted).ConfigureAwait(false);
+        return saida.Tipo == TipoDeSaida.Ok ? Json(saida.Valor) : Erro(StatusCodes.Status404NotFound, [.. saida.Erros!]);
     }
 
     private static async Task<IResult> LigarPacote(string nome, bool ligado, HttpContext contexto, ServicoDeCenarios servico) =>

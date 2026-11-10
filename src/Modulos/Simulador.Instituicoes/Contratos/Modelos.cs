@@ -131,6 +131,12 @@ public interface IConsultaDeClientes
     Task<bool> TemClientes(string endereco, CancellationToken cancelamento);
 }
 
+/// <summary>Anomalias ligadas num banco, para o aviso da lista (RN114); a spec 009 implementa.</summary>
+public interface IConsultaDeAnomalias
+{
+    Task<IReadOnlyList<string>> Ligadas(string endereco, CancellationToken cancelamento);
+}
+
 /// <summary>O que o módulo precisa do ambiente; o host implementa (ADR-007).</summary>
 public interface IAmbienteDasInstituicoes
 {

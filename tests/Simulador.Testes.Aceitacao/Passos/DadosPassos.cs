@@ -423,6 +423,17 @@ public sealed class DadosPassos : IDisposable
         }
     }
 
+    // RN113 (spec 009)
+    [Given(@"^que o ""Banco Restritivo"" tem a anomalia ""(.*)""$")]
+    public async Task ComAnomalia(string anomalia)
+    {
+        using var resposta = await _admin.PostAsync(new Uri($"/admin/cenarios/anomalias/{Banco}/{anomalia}/ligar", UriKind.Relative), null);
+        Assert.True(resposta.IsSuccessStatusCode, await resposta.Content.ReadAsStringAsync());
+    }
+
+    [Given(@"^uma chave expirada$")]
+    public Task ChaveExpirada() => ChaveRuim("expirada");
+
     [When(@"^Ana pede a página seguinte$")]
     public async Task PaginaSeguinte()
     {

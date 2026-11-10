@@ -1,5 +1,7 @@
 using Simulador.Catalogo.Contratos;
+using Simulador.Comum.Aleatorio;
 using Simulador.Comum.Comportamento;
+using Simulador.Comum.Erros;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Marcacao.Contratos;
@@ -73,11 +75,56 @@ internal sealed class AmbienteDosConsentimentos(
         c.Versao);
 }
 
-/// <summary>Leva a operação do catálogo ao portão do módulo.</summary>
-internal sealed class PortaoPeloConsentimento(IPortaoDeSeguranca portao) : IPortaoDeOperacao
+/// <summary>
+/// Leva a operação do catálogo ao portão do módulo. As anomalias trocam o comportamento dessa etapa
+/// (ADR-008, RN113): 401 vira 403, e o <c>x-fapi-interaction-id</c> devolvido muda.
+/// </summary>
+internal sealed class PortaoPeloConsentimento(IPortaoDeSeguranca portao, IAnomaliasDaChamada anomalias, IGeradorAleatorio aleatorio, TimeProvider relogio) : IPortaoDeOperacao
 {
-    public Task<IResult?> Avaliar(HttpContext contexto, OperacaoDoCatalogo operacao) =>
-        portao.Avaliar(contexto, new OperacaoProtegida(operacao.Contrato, operacao.Escopos ?? [], operacao.Permissoes ?? []));
+    private const string CabecalhoDeCorrelacao = "x-fapi-interaction-id";
+
+    public async Task<IResult?> Avaliar(HttpContext contexto, OperacaoDoCatalogo operacao)
+    {
+        ArgumentNullException.ThrowIfNull(contexto);
+        ArgumentNullException.ThrowIfNull(operacao);
+        var resultado = await portao.Avaliar(contexto, new OperacaoProtegida(operacao.Contrato, operacao.Escopos ?? [], operacao.Permissoes ?? [])).ConfigureAwait(false);
+        var banco = contexto.Request.RouteValues["banco"] as string ?? string.Empty;
+        if (resultado is IStatusCodeHttpResult { StatusCode: StatusCodes.Status401Unauthorized }
+            && await anomalias.Ligada(banco, Anomalias.RevogadoCom403, contexto.RequestAborted).ConfigureAwait(false))
+        {
+            resultado = Results.Json(EnvelopeDeErro.Criar("FORBIDDEN", "Acesso proibido", "Acesso proibido", relogio), EnvelopeDeErro.OpcoesJson, statusCode: StatusCodes.Status403Forbidden);
+        }
+
+        var recebido = contexto.Request.Headers[CabecalhoDeCorrelacao].ToString();
+        if (recebido.Length > 0
+            && contexto.Response.Headers[CabecalhoDeCorrelacao].ToString() == recebido
+            && await anomalias.Ligada(banco, Anomalias.InteracaoDiferente, contexto.RequestAborted).ConfigureAwait(false))
+        {
+            contexto.Response.Headers[CabecalhoDeCorrelacao] = OutraCorrelacao(recebido);
+        }
+
+        return resultado;
+    }
+
+    /// <summary>UUID versão 4 do gerador injetado, diferente do recebido.</summary>
+    private string OutraCorrelacao(string recebido)
+    {
+        const string Hexadecimal = "0123456789abcdef";
+        while (true)
+        {
+            var d = new string([.. Enumerable.Range(0, 32).Select(i => i switch
+            {
+                12 => '4',
+                16 => '8',
+                _ => Hexadecimal[aleatorio.ProximoInteiro(Hexadecimal.Length)],
+            })]);
+            var novo = $"{d[..8]}-{d[8..12]}-{d[12..16]}-{d[16..20]}-{d[20..]}";
+            if (!string.Equals(novo, recebido, StringComparison.OrdinalIgnoreCase))
+            {
+                return novo;
+            }
+        }
+    }
 }
 
 /// <summary>Publica uma operação do módulo no catálogo.</summary>

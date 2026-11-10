@@ -11,7 +11,10 @@ public sealed record EfeitoDaRegra(
     int? EsperaMs = null,
     string? Resultado = null,
     string? Falha = null,
-    string? Estado = null);
+    string? Estado = null,
+    string? Defeito = null,
+    string? Campo = null,
+    int? Quantidade = null);
 
 /// <summary>Regra de cenário (RN14).</summary>
 public sealed record RegraDeCenario(
@@ -47,8 +50,20 @@ public sealed record PerfilDaChamada(
     int? JanelaDuracaoMin = null,
     int? JanelaIntervaloMin = null);
 
-/// <summary>O que fazer com a chamada: esperar e, se houver, trocar a resposta.</summary>
-public sealed record DecisaoDeComportamento(TimeSpan Espera, int? Status = null, string? Transporte = null);
+/// <summary>O que fazer com a chamada: esperar e, se houver, trocar a resposta ou aplicar um defeito (RN111).</summary>
+public sealed record DecisaoDeComportamento(TimeSpan Espera, int? Status = null, string? Transporte = null, DefeitoDaChamada? Defeito = null);
+
+/// <summary>Defeito de dado sorteado para a resposta normal (RN110, RN117).</summary>
+public sealed record DefeitoDaChamada(string Nome, string? Campo = null, int? Quantidade = null);
+
+/// <summary>Anomalia de protocolo de um banco (RN113); ausente = desligada (RN114).</summary>
+public sealed record AnomaliaDaInstituicao(string Instituicao, string Nome, bool Ligada, DateTimeOffset AtualizadaEm);
+
+/// <summary>Estado de uma anomalia num banco, para a administração.</summary>
+public sealed record EstadoDaAnomalia(string Nome, bool Ligada);
+
+/// <summary>Item de um catálogo de defeitos ou anomalias.</summary>
+public sealed record ItemDoCatalogo(string Nome, string Descricao);
 
 /// <summary>Grava regras e pacotes.</summary>
 public interface IRepositorioDeCenarios
@@ -68,6 +83,10 @@ public interface IRepositorioDeCenarios
     Task SalvarPacote(PacoteDeCenario pacote, CancellationToken cancelamento);
 
     Task ApagarPacote(string nome, CancellationToken cancelamento);
+
+    Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento);
+
+    Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento);
 }
 
 /// <summary>O que o módulo precisa do ambiente; o host implementa (ADR-007).</summary>
@@ -76,6 +95,8 @@ public interface IAmbienteDosCenarios
     IReadOnlySet<int> StatusDeclarados { get; }
 
     bool OperacaoExiste(string operationId);
+
+    Task<bool> InstituicaoExiste(string instituicao, CancellationToken cancelamento);
 
     /// <summary>Próxima posição da sequência; zero sem contadores (RN30, RN54).</summary>
     Task<long> ProximaPosicao(string chave, CancellationToken cancelamento);
@@ -89,6 +110,9 @@ public interface ICenarios
     Task<DecisaoDeComportamento> Decidir(ChamadaAvaliada chamada, PerfilDaChamada perfil, DateTimeOffset instante, IReadOnlySet<int> declarados, CancellationToken cancelamento);
 
     Task<string?> EstadoSobreposto(ChamadaAvaliada chamada, DateTimeOffset instante, CancellationToken cancelamento);
+
+    /// <summary>Anomalias ligadas no banco, pelo cache de até 5 s (RN113, RNF12).</summary>
+    Task<IReadOnlySet<string>> AnomaliasLigadas(string instituicao, CancellationToken cancelamento);
 
     /// <summary>Número em [0, 1).</summary>
     double Sorteio();

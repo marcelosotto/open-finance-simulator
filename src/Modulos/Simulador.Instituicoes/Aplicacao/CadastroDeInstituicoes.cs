@@ -280,3 +280,9 @@ internal sealed class SemClientes : IConsultaDeClientes
 {
     public Task<bool> TemClientes(string endereco, CancellationToken cancelamento) => Task.FromResult(false);
 }
+
+/// <summary>Sem o módulo de cenários, nenhuma anomalia está ligada (RN114).</summary>
+internal sealed class SemAnomalias : IConsultaDeAnomalias
+{
+    public Task<IReadOnlyList<string>> Ligadas(string endereco, CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<string>>([]);
+}

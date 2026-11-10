@@ -97,7 +97,6 @@ Funcionalidade: Paginar como o Open Finance
     Então a cota deve subir 1
 
   # RN113
-  @spec-009
   Cenário: Anomalia de chave com 422
     Dado que o "Banco Restritivo" tem a anomalia "chave-recusada-com-422"
     E uma chave expirada
