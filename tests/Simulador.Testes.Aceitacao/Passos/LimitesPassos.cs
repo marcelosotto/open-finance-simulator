@@ -545,12 +545,10 @@ public sealed class LimitesPassos : IDisposable
 
         public Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento) => interno.Recurso(resourceId, cancelamento);
 
-        public Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) => interno.RecursoNoInstante(resourceId, instante, cancelamento);
-
         public Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) => interno.Cliente(documento, cancelamento);
 
-        public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento) =>
-            interno.Transacoes(resourceId, de, ate, instante, cancelamento);
+        public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset corte, CancellationToken cancelamento) =>
+            interno.Transacoes(resourceId, de, ate, instante, corte, cancelamento);
 
         public Task<decimal> Saldo(string resourceId, CancellationToken cancelamento) =>
             falha.Ligada ? throw new InvalidOperationException("Falha provocada pelo teste.") : interno.Saldo(resourceId, cancelamento);

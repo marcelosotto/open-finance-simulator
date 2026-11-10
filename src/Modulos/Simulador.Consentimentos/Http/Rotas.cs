@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Simulador.Comum.Aleatorio;
+using Simulador.Comum.Comportamento;
 using Simulador.Comum.Erros;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Consentimentos.Dominio;
@@ -165,6 +166,11 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
             return Erro422(Permissoes.SemFuncionais);
         }
 
+        if (await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+        {
+            return desvio;
+        }
+
         if (await ambiente.NovoConsentId(cancelamento).ConfigureAwait(false) is not { } id)
         {
             return Erro422(Ciclo.NaoMapeado);
@@ -185,6 +191,11 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
             return recusa;
         }
 
+        if (await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+        {
+            return desvio;
+        }
+
         Registrar(contexto, consentimento!);
         return Saidas.Json(Corpo(contexto, consentimento!));
     }
@@ -202,6 +213,11 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
             if (consentimento!.Estado == Ciclo.Rejeitado)
             {
                 return Erro422("CONSENTIMENTO_EM_STATUS_REJEITADO");
+            }
+
+            if (tentativa == 0 && await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+            {
+                return desvio;
             }
 
             if (await ambiente.Atualizar(Ciclo.Rejeitar(consentimento, Ciclo.PorTpp, Ciclo.Revogado, relogio.GetUtcNow()), contexto.RequestAborted).ConfigureAwait(false))
@@ -252,6 +268,11 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
                 return Erro422(Ciclo.NaoMapeado);
             }
 
+            if (tentativa == 0 && await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+            {
+                return desvio;
+            }
+
             var extensao = new DadosDaExtensao(nova, consentimento.ExpiraEm, cpf, documento.Rel!, agora, ip, agente);
             var renovado = consentimento with { ExpiraEm = nova, AtualizadoEm = agora, Extensoes = [extensao, .. consentimento.Extensoes] };
             if (await ambiente.Atualizar(renovado, cancelamento).ConfigureAwait(false))
@@ -281,6 +302,11 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
         if (foraDaFaixa)
         {
             return Erro422("PAGE_NOT_FOUND");
+        }
+
+        if (await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+        {
+            return desvio;
         }
 
         var daPagina = consentimento.Extensoes.Skip((pagina - 1) * tamanho).Take(tamanho).ToList();
@@ -316,7 +342,7 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
             case SituacaoDaPreparacao.Preparando:
                 return Results.StatusCode(StatusCodes.Status202Accepted);
             case SituacaoDaPreparacao.Esgotada:
-                return Saidas.Erro(StatusCodes.Status504GatewayTimeout, "TEMPO_ESGOTADO", "Tempo esgotado", relogio);
+                return Saidas.Erro(StatusCodes.Status504GatewayTimeout, "GATEWAY_TIMEOUT", "Tempo esgotado", relogio);
         }
 
         var itens = new List<DadosDoRecurso>();
@@ -337,6 +363,11 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
         if (foraDaFaixa)
         {
             return Erro422("PAGE_NOT_FOUND");
+        }
+
+        if (await EtapaDeComportamento.Aplicar(contexto).ConfigureAwait(false) is { } desvio)
+        {
+            return desvio;
         }
 
         var daPagina = itens.Skip((pagina - 1) * tamanho).Take(tamanho).ToList();
@@ -536,7 +567,7 @@ internal static class Rotas
 
         if (!dadosDoBanco.Ativo)
         {
-            return Saidas.Erro(StatusCodes.Status503ServiceUnavailable, "SERVICO_INDISPONIVEL", "Serviço indisponível", relogio);
+            return Saidas.Erro(StatusCodes.Status503ServiceUnavailable, "SERVICE_UNAVAILABLE", "Serviço indisponível", relogio);
         }
 
         if (!contexto.Request.HasFormContentType)
@@ -593,18 +624,18 @@ internal static class Rotas
         return Saidas.Json(new { receptora.OrganisationId, receptora.Nome, receptora.Usuario, receptora.Senha, receptora.CriadaEm, credencialDeTeste = true }, StatusCodes.Status201Created);
     }
 
-    private static async Task<IResult> RevogarNaAdministracao(string consentId, HttpContext contexto, IAmbienteDosConsentimentos ambiente, TimeProvider relogio)
+    private static async Task<IResult> RevogarNaAdministracao(string consentId, HttpContext contexto, IAmbienteDosConsentimentos ambiente)
     {
         var fraude = contexto.Request.HasJsonContentType()
             && (await contexto.Request.ReadFromJsonAsync<PedidoDeRevogacao>(JsonDosConsentimentos.Opcoes, contexto.RequestAborted).ConfigureAwait(false))?.Motivo == "fraude";
         for (var tentativa = 0; tentativa < TentativasDeEscrita; tentativa++)
         {
-            var agora = relogio.GetUtcNow();
             if (await ambiente.Consentimento(consentId, contexto.RequestAborted).ConfigureAwait(false) is not { } guardado)
             {
                 return Results.NotFound();
             }
 
+            var agora = await ambiente.AgoraNoBanco(guardado.Banco, contexto.RequestAborted).ConfigureAwait(false);
             var consentimento = Ciclo.Efetivo(guardado, agora);
             if (consentimento.Estado == Ciclo.Rejeitado)
             {
@@ -652,12 +683,12 @@ internal static class Rotas
     }
 
     /// <summary>Liga o recurso ao consentimento vigente, sem desfazer o que outra chamada gravou.</summary>
-    private static async Task<bool> Anexar(IAmbienteDosConsentimentos ambiente, string consentId, string resourceId, TimeProvider relogio, CancellationToken cancelamento)
+    private static async Task<bool> Anexar(IAmbienteDosConsentimentos ambiente, string consentId, string resourceId, CancellationToken cancelamento)
     {
         for (var tentativa = 0; tentativa < TentativasDeEscrita; tentativa++)
         {
             var atual = await ambiente.Consentimento(consentId, cancelamento).ConfigureAwait(false);
-            if (atual is null || Ciclo.Efetivo(atual, relogio.GetUtcNow()).Estado != Ciclo.Autorizado
+            if (atual is null || Ciclo.Efetivo(atual, await ambiente.AgoraNoBanco(atual.Banco, cancelamento).ConfigureAwait(false)).Estado != Ciclo.Autorizado
                 || await ambiente.Atualizar(atual with { Recursos = [.. atual.Recursos, resourceId] }, cancelamento).ConfigureAwait(false))
             {
                 return true;
@@ -667,7 +698,7 @@ internal static class Rotas
         return false;
     }
 
-    private static async Task<IResult> AdicionarProduto(string documento, PedidoDeProduto pedido, HttpContext contexto, IAmbienteDosConsentimentos ambiente, TimeProvider relogio)
+    private static async Task<IResult> AdicionarProduto(string documento, PedidoDeProduto pedido, HttpContext contexto, IAmbienteDosConsentimentos ambiente)
     {
         var cancelamento = contexto.RequestAborted;
         if (await ambiente.Cliente(documento, cancelamento).ConfigureAwait(false) is not { } cliente)
@@ -691,7 +722,7 @@ internal static class Rotas
         {
             foreach (var consentId in cliente.Consentimentos.Where(c => c.Banco == banco && Permissoes.Cobre(recurso.Tipo, c.Permissoes)).Select(c => c.ConsentId))
             {
-                if (!await Anexar(ambiente, consentId, recurso.ResourceId, relogio, cancelamento).ConfigureAwait(false))
+                if (!await Anexar(ambiente, consentId, recurso.ResourceId, cancelamento).ConfigureAwait(false))
                 {
                     return ErroAdmin(StatusCodes.Status409Conflict, "consentimento em alteração");
                 }

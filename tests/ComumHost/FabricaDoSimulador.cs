@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Time.Testing;
+using Simulador.Cenarios.Contratos;
 using Simulador.Comum.Aleatorio;
+using Simulador.Comum.Comportamento;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Limites.Contratos;
@@ -25,6 +27,7 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
     private readonly Dictionary<string, string?> _configuracao = new(StringComparer.Ordinal);
     private readonly List<Action<IServiceCollection>> _servicos = [];
     private bool _usarMongo;
+    private bool _comComportamento;
 
     /// <summary>Massa em memória dos testes sem contêiner.</summary>
     public RepositorioDeMassaEmMemoria Massa { get; } = new();
@@ -38,6 +41,16 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
     }
 
     public FakeTimeProvider Relogio { get; } = new(new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero));
+
+    /// <summary>Esperas pedidas pela etapa de comportamento.</summary>
+    public EsperasRegistradas Esperas { get; } = new();
+
+    /// <summary>Liga latência, sorteio e regras; por padrão, ficam desligados nos testes de outras specs.</summary>
+    public FabricaDoSimulador ComComportamento()
+    {
+        _comComportamento = true;
+        return this;
+    }
 
     /// <summary>Troca uma configuração antes de subir o host.</summary>
     public FabricaDoSimulador Com(string chave, string? valor)
@@ -109,8 +122,16 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(servicos =>
         {
-            servicos.RemoveAll<TimeProvider>();
-            servicos.AddSingleton<TimeProvider>(Relogio);
+            servicos.RemoveAll<HoraReal>();
+            servicos.AddSingleton(new HoraReal(Relogio));
+            servicos.RemoveAll<IEsperaDaChamada>();
+            servicos.AddSingleton<IEsperaDaChamada>(Esperas);
+            if (!_comComportamento)
+            {
+                servicos.RemoveAll<IComportamentoDaChamada>();
+                servicos.AddSingleton<IComportamentoDaChamada>(new ComportamentoNulo());
+            }
+
             servicos.RemoveAll<IGeradorAleatorio>();
             servicos.AddSingleton<IGeradorAleatorio>(new GeradorAleatorioComSemente(Semente));
             servicos.RemoveAll<IContadores>();
@@ -123,6 +144,8 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
                 servicos.AddSingleton<IRepositorioDeMassa>(Massa);
                 servicos.RemoveAll<IRepositorioDeReceptoras>();
                 servicos.AddSingleton<IRepositorioDeReceptoras>(new RepositorioDeReceptorasEmMemoria());
+                servicos.RemoveAll<IRepositorioDeCenarios>();
+                servicos.AddSingleton<IRepositorioDeCenarios>(new RepositorioDeCenariosEmMemoria());
             }
 
             foreach (var registrar in _servicos)

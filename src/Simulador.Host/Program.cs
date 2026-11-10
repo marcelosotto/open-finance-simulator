@@ -1,5 +1,7 @@
 using Simulador.Catalogo.Contratos;
+using Simulador.Cenarios.Contratos;
 using Simulador.Comum.Aleatorio;
+using Simulador.Comum.Comportamento;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Dados.Contratos;
 using Simulador.Host;
@@ -17,7 +19,8 @@ builder.WebHost.ConfigureKestrel(kestrel =>
     kestrel.ListenAnyIP(portas.Administracao);
 });
 
-builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(new HoraReal(TimeProvider.System));
+builder.Services.AddSingleton<TimeProvider, RelogioDaChamada>();
 builder.Services.AddSingleton<IGeradorAleatorio>(_ =>
     new GeradorAleatorioComSemente(builder.Configuration.GetValue<int?>("Simulador:Semente") ?? Environment.TickCount));
 builder.AdicionarObservabilidade();
@@ -28,14 +31,16 @@ builder.Services.AddMassa(builder.Configuration).AddAdaptadoresDaMassa();
 builder.Services.AddConsentimentos(builder.Configuration).AddAdaptadoresDeConsentimentos();
 builder.Services.AddDados(builder.Configuration).AddAdaptadoresDeDados();
 builder.Services.AddLimites(builder.Configuration).AddAdaptadoresDeLimites();
+builder.Services.AddCenarios(builder.Configuration).AddAdaptadoresDeCenarios();
 
 var app = builder.Build();
 
-var openFinance = app.MapGroup(string.Empty).RequireHost($"*:{portas.OpenFinance}").ComMarcacao();
+var openFinance = app.MapGroup(string.Empty).RequireHost($"*:{portas.OpenFinance}").ComMarcacao().AddEndpointFilter<RouteGroupBuilder, FiltroDaChamada>();
 var administracao = app.MapGroup(string.Empty).RequireHost($"*:{portas.Administracao}");
 administracao.MapGet("/saude/vivo", () => Results.Ok());
 openFinance.MapearCatalogo(administracao);
 administracao.MapearInstituicoes();
+administracao.MapearCenarios();
 administracao.MapearMassa();
 openFinance.MapearConsentimentos(administracao);
 

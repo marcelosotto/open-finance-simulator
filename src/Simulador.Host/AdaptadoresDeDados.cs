@@ -1,5 +1,6 @@
 using System.Text.Json.Nodes;
 using Simulador.Catalogo.Contratos;
+using Simulador.Comum.Comportamento;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Dados.Contratos;
 using Simulador.Instituicoes.Contratos;
@@ -10,7 +11,7 @@ using Simulador.Massa.Contratos;
 namespace Simulador.Host;
 
 /// <summary>Liga Dados a Consentimentos, Massa, Instituições e Marcação, sem referência entre os módulos (ADR-007).</summary>
-internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, IConsultaDeMassa consulta, ICatalogo catalogo, ILimites limites) : IAmbienteDosDados
+internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, IConsultaDeMassa consulta, ICatalogo catalogo, ILimites limites, IComportamentoDaChamada comportamento) : IAmbienteDosDados
 {
     private readonly Lazy<Dictionary<string, OperacaoDoCatalogo>> _operacoes = new(() => catalogo.Operacoes.ToDictionary(o => o.OperationId, StringComparer.Ordinal));
 
@@ -29,12 +30,7 @@ internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, ICons
 
     public async Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento) =>
         await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r
-            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, r.Estado, r.Natureza, r.InicioDoHistorico)
-            : null;
-
-    public async Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) =>
-        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r && (r.Natureza == Naturezas.Virtual || r.CriadoEm <= instante)
-            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, NoInstante.Estado(r.Estado, r.EstadosAnteriores, instante), r.Natureza, r.InicioDoHistorico)
+            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, cancelamento).ConfigureAwait(false), r.Natureza, r.InicioDoHistorico)
             : null;
 
     public async Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) =>
@@ -42,8 +38,8 @@ internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, ICons
             ? new ClienteDeDados(m.Cliente.Documento, m.Cliente.Nome, m.Cliente.Natureza)
             : null;
 
-    public async Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento) =>
-        [.. (await consulta.TransacoesEm(resourceId, de, ate, instante, cancelamento).ConfigureAwait(false) ?? [])
+    public async Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset corte, CancellationToken cancelamento) =>
+        [.. (await consulta.TransacoesEm(resourceId, de, ate, instante, corte, cancelamento).ConfigureAwait(false) ?? [])
             .Select(t => new TransacaoDeDados(t.Id, t.Dia, t.Posicao, t.Valor, t.Direcao == "CREDITO", t.Tipo, t.Nome, t.Estado))];
 
     public async Task<decimal> Saldo(string resourceId, CancellationToken cancelamento) =>

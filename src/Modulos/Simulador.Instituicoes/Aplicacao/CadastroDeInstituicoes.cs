@@ -15,6 +15,9 @@ internal sealed record PedidoDeCriacao(
     IReadOnlyList<string>? Produtos = null,
     string? Marca = null);
 
+/// <summary>Corpo de mudança do relógio (UC28).</summary>
+internal sealed record PedidoDeRelogio(DateTimeOffset? FixadoEm = null, decimal? Fator = null);
+
 internal enum TipoDeResultado
 {
     Ok,
@@ -42,6 +45,7 @@ internal sealed class CadastroDeInstituicoes(
     TimeProvider relogio) : IConsultaDeInstituicoes
 {
     private const string AutorPadrao = "operador";
+    private const decimal FatorMaximo = 100_000m;
 
     private static readonly HashSet<string> CamposEditaveis = new(StringComparer.Ordinal)
     {
@@ -167,6 +171,29 @@ internal sealed class CadastroDeInstituicoes(
             ? await MudarSituacao(atual, Situacoes.Ativa, "reativada", autor, cancelamento).ConfigureAwait(false)
             : ResultadoDoCadastro.NaoEncontrada;
 
+    /// <summary>Fixa ou acelera o relógio (RN73, UC28).</summary>
+    public async Task<ResultadoDoCadastro> MudarRelogio(string endereco, PedidoDeRelogio pedido, string? autor, CancellationToken cancelamento)
+    {
+        if (await repositorio.Obter(endereco, cancelamento).ConfigureAwait(false) is not { } atual)
+        {
+            return ResultadoDoCadastro.NaoEncontrada;
+        }
+
+        if ((pedido.FixadoEm is null) == (pedido.Fator is null) || pedido.Fator is <= 0 or > FatorMaximo)
+        {
+            return ResultadoDoCadastro.Invalida($"informe fixadoEm ou fator, maior que 0 e até {FatorMaximo}");
+        }
+
+        var real = relogio.GetUtcNow();
+        var novo = pedido.FixadoEm is { } fixado ? new RelogioSimulado(fixado, real, 0) : new RelogioSimulado(atual.Relogio?.Agora(real) ?? real, real, pedido.Fator!.Value);
+        return await TrocarRelogio(atual, novo, autor, cancelamento).ConfigureAwait(false);
+    }
+
+    public async Task<ResultadoDoCadastro> VoltarAoRelogioReal(string endereco, string? autor, CancellationToken cancelamento) =>
+        await repositorio.Obter(endereco, cancelamento).ConfigureAwait(false) is { } atual
+            ? await TrocarRelogio(atual, null, autor, cancelamento).ConfigureAwait(false)
+            : ResultadoDoCadastro.NaoEncontrada;
+
     /// <summary>Monta uma instituição copiando o perfil (RN04).</summary>
     public Instituicao Nova(string endereco, string nome, PerfilDeComportamento perfil, bool pronta) => new(
         endereco,
@@ -185,6 +212,14 @@ internal sealed class CadastroDeInstituicoes(
         repositorio.AcrescentarHistorico(
             new EntradaDeHistorico(endereco, relogio.GetUtcNow(), string.IsNullOrWhiteSpace(autor) ? AutorPadrao : autor, acao, mudancas),
             cancelamento);
+
+    private async Task<ResultadoDoCadastro> TrocarRelogio(Instituicao atual, RelogioSimulado? novo, string? autor, CancellationToken cancelamento)
+    {
+        var alterada = atual with { Relogio = novo };
+        await repositorio.Substituir(alterada, cancelamento).ConfigureAwait(false);
+        await Registrar(atual.Endereco, autor, "relogio-alterado", [new Mudanca("relogio", atual.Relogio?.ToString(), novo?.ToString())], cancelamento).ConfigureAwait(false);
+        return ResultadoDoCadastro.Sucesso(alterada);
+    }
 
     private static JsonObject ComoJson(Instituicao instituicao) =>
         JsonSerializer.SerializeToNode(instituicao, JsonDasInstituicoes.Opcoes)!.AsObject();

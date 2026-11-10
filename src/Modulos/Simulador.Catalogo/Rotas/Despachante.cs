@@ -20,6 +20,7 @@ internal sealed class Despachante(IResolvedorDeInstituicao resolvedor, TimeProvi
 
     public async Task<IResult> Despachar(HttpContext contexto, OperacaoDoCatalogo operacao)
     {
+        contexto.Items[OperacaoDoCatalogo.ItemDaChamada] = operacao;
         var banco = contexto.Request.RouteValues["banco"] as string ?? string.Empty;
         var situacao = await resolvedor.Situacao(banco, contexto.RequestAborted).ConfigureAwait(false);
         if (situacao != SituacaoDoBanco.Ativo)
@@ -66,7 +67,7 @@ internal static class Respostas
     /// <summary>Instituição fora do ar, sem explicar o motivo (RN06, RN18).</summary>
     public static IResult ForaDoAr(TimeProvider relogio) => Results.Json(
         EnvelopeDeErro.Criar(
-            "SERVICO_INDISPONIVEL",
+            "SERVICE_UNAVAILABLE",
             "Serviço indisponível",
             "O serviço não está disponível no momento.",
             relogio),

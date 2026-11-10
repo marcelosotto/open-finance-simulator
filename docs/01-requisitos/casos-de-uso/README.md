@@ -114,7 +114,7 @@ Todos começam como **Rascunho**.
 - **Status:** Aprovado
 - **Ator:** QA
 - **Objetivo:** provocar uma situação específica, de forma repetível.
-- **Fluxo principal:** 1. Escolhe o alcance: instituição, endpoint, cliente, recurso ou uma combinação deles. 2. Escolhe o efeito: latência, status, timeout, indisponibilidade, defeito ou mudança de estado. 3. Define frequência, período e semente. 4. Salva.
+- **Fluxo principal:** 1. Escolhe o alcance: instituição, endpoint, cliente, recurso ou uma combinação deles. 2. Escolhe o efeito: latência, status, timeout, indisponibilidade, falha de transporte, defeito (spec 009) ou mudança de estado. 3. Define frequência, período e semente. 4. Salva.
 - **Fluxo alternativo — pacote de cenário:** salva várias regras com um nome e liga tudo de uma vez ([RN19](../regras-de-negocio.md#rn19)).
 - **Pós-condição:** a regra mais específica vence ([RN15](../regras-de-negocio.md#rn15)).
 - **Regras:** [RN13](../regras-de-negocio.md#rn13) a [RN19](../regras-de-negocio.md#rn19), [RN54](../regras-de-negocio.md#rn54).
@@ -131,7 +131,7 @@ Todos começam como **Rascunho**.
 ### <a id="uc28"></a>UC28 — Controlar o relógio
 - **Status:** Aprovado
 - **Ator:** QA
-- **Objetivo:** testar o que depende de tempo sem esperar: 60 minutos do consentimento, virada do mês.
+- **Objetivo:** testar o que depende de tempo sem esperar: validade do token, da chave de paginação e virada do mês.
 - **Fluxo principal:** 1. Escolhe a instituição. 2. Fixa uma data ou define um fator de aceleração. 3. As respostas passam a usar a hora simulada, e o cabeçalho `x-sim-clock` a mostra.
 - **Fluxo alternativo — voltar ao normal:** volta ao relógio real.
 - **Pós-condição:** TPM e capacidade seguem a hora real ([RN73](../regras-de-negocio.md#rn73)).
@@ -289,7 +289,7 @@ Todos começam como **Rascunho**.
 ### <a id="uc21"></a>UC21 — Simular timeout e indisponibilidade
 - **Status:** Aprovado
 - **Ator:** Sistema
-- **Fluxo principal:** 1. O perfil ou uma regra de cenário afeta a chamada. 2. O sistema segura a resposta pelo tempo configurado. 3. No perfil `timeout`, termina em 504. Regras de cenário podem simular 503, conexão cortada ou corpo truncado.
+- **Fluxo principal:** 1. O perfil ou uma regra de cenário afeta a chamada. 2. O sistema segura a resposta por 15 s, ou pelo tempo que a regra informar. 3. A chamada da cauda lenta e todo 504 simulado terminam em 504. Regras de cenário podem simular 503, conexão cortada ou corpo truncado.
 - **Regras:** [RN12](../regras-de-negocio.md#rn12), [RN16](../regras-de-negocio.md#rn16), [RN17](../regras-de-negocio.md#rn17).
 
 ### <a id="uc22"></a>UC22 — Injetar defeitos e anomalias

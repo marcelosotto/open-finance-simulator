@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Microsoft.Extensions.Hosting;
 using Simulador.Comum.Aleatorio;
+using Simulador.Comum.Comportamento;
 using Simulador.Massa.Contratos;
 using Simulador.Massa.Dominio;
 
@@ -510,9 +511,9 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
     }
 
     public Task<IReadOnlyList<Transacao>?> Transacoes(string resourceId, DateOnly de, DateOnly ate, CancellationToken cancelamento) =>
-        TransacoesEm(resourceId, de, ate, baseDaMassa.Agora, cancelamento);
+        TransacoesEm(resourceId, de, ate, baseDaMassa.Agora, null, cancelamento);
 
-    public async Task<IReadOnlyList<Transacao>?> TransacoesEm(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento)
+    public async Task<IReadOnlyList<Transacao>?> TransacoesEm(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset? corte, CancellationToken cancelamento)
     {
         if (await ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is not { } recurso)
         {
@@ -520,7 +521,7 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         }
 
         var perfis = await baseDaMassa.Perfis(cancelamento).ConfigureAwait(false);
-        return CalculoDeTransacoes.Transacoes(recurso, perfis[recurso.Perfil], de, ate, DateOnly.FromDateTime(instante.UtcDateTime), await Ajustes(resourceId, cancelamento, instante).ConfigureAwait(false));
+        return CalculoDeTransacoes.Transacoes(recurso, perfis[recurso.Perfil], de, ate, DateOnly.FromDateTime(instante.UtcDateTime), await Ajustes(resourceId, cancelamento, corte).ConfigureAwait(false));
     }
 
     public async Task<decimal?> Saldo(string resourceId, CancellationToken cancelamento)
@@ -586,7 +587,7 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
         foreach (var recurso in item.Recursos)
         {
             var ajuste = await repositorio.ObterAjuste(AlvoDoRecurso(recurso.ResourceId), cancelamento).ConfigureAwait(false);
-            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado, Versao = ajuste.Versao, EstadosAnteriores = ajuste.EstadosAnteriores } : recurso);
+            recursos.Add(ajuste?.Estado is { } estado ? recurso with { Estado = estado, Versao = ajuste.Versao } : recurso);
         }
 
         return item with { Consentimentos = consentimentos, Recursos = recursos };
@@ -604,7 +605,7 @@ internal sealed class ConsultaDeMassa(IRepositorioDeMassa repositorio, IAmbiente
 
     private async Task<IReadOnlyDictionary<string, decimal>> Ajustes(string resourceId, CancellationToken cancelamento, DateTimeOffset? ate = null) =>
         (await repositorio.ListarAjustesDoRecurso(resourceId, cancelamento).ConfigureAwait(false))
-            .Select(a => (a.Alvo, Valor: ate is { } instante ? NoInstante.Valor(a, instante) : a.Valor))
+            .Select(a => (a.Alvo, Valor: ate is { } corte ? NoInstante.Valor(a, corte) : a.Valor))
             .Where(a => a.Valor is not null)
             .ToDictionary(a => a.Alvo, a => a.Valor!.Value, StringComparer.Ordinal);
 }
@@ -679,7 +680,7 @@ internal sealed class ServicoDoMundo(IRepositorioDeMassa repositorio, BaseDaMass
 }
 
 /// <summary>Ajustes sobre dado calculado (RN53).</summary>
-internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMassa baseDaMassa, ConsultaDeMassa consulta, TimeProvider relogio)
+internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMassa baseDaMassa, ConsultaDeMassa consulta, IAmbienteDaMassa ambiente, HoraReal hora)
 {
     public async Task<Resultado<Ajuste>> Criar(PedidoDeAjuste pedido, string? autor, CancellationToken cancelamento)
     {
@@ -722,12 +723,14 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
         }
 
         var chave = CalculoDeTransacoes.Chave(recurso.ResourceId, dia, posicao);
-        var agora = relogio.GetUtcNow();
+        // A hora do banco é a exibida; a hora real decide a visibilidade nas páginas seguintes (RN37).
+        var agora = await ambiente.AgoraNoBanco(recurso.Banco, cancelamento).ConfigureAwait(false);
+        var real = hora.Relogio.GetUtcNow();
         var anterior = await repositorio.ObterAjuste(chave, cancelamento).ConfigureAwait(false);
         var historico = anterior is { Valor: { } valor, AtualizadoEm: { } desde }
-            ? [.. anterior.ValoresAnteriores ?? [], new ValorAnterior(valor, desde, agora)]
+            ? [.. anterior.ValoresAnteriores ?? [], new ValorAnterior(valor, desde, agora, anterior.AtualizadoEmReal ?? desde, real)]
             : anterior?.ValoresAnteriores;
-        return Resultados.Ok(new Ajuste(chave, pedido.Tipo, recurso.Natureza == Naturezas.Virtual, Valor: pedido.Valor, RecursoId: recurso.ResourceId, Banco: recurso.Banco, LoteId: recurso.LoteId, AtualizadoEm: agora, ValoresAnteriores: historico));
+        return Resultados.Ok(new Ajuste(chave, pedido.Tipo, recurso.Natureza == Naturezas.Virtual, Valor: pedido.Valor, RecursoId: recurso.ResourceId, Banco: recurso.Banco, LoteId: recurso.LoteId, AtualizadoEm: agora, ValoresAnteriores: historico, AtualizadoEmReal: real));
     }
 
     private async Task<Resultado<Ajuste>> DeConsentimento(PedidoDeAjuste pedido, CancellationToken cancelamento)
@@ -747,7 +750,7 @@ internal sealed class ServicoDeAjustes(IRepositorioDeMassa repositorio, BaseDaMa
             return Resultados.Invalido<Ajuste>("só consentimento virtual recebe ajuste");
         }
 
-        return Resultados.Ok(new Ajuste(ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId), pedido.Tipo, DoMundo: true, Estado: pedido.Estado, RejeitadoPor: "USER", Banco: consentimento.Banco, Razao: "CUSTOMER_MANUALLY_REVOKED", ExpiraEm: consentimento.ExpiraEm, AtualizadoEm: relogio.GetUtcNow(), Extensoes: consentimento.Extensoes, Versao: consentimento.Versao + 1));
+        return Resultados.Ok(new Ajuste(ConsultaDeMassa.AlvoDoConsentimento(consentimento.ConsentId), pedido.Tipo, DoMundo: true, Estado: pedido.Estado, RejeitadoPor: "USER", Banco: consentimento.Banco, Razao: "CUSTOMER_MANUALLY_REVOKED", ExpiraEm: consentimento.ExpiraEm, AtualizadoEm: await ambiente.AgoraNoBanco(consentimento.Banco, cancelamento).ConfigureAwait(false), Extensoes: consentimento.Extensoes, Versao: consentimento.Versao + 1));
     }
 }
 
@@ -786,13 +789,10 @@ internal sealed class EscritaDeMassa(
                 cancelamento)
             : repositorio.SalvarConsentimentoSeVersao(consentimento with { Versao = consentimento.Versao + 1 }, consentimento.Versao, cancelamento);
 
-    public Task<bool> MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento)
-    {
-        IReadOnlyList<EstadoAnterior> anteriores = [.. recurso.EstadosAnteriores ?? [], new EstadoAnterior(recurso.Estado, relogio.GetUtcNow())];
-        return recurso.Natureza == Naturezas.Virtual
-            ? repositorio.SalvarAjusteSeVersao(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco, EstadosAnteriores: anteriores, Versao: recurso.Versao + 1), recurso.Versao, cancelamento)
-            : repositorio.SalvarRecursoSeVersao(recurso with { Estado = estado, EstadosAnteriores = anteriores, Versao = recurso.Versao + 1 }, recurso.Versao, cancelamento);
-    }
+    public Task<bool> MudarEstadoDoRecurso(Recurso recurso, string estado, CancellationToken cancelamento) =>
+        recurso.Natureza == Naturezas.Virtual
+            ? repositorio.SalvarAjusteSeVersao(new Ajuste(ConsultaDeMassa.AlvoDoRecurso(recurso.ResourceId), "recurso", DoMundo: true, Estado: estado, Banco: recurso.Banco, Versao: recurso.Versao + 1), recurso.Versao, cancelamento)
+            : repositorio.SalvarRecursoSeVersao(recurso with { Estado = estado, Versao = recurso.Versao + 1 }, recurso.Versao, cancelamento);
 
     public async Task<Recurso?> AdicionarProduto(string documento, string banco, string produto, string estado, CancellationToken cancelamento)
     {

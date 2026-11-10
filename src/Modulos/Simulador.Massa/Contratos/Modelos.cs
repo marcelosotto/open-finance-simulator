@@ -137,25 +137,26 @@ public sealed record Lote(
 /// <summary>Definição do mundo virtual; os itens são calculados (RN52).</summary>
 public sealed record MundoVirtual(int Total, long Semente, Distribuicao Distribuicao);
 
-/// <summary>Valor que um ajuste teve no intervalo, para a chave de paginação (RN37).</summary>
-public sealed record ValorAnterior(decimal Valor, DateTimeOffset De, DateTimeOffset Ate);
+/// <summary>
+/// Valor que um ajuste teve no intervalo, para a chave de paginação (RN37): na hora do banco e na hora real.
+/// Sem a hora real (gravado antes dela), vale a hora gravada.
+/// </summary>
+public sealed record ValorAnterior(decimal Valor, DateTimeOffset De, DateTimeOffset Ate, DateTimeOffset? DeReal = null, DateTimeOffset? AteReal = null);
 
-/// <summary>Estado que um recurso teve até o instante (RN37).</summary>
+/// <summary>Estado anterior de um recurso, só lido de documentos antigos; não é mais gravado.</summary>
 public sealed record EstadoAnterior(string Estado, DateTimeOffset Ate);
 
-/// <summary>O que valia em um instante passado (RN37).</summary>
+/// <summary>O que valia na emissão de uma chave, comparando só hora real (RN37).</summary>
 public static class NoInstante
 {
-    public static decimal? Valor(Ajuste ajuste, DateTimeOffset instante)
+    public static decimal? Valor(Ajuste ajuste, DateTimeOffset emissaoReal)
     {
         ArgumentNullException.ThrowIfNull(ajuste);
-        return ajuste.AtualizadoEm is null || ajuste.AtualizadoEm <= instante
+        var feitoEm = ajuste.AtualizadoEmReal ?? ajuste.AtualizadoEm;
+        return feitoEm is null || feitoEm <= emissaoReal
             ? ajuste.Valor
-            : ajuste.ValoresAnteriores?.FirstOrDefault(v => v.De <= instante && instante < v.Ate)?.Valor;
+            : ajuste.ValoresAnteriores?.FirstOrDefault(v => (v.DeReal ?? v.De) <= emissaoReal && emissaoReal < (v.AteReal ?? v.Ate))?.Valor;
     }
-
-    public static string Estado(string atual, IReadOnlyList<EstadoAnterior>? anteriores, DateTimeOffset instante) =>
-        anteriores?.FirstOrDefault(e => instante < e.Ate)?.Estado ?? atual;
 }
 
 /// <summary>Alteração persistida sobre um dado calculado (RN53).</summary>
@@ -175,7 +176,8 @@ public sealed record Ajuste(
     IReadOnlyList<Extensao>? Extensoes = null,
     IReadOnlyList<ValorAnterior>? ValoresAnteriores = null,
     IReadOnlyList<EstadoAnterior>? EstadosAnteriores = null,
-    int Versao = 0);
+    int Versao = 0,
+    DateTimeOffset? AtualizadoEmReal = null);
 
 /// <summary>Quantidades de massa.</summary>
 public sealed record ResumoDeMassa(long Clientes, long Consentimentos, long Recursos, long Ajustes);
@@ -296,7 +298,8 @@ public interface IConsultaDeMassa
 
     /// <summary>Saldo calculado até hoje, ou nulo se o recurso não existe (RN46).</summary>
     /// <summary>Como <c>Transacoes</c>, no instante pedido: ajustes posteriores não aparecem (RN37).</summary>
-    Task<IReadOnlyList<Transacao>?> TransacoesEm(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento);
+    /// <summary>As transações até o instante do banco, com os ajustes feitos até o corte em hora real; sem corte, os ajustes atuais (RN37).</summary>
+    Task<IReadOnlyList<Transacao>?> TransacoesEm(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset? corte, CancellationToken cancelamento);
 
     Task<decimal?> Saldo(string resourceId, CancellationToken cancelamento);
 
@@ -333,6 +336,9 @@ public interface IAmbienteDaMassa
 
     /// <summary>Produtos oferecidos por cada instituição cadastrada (RN08).</summary>
     Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> ProdutosDosBancos(CancellationToken cancelamento);
+
+    /// <summary>A hora do banco, para escritas que entram em resposta (RN73).</summary>
+    Task<DateTimeOffset> AgoraNoBanco(string banco, CancellationToken cancelamento);
 
     Task RegistrarHistorico(EventoDaMassa evento, CancellationToken cancelamento);
 

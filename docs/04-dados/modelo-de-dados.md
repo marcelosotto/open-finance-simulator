@@ -7,7 +7,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 ## MongoDB
 | Coleção | Conteúdo | Observação |
 |---|---|---|
-| `instituicoes` | Nome, endereço, `organisationId`, público, produtos, comportamento, limites e QCA sobrescrito por receptora | Nasce com os 5 bancos de perfil e os 11 de nome real |
+| `instituicoes` | Nome, endereço, `organisationId`, público, produtos, comportamento, limites, relógio e QCA sobrescrito por receptora | Nasce com os 5 bancos de perfil e os 11 de nome real |
 | `perfis_comportamento` | Modelos de comportamento | Prontos não são apagados |
 | `perfis_dados` | Volume, valores, tipos e saldo inicial | Em uso não é apagado |
 | `distribuicoes` | Divisão da massa entre bancos, perfis e produtos, e porcentagem de PJ | Bancos e perfis somam 100%; produtos têm porcentagem própria |
@@ -18,7 +18,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `mundo_virtual` | Total, semente e distribuição | Um por ambiente; reproduz o mesmo mundo |
 | `ajustes` | Mudanças sobre transação ou dado virtual | Chave: alvo; vence o cálculo |
 | `lotes` | Parâmetros, semente, progresso e situação | Apagar leva tudo junto |
-| `cenarios` | Regras, defeitos e anomalias | Índice por alcance |
+| `cenarios` | Regras e pacotes de cenário; defeitos e anomalias na spec 009 | Lidas por cache de até 5 s ([RNF12](../01-requisitos/requisitos.md#rnf12)) |
 | `historico` | Quem mudou o quê, com antes e depois | Toda escrita de administração |
 
 ## Redis
@@ -27,6 +27,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `tpm:{banco}:{receptora}:{endpoint}:{minuto}` | Chamadas no minuto | 2 minutos |
 | `tps:{banco}:{segundo}` | Chamadas no segundo | 5 segundos |
 | `cota:{banco}:{mes}:{endpoint}:{objeto}:{cliente}:{receptora}` | Respostas 2XX no mês | 40 dias |
+| `seq:{regra}` | Posição da sequência de uma regra com semente | Sem expiração |
 
 O documento do cliente entra na chave como hash.
 

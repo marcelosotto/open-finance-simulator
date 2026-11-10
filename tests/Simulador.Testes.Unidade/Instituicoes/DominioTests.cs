@@ -138,6 +138,7 @@ public class ValidacaoTests
         { "418", ComPesos((418, 1)) },
         { "503", ComPesos((503, 1)) },
         { "429", ComPesos((429, 1)) },
+        { "status de sucesso declarado (Q1 da 007)", ComPesos((200, 1)) },
         { "423", ComPesos((423, 1)) },
         { "529", ComPesos((529, 1)) },
         { "peso negativo", ComPesos((500, -1), (504, 1)) },
@@ -163,7 +164,6 @@ public class ValidacaoTests
         { "PJ", Exemplo() with { Publico = "PJ" } },
         { "taxa zero sem pesos", ComComportamento(c => c with { TaxaDeErroPct = 0, PesosPorStatus = new Dictionary<int, decimal>() }) },
         { "janela", ComComportamento(c => c with { Janela = new Janela(2, 60) }) },
-        { "status de sucesso declarado", ComPesos((200, 1)) },
         { "tpm alta informado", ComLimites(l => l with { Tpm = l.Tpm with { Alta = 10 } }) },
         { "qca por receptora", ComLimites(l => l with { QcaPorReceptora = new Dictionary<string, long> { ["org"] = 5 } }) },
     };

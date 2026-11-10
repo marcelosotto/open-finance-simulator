@@ -85,7 +85,6 @@ Funcionalidade: API de Recursos
     Então cada conta deve aparecer com o próprio estado
 
   # RN108
-  @spec-007
   Cenário: Bloqueio programado
     Dado uma regra que bloqueia a conta às 10h
     Quando Ana consulta a conta às 10h01

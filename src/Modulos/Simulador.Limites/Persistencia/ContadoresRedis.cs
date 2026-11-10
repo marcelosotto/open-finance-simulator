@@ -20,10 +20,18 @@ internal sealed partial class ContadoresRedis : IContadores, IAsyncDisposable
     private readonly Func<Task<IDatabase>> _banco;
     private readonly ILogger<ContadoresRedis> _log;
     private readonly TimeProvider _relogio;
+    private readonly TimeSpan _tempoMaximo = TimeSpan.FromMilliseconds(TempoMaximoMs);
 
     public ContadoresRedis(string conexao, ILogger<ContadoresRedis> log, TimeProvider relogio)
         : this(log, relogio, Conectar(conexao, out var abertura), abertura)
     {
+    }
+
+    /// <summary>Com tempo máximo maior, para testes sob carga; produção usa sempre 100 ms.</summary>
+    internal ContadoresRedis(string conexao, ILogger<ContadoresRedis> log, TimeProvider relogio, TimeSpan tempoMaximo)
+        : this(conexao, log, relogio)
+    {
+        _tempoMaximo = tempoMaximo;
     }
 
     /// <summary>Com o acesso ao banco substituído, para testar quem não responde.</summary>
@@ -73,7 +81,7 @@ internal sealed partial class ContadoresRedis : IContadores, IAsyncDisposable
     {
         try
         {
-            return await Chamar(operacao).WaitAsync(TimeSpan.FromMilliseconds(TempoMaximoMs), _relogio).ConfigureAwait(false);
+            return await Chamar(operacao).WaitAsync(_tempoMaximo, _relogio).ConfigureAwait(false);
         }
         catch (Exception erro) when (erro is RedisException or TimeoutException)
         {

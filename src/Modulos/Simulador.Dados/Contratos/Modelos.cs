@@ -32,13 +32,11 @@ public interface IAmbienteDosDados
 
     Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento);
 
-    /// <summary>Como o recurso estava no instante da chave; nulo se ainda não existia (RN37).</summary>
-    Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento);
-
     Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento);
 
     /// <summary>Transações vistas no instante pedido, sem ajustes posteriores (RN37).</summary>
-    Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento);
+    /// <summary>As transações até o instante do banco, com os ajustes feitos até o corte em hora real (RN37).</summary>
+    Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset corte, CancellationToken cancelamento);
 
     Task<decimal> Saldo(string resourceId, CancellationToken cancelamento);
 

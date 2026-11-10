@@ -1,8 +1,6 @@
 # language: pt
 # Casos de uso: UC04, UC21, UC28 — ../casos-de-uso/README.md
 # Regras (RNxx): ../regras-de-negocio.md
-# Spec 007: os cenários ficam ignorados até a spec ser entregue (ADR-009).
-@spec-007
 Funcionalidade: Simular o comportamento real das instituições
   Como QA
   Quero provocar lentidão, erro e timeout

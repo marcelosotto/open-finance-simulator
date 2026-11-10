@@ -44,14 +44,15 @@ public class RevisaoDosDadosTests
         Assert.Equal(3m, NoInstante.Valor(ajuste with { AtualizadoEm = null }, T0));
     }
 
+    /// <summary>Com a hora real gravada, só ela decide; a hora do banco, igual para tudo com o relógio fixado, é ignorada (RN37).</summary>
     [Fact]
-    public void Estado_vale_o_que_tinha_no_instante()
+    public void Ajuste_compara_so_a_hora_real()
     {
-        EstadoAnterior[] anteriores = [new("A", T0.AddHours(1)), new("B", T0.AddHours(2))];
+        var fixado = T0.AddYears(-5);
+        var ajuste = new Ajuste("a", "transacao", false, Valor: 2m, AtualizadoEm: fixado, AtualizadoEmReal: T0.AddHours(1), ValoresAnteriores: [new ValorAnterior(1m, fixado, fixado, T0, T0.AddHours(1))]);
 
-        Assert.Equal("A", NoInstante.Estado("C", anteriores, T0));
-        Assert.Equal("B", NoInstante.Estado("C", anteriores, T0.AddMinutes(90)));
-        Assert.Equal("C", NoInstante.Estado("C", anteriores, T0.AddHours(2)));
-        Assert.Equal("C", NoInstante.Estado("C", null, T0));
+        Assert.Equal(1m, NoInstante.Valor(ajuste, T0.AddMinutes(30)));
+        Assert.Equal(2m, NoInstante.Valor(ajuste, T0.AddHours(1)));
+        Assert.Null(NoInstante.Valor(ajuste, T0.AddMinutes(-1)));
     }
 }

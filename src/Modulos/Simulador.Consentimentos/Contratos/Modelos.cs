@@ -84,6 +84,9 @@ public sealed record DadosDoCliente(
 /// <summary>O que o módulo precisa dos outros; o host implementa (ADR-007).</summary>
 public interface IAmbienteDosConsentimentos
 {
+    /// <summary>A hora do banco, para escritas que entram em resposta (RN73).</summary>
+    Task<DateTimeOffset> AgoraNoBanco(string banco, CancellationToken cancelamento);
+
     Task<DadosDoBanco?> Banco(string banco, CancellationToken cancelamento);
 
     Task<DadosDoCliente?> Cliente(string documento, CancellationToken cancelamento);

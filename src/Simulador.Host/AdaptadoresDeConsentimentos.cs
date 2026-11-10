@@ -1,4 +1,5 @@
 using Simulador.Catalogo.Contratos;
+using Simulador.Comum.Comportamento;
 using Simulador.Consentimentos.Contratos;
 using Simulador.Instituicoes.Contratos;
 using Simulador.Marcacao.Contratos;
@@ -13,7 +14,9 @@ internal sealed class AmbienteDosConsentimentos(
     IEscritaDeMassa escrita,
     IAmbienteDaMassa ambiente,
     IMarcador marcador,
-    TimeProvider relogio) : IAmbienteDosConsentimentos
+    TimeProvider relogio,
+    RelogioDosBancos relogios,
+    IComportamentoDaChamada comportamento) : IAmbienteDosConsentimentos
 {
     public string Marca => marcador.Marca.Valor;
 
@@ -31,7 +34,7 @@ internal sealed class AmbienteDosConsentimentos(
         await consulta.ObterConsentimento(consentId, cancelamento).ConfigureAwait(false) is { } c ? Mapear(c) : null;
 
     public async Task<DadosDoRecurso?> Recurso(string resourceId, CancellationToken cancelamento) =>
-        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) : null;
+        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) with { Estado = await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, cancelamento).ConfigureAwait(false) } : null;
 
     public Task<string?> NovoConsentId(CancellationToken cancelamento) => escrita.NovoConsentId(cancelamento);
 
@@ -48,6 +51,8 @@ internal sealed class AmbienteDosConsentimentos(
         await escrita.AdicionarProduto(documento, banco, produto, estado, cancelamento).ConfigureAwait(false) is { } r ? Mapear(r) : null;
 
     public string NovoOrganisationId() => marcador.NovoIdentificador(Natureza.Persistido);
+
+    public Task<DateTimeOffset> AgoraNoBanco(string banco, CancellationToken cancelamento) => relogios.Agora(banco, cancelamento);
 
     public void RegistrarNatureza(HttpContext contexto, string natureza) =>
         contexto.RequestServices.GetRequiredService<IRegistroDeNatureza>().Registrar(natureza == Naturezas.Virtual ? Natureza.Virtual : Natureza.Persistido);

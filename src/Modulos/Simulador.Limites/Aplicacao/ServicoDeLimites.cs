@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Http;
+using Simulador.Comum.Comportamento;
 using Simulador.Comum.Erros;
 using Simulador.Limites.Contratos;
 using Simulador.Limites.Dominio;
@@ -7,13 +8,13 @@ using Simulador.Limites.Dominio;
 namespace Simulador.Limites.Aplicacao;
 
 /// <summary>Conta as chamadas e recusa o excesso (UC18 a UC20, RN39).</summary>
-internal sealed class ServicoDeLimites(IContadores contadores, TimeProvider relogio) : ILimites
+internal sealed class ServicoDeLimites(IContadores contadores, TimeProvider relogio, HoraReal hora) : ILimites
 {
     private const int StatusDeSobrecarga = 529;
 
     public async Task<IResult?> Avaliar(HttpContext contexto, EntradaDaChamada entrada)
     {
-        var agora = relogio.GetUtcNow();
+        var agora = hora.Relogio.GetUtcNow();
         var cancelamento = contexto.RequestAborted;
         var capacidade = await contadores.Somar(ChavesDeContador.Capacidade(entrada.Banco, agora), ChavesDeContador.ValidadeDaCapacidade, cancelamento).ConfigureAwait(false);
         if (capacidade > entrada.Capacidade)

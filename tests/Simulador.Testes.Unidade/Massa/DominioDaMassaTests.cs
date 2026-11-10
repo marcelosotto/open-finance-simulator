@@ -7,6 +7,8 @@ namespace Simulador.Testes.Unidade.Massa;
 
 internal sealed class AmbienteFalso(string marca = "hml") : IAmbienteDaMassa
 {
+    public Task<DateTimeOffset> AgoraNoBanco(string banco, CancellationToken cancelamento) => Task.FromResult(DateTimeOffset.UnixEpoch);
+
     public string Marca => marca;
 
     public string Identificador(string natureza, string corpo) => $"{marca}-{natureza[0].ToString().Replace("p", "p", StringComparison.Ordinal)}-{corpo}";

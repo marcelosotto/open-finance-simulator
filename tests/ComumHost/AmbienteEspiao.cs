@@ -20,14 +20,12 @@ internal sealed class AmbienteEspiao(IAmbienteDosDados interno, EspiaoDeDados es
 
     public Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento) => interno.Recurso(resourceId, cancelamento);
 
-    public Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) => interno.RecursoNoInstante(resourceId, instante, cancelamento);
-
     public Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) => interno.Cliente(documento, cancelamento);
 
-    public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento)
+    public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, DateTimeOffset corte, CancellationToken cancelamento)
     {
         espiao.Intervalos.Add((de, ate));
-        return interno.Transacoes(resourceId, de, ate, instante, cancelamento);
+        return interno.Transacoes(resourceId, de, ate, instante, corte, cancelamento);
     }
 
     public Task<decimal> Saldo(string resourceId, CancellationToken cancelamento)

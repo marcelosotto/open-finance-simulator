@@ -71,7 +71,7 @@ internal static class Preparacao
 
     public static SituacaoDaPreparacao Situacao(DateTimeOffset criadoEm, int duracaoSegundos, DateTimeOffset agora)
     {
-        var passados = (agora - criadoEm).TotalSeconds;
+        var passados = Math.Max(0, (agora - criadoEm).TotalSeconds);
         if (passados >= LimiteSegundos)
         {
             return duracaoSegundos > LimiteSegundos ? SituacaoDaPreparacao.Esgotada : SituacaoDaPreparacao.Pronta;
