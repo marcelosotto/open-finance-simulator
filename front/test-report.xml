@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testExecutions version="1">
+  <file path="/app/tests/presentation/instituicoes/ListaDeBancos.test.tsx">
+    <testCase name="Lista de bancos (UI02) mostra perfil e situação, e o aviso só no banco com anomalia ligada (RN114)" duration="197"/>
+    <testCase name="Lista de bancos (UI02) mostra o erro e deixa tentar de novo quando a administração falha" duration="78"/>
+    <testCase name="Lista de bancos (UI02) lista vazia" duration="23"/>
+  </file>
+</testExecutions>

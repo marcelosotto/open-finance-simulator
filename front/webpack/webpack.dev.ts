@@ -4,6 +4,8 @@ import 'webpack-dev-server';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { comum } from './webpack.common';
 
+process.env.SIM_REFRESH = '1';
+
 // Desenvolvimento: porta 3000, com /admin repassado ao simulador na 8081 (mesma origem, sem CORS).
 const configuracao: Configuration = merge(comum, {
   mode: 'development',

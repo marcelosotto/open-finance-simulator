@@ -8,7 +8,13 @@ const config: Config = {
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   setupFiles: ['<rootDir>/tests/antes.ts'],
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  transform: { '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }] },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.json' }],
+    // Dependências do msw publicadas só em ESM.
+    '^.+\\.m?js$': 'babel-jest',
+  },
+  // Transforma os .mjs e os pacotes ESM do msw; o resto de node_modules fica como está.
+  transformIgnorePatterns: ['/node_modules/(?!(until-async)/).+(?<!\\.mjs)$'],
   moduleNameMapper: { '^@/(.*)$': '<rootDir>/src/$1', '\\.(s?css)$': '<rootDir>/tests/estilo.ts' },
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/main/index.tsx', '!src/**/*.d.ts'],
   coverageReporters: ['text-summary', 'lcov', 'cobertura'],

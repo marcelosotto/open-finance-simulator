@@ -23,6 +23,7 @@ export const iniciarIdioma = () => {
       resources: { 'pt-BR': { translation: recursos } },
       interpolation: { escapeValue: false },
       initImmediate: false,
+      showSupportNotice: false,
     });
   }
   return i18next;

@@ -20,3 +20,12 @@ export const rotas: RouteObject[] = [
     ],
   },
 ];
+
+// Comportamento do React Router 7 já ligado, para a troca de versão não mudar a tela.
+export const FUTURO_DO_ROTEADOR = {
+  v7_relativeSplatPath: true,
+  v7_fetcherPersist: true,
+  v7_normalizeFormMethod: true,
+  v7_partialHydration: true,
+  v7_skipActionErrorRevalidation: true,
+} as const;
