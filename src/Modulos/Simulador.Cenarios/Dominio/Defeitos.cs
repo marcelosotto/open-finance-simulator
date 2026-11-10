@@ -17,7 +17,7 @@ public static class Defeitos
     public const string DataForaDaJanela = "data-fora-da-janela";
     public const string DadoMudaNaPaginacao = "dado-muda-na-paginacao";
 
-    /// <summary>Teto, em módulo, da <c>quantidade</c> de <c>dado-muda-na-paginacao</c>: o maior page-size (RN117).</summary>
+    /// <summary>Teto de produto, em módulo, da <c>quantidade</c> de <c>dado-muda-na-paginacao</c> (RN115).</summary>
     public const int QuantidadeMaxima = 1000;
 
     public static IReadOnlyList<ItemDoCatalogo> Catalogo { get; } =
@@ -29,7 +29,7 @@ public static class Defeitos
         new(TransactionIdRepetido, "Copia o transactionId do primeiro item no segundo."),
         new(TotalRecordsIncoerente, "Soma 1 a meta.totalRecords."),
         new(DataForaDaJanela, "Leva as datas da primeira transação para dois anos antes do instante da chamada."),
-        new(DadoMudaNaPaginacao, "Na página seguinte, acrescenta (quantidade positiva) ou tira (negativa, de -1000 a 1000) itens e ajusta totalRecords e totalPages."),
+        new(DadoMudaNaPaginacao, "Na página seguinte, acrescenta (quantidade positiva) ou tira (negativa) itens, com quantidade de -1000 a 1000 e diferente de 0, e ajusta totalRecords e totalPages."),
     ];
 
     /// <summary>Os defeitos que aceitam <c>campo</c> (RN117).</summary>
@@ -37,7 +37,7 @@ public static class Defeitos
 
     public static bool Existe(string? nome) => nome is not null && Catalogo.Any(d => d.Nome == nome);
 
-    /// <summary>De -1000 a 1000, sem o zero (RN117).</summary>
+    /// <summary>De -1000 a 1000, sem o zero (RN115).</summary>
     public static bool QuantidadeValida(int quantidade) => quantidade is not 0 and >= -QuantidadeMaxima and <= QuantidadeMaxima;
 }
 

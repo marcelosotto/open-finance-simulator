@@ -67,3 +67,10 @@ Correções aprovadas pelo Marcelo depois da revisão:
 7. Docs: RN15 ganha a exceção das regras de estado e de defeito, RN38 a nota de `interacao-diferente`, e a ADR-008 diz onde agem anomalias e defeitos. Perfis deixa claro que anomalias e defeitos não fazem parte do perfil.
 8. Schema em cache: o `JsonObject` de `JsonNode.Parse` monta os filhos na primeira leitura, sem trava. Como chamadas simultâneas compartilham o schema, a árvore é montada inteira antes de entrar no cache.
 9. `formato-invalido` só reescreve texto: com `campo` objeto, lista ou número, a resposta sai normal (RN117).
+
+### Segunda rodada (2026-11-10)
+
+- O MongoDB fora leva cerca de 30 s para acusar, e o portão lê as anomalias duas vezes. Agora a consulta na chamada espera no máximo 1 s e guarda a falha por 5 s: o portão e a chave degradam depressa. Os testes simulam leitura que nunca termina.
+- `Remover` apaga as anomalias antes do banco. Se a limpeza falha, o banco fica e o histórico não registra a remoção.
+- `SementeDoAmbiente` lê `Simulador:Semente` do mesmo jeito no host e em Cenários. Valor ausente ou malformado vale uma semente sorteada uma vez por processo. O gerador dos defeitos usa sempre a semente derivada por XOR, então as duas sementes nunca coincidem.
+- RN111 deixa de citar a ADR-004, RN115 justifica o teto como decisão de produto, e RN113 registra que a administração responde 500 com o MongoDB fora.

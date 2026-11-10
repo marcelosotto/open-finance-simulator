@@ -159,8 +159,9 @@ internal sealed class CadastroDeInstituicoes(
 
         if (!atual.Pronta && !await clientes.TemClientes(endereco, cancelamento).ConfigureAwait(false))
         {
-            await repositorio.Apagar(endereco, cancelamento).ConfigureAwait(false);
+            // Anomalias antes do banco: se a limpeza falha, o banco fica e o pedido pode ser repetido, sem anomalia órfã (RN113).
             await anomalias.Apagar(endereco, cancelamento).ConfigureAwait(false);
+            await repositorio.Apagar(endereco, cancelamento).ConfigureAwait(false);
             await Registrar(endereco, autor, "apagada", [], cancelamento).ConfigureAwait(false);
             return ResultadoDoCadastro.Sucesso(atual, "apagada");
         }

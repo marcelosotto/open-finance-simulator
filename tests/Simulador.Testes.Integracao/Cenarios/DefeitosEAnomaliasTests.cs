@@ -1,8 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Simulador.Cenarios.Contratos;
 using Simulador.Cenarios.Persistencia;
 using Simulador.Massa.Contratos;
@@ -338,53 +336,5 @@ public sealed class DefeitosEAnomaliasTests : IDisposable
         Assert.All(estado!, a => Assert.False(a.Ligada));
         using var recriado = JsonDocument.Parse(await _admin.GetStringAsync(U($"/admin/instituicoes/{endereco}"), _ct));
         Assert.Equal(0, recriado.RootElement.GetProperty("anomaliasLigadas").GetArrayLength());
-    }
-}
-
-/// <summary>Revisão da 009, achado 6: com o cache de cenários sem leitura (MongoDB fora), o 401 do portão segue 401.</summary>
-public sealed class AnomaliasSemLeituraTests : IDisposable
-{
-    private readonly FabricaDoSimulador _fabrica = new FabricaDoSimulador().ComComportamento().ComServicos(s =>
-    {
-        s.RemoveAll<IRepositorioDeCenarios>();
-        s.AddSingleton<IRepositorioDeCenarios>(new RepositorioForaDoAr());
-    });
-
-    public void Dispose() => _fabrica.Dispose();
-
-    [Fact]
-    public async Task Sem_token_segue_401_e_devolve_a_mesma_correlacao()
-    {
-        using var api = _fabrica.ClienteOpenFinance();
-        using var resposta = await AtalhosDeConsentimento.Chamar(api, HttpMethod.Get, AtalhosDeConsentimento.Caminho("banco-estavel", "accounts", "/accounts"), null);
-        Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
-        Assert.Equal(AtalhosDeConsentimento.Correlacao, resposta.Headers.GetValues("x-fapi-interaction-id").Single());
-    }
-
-    private sealed class RepositorioForaDoAr : IRepositorioDeCenarios
-    {
-        private static Task<T> Falha<T>() => Task.FromException<T>(new TimeoutException("MongoDB fora do ar"));
-
-        public Task<IReadOnlyList<RegraDeCenario>> ListarRegras(CancellationToken cancelamento) => Falha<IReadOnlyList<RegraDeCenario>>();
-
-        public Task<RegraDeCenario?> ObterRegra(string id, CancellationToken cancelamento) => Falha<RegraDeCenario?>();
-
-        public Task SalvarRegra(RegraDeCenario regra, CancellationToken cancelamento) => Falha<bool>();
-
-        public Task ApagarRegra(string id, CancellationToken cancelamento) => Falha<bool>();
-
-        public Task<IReadOnlyList<PacoteDeCenario>> ListarPacotes(CancellationToken cancelamento) => Falha<IReadOnlyList<PacoteDeCenario>>();
-
-        public Task<PacoteDeCenario?> ObterPacote(string nome, CancellationToken cancelamento) => Falha<PacoteDeCenario?>();
-
-        public Task SalvarPacote(PacoteDeCenario pacote, CancellationToken cancelamento) => Falha<bool>();
-
-        public Task ApagarPacote(string nome, CancellationToken cancelamento) => Falha<bool>();
-
-        public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Falha<IReadOnlyList<AnomaliaDaInstituicao>>();
-
-        public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento) => Falha<bool>();
-
-        public Task ApagarAnomalias(string instituicao, CancellationToken cancelamento) => Falha<bool>();
     }
 }

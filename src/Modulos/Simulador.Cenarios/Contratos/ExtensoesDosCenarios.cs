@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,9 +20,7 @@ public static class ExtensoesDosCenarios
             configuracao["Simulador:Mongo:Conexao"] ?? "mongodb://localhost:27017",
             configuracao["Simulador:Mongo:Base"] ?? "simulador"));
         servicos.AddSingleton(_ => new GeradorDosDefeitos(new GeradorAleatorioComSemente(
-            int.TryParse(configuracao["Simulador:Semente"], NumberStyles.Integer, CultureInfo.InvariantCulture, out var semente)
-                ? semente ^ DeslocamentoDosDefeitos
-                : Environment.TickCount)));
+            SementeDoAmbiente.Derivada(configuracao[SementeDoAmbiente.Chave], DeslocamentoDosDefeitos))));
         servicos.AddSingleton<ServicoDeCenarios>();
         servicos.AddSingleton<ICenarios>(p => p.GetRequiredService<ServicoDeCenarios>());
         return servicos;

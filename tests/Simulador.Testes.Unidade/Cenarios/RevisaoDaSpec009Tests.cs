@@ -186,6 +186,29 @@ public sealed class RevisaoDaSpec009Tests
         Assert.Equal(semDefeito.ProximoTexto(16), comDefeito.ProximoTexto(16));
     }
 
+    /// <summary>Segunda revisão, achado 3: a mesma leitura no host e nos cenários, e sementes derivadas sempre diferentes.</summary>
+    [Theory]
+    [InlineData("123")]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("nao-e-numero")]
+    public void Semente_derivada_nunca_repete_a_do_ambiente(string? valor)
+    {
+        var semente = SementeDoAmbiente.De(valor);
+        Assert.Equal(semente, SementeDoAmbiente.De(valor));
+        Assert.NotEqual(semente, SementeDoAmbiente.Derivada(valor, 0x0009_D3F3));
+        if (valor == "123")
+        {
+            Assert.Equal(123, semente);
+        }
+        else
+        {
+            Assert.Equal(SementeDoAmbiente.De(null), semente);
+        }
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => SementeDoAmbiente.Derivada(valor, 0));
+    }
+
     private sealed class GeradorContado(IGeradorAleatorio gerador) : IGeradorAleatorio
     {
         public int Sorteios { get; private set; }

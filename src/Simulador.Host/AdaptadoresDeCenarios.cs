@@ -211,19 +211,33 @@ internal sealed class ResultadoComDefeito(IResult original, DefeitoDaChamada def
 }
 
 /// <summary>
-/// Anomalias do banco pelo cache de Cenários (RN113). Se a leitura falha (MongoDB fora), a anomalia conta como
-/// desligada: o 401 do portão segue 401 e a chave segue o caminho normal, em vez de virar 500.
+/// Anomalias do banco pelo cache de Cenários (RN113). Se a leitura falha ou demora mais que <see cref="EsperaMaxima"/>
+/// (MongoDB fora, que o driver só acusa depois de ~30 s), a anomalia conta como desligada: o 401 do portão segue 401
+/// e a chave segue o caminho normal, sem virar 500 e sem segurar a chamada (RN12). A falha fica guardada por
+/// <see cref="PausaDepoisDaFalha"/>: nesse tempo, nenhuma consulta espera de novo, nem a segunda do mesmo portão.
 /// </summary>
 internal sealed partial class AnomaliasDaChamada(ICenarios cenarios, ILogger<AnomaliasDaChamada> registro) : IAnomaliasDaChamada
 {
+    public static readonly TimeSpan EsperaMaxima = TimeSpan.FromSeconds(1);
+    public static readonly TimeSpan PausaDepoisDaFalha = TimeSpan.FromSeconds(5);
+
+    private long _semLeituraAte = long.MinValue;
+
     public async Task<bool> Ligada(string instituicao, string nome, CancellationToken cancelamento)
     {
+        if (Environment.TickCount64 < Volatile.Read(ref _semLeituraAte))
+        {
+            return false;
+        }
+
         try
         {
-            return (await cenarios.AnomaliasLigadas(instituicao, cancelamento).ConfigureAwait(false)).Contains(nome);
+            var ligadas = await cenarios.AnomaliasLigadas(instituicao, cancelamento).WaitAsync(EsperaMaxima, TimeProvider.System, cancelamento).ConfigureAwait(false);
+            return ligadas.Contains(nome);
         }
         catch (Exception erro) when (erro is MongoDB.Driver.MongoException or TimeoutException)
         {
+            Volatile.Write(ref _semLeituraAte, Environment.TickCount64 + (long)PausaDepoisDaFalha.TotalMilliseconds);
             LeituraFalhou(registro, nome, instituicao, erro);
             return false;
         }

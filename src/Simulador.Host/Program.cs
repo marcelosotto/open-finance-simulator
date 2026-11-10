@@ -22,7 +22,7 @@ builder.WebHost.ConfigureKestrel(kestrel =>
 builder.Services.AddSingleton(new HoraReal(TimeProvider.System));
 builder.Services.AddSingleton<TimeProvider, RelogioDaChamada>();
 builder.Services.AddSingleton<IGeradorAleatorio>(_ =>
-    new GeradorAleatorioComSemente(builder.Configuration.GetValue<int?>("Simulador:Semente") ?? Environment.TickCount));
+    new GeradorAleatorioComSemente(SementeDoAmbiente.De(builder.Configuration[SementeDoAmbiente.Chave])));
 builder.AdicionarObservabilidade();
 builder.Services.AddCatalogo(builder.Configuration);
 builder.Services.AddMarcacao(builder.Configuration);
