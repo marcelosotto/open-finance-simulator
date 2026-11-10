@@ -241,6 +241,7 @@ internal static class ValidacaoDeRegra
         Exigir(regra is not { Inicio: { } inicio, Fim: { } fim } || inicio < fim, "início deve vir antes do fim");
         Exigir(regra.Efeito.Tipo != Efeitos.Estado || regra.FrequenciaPct == 100, "regra de estado exige frequência de 100%");
         Exigir(regra.Efeito.EsperaMs is null or > 0, "esperaMs deve ser positivo");
+        Exigir(regra.Efeito.Quantidade is not { } quantidade || Defeitos.QuantidadeValida(quantidade), $"quantidade deve ser de -{Defeitos.QuantidadeMaxima} a {Defeitos.QuantidadeMaxima}, diferente de 0");
         Exigir(EfeitoValido(regra.Efeito, statusDeclarados), "efeito inválido");
         return erros;
     }
@@ -255,7 +256,7 @@ internal static class ValidacaoDeRegra
         Efeitos.Estado => efeito.Estado is { } estado && Estados.Contains(estado),
         Efeitos.Defeito => Defeitos.Existe(efeito.Defeito)
             && (efeito.Campo is null || Defeitos.DeCampo.Contains(efeito.Defeito!))
-            && (efeito.Quantidade is null || (efeito.Defeito == Defeitos.DadoMudaNaPaginacao && efeito.Quantidade != 0)),
+            && (efeito.Quantidade is null || efeito.Defeito == Defeitos.DadoMudaNaPaginacao),
         _ => false,
     };
 }

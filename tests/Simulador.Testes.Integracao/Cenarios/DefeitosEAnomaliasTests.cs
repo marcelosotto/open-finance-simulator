@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Simulador.Cenarios.Contratos;
 using Simulador.Cenarios.Persistencia;
 using Simulador.Massa.Contratos;
@@ -32,6 +34,19 @@ public sealed class AnomaliasNoMongoTests : IDisposable
         Assert.Equal(2, lidas.Count(a => a.Instituicao == "banco" && a.Ligada));
         Assert.False(lidas.Single(a => a.Instituicao == "outro").Ligada);
         Assert.Empty(await _repositorio.ListarRegras(_ct));
+    }
+
+    [Fact]
+    public async Task Apagar_as_anomalias_do_banco_nao_toca_outro_banco_de_prefixo_parecido()
+    {
+        var agora = new DateTimeOffset(2026, 11, 5, 12, 0, 0, TimeSpan.Zero);
+        await _repositorio.SalvarAnomalia(new AnomaliaDaInstituicao("banco", "revogado-com-403", true, agora), _ct);
+        await _repositorio.SalvarAnomalia(new AnomaliaDaInstituicao("banco", "interacao-diferente", true, agora), _ct);
+        await _repositorio.SalvarAnomalia(new AnomaliaDaInstituicao("banco-x", "revogado-com-403", true, agora), _ct);
+
+        await _repositorio.ApagarAnomalias("banco", _ct);
+
+        Assert.Equal(["banco-x"], (await _repositorio.ListarAnomalias(_ct)).Select(a => a.Instituicao));
     }
 }
 
@@ -288,5 +303,88 @@ public sealed class DefeitosEAnomaliasTests : IDisposable
         using var revogado = await AtalhosDeConsentimento.Chamar(_api, HttpMethod.Delete, AtalhosDeConsentimento.Caminho(Banco, "consents", "/consents/{consentId}", _consentId), await Token("consents"));
         Assert.Equal(HttpStatusCode.NoContent, revogado.StatusCode);
         Assert.Empty(await revogado.Content.ReadAsByteArrayAsync(_ct));
+    }
+
+    /// <summary>Revisão da 009, achado 1: o banco recriado com o mesmo nome nasce sem as anomalias do apagado.</summary>
+    [Fact]
+    public async Task Banco_recriado_com_o_mesmo_nome_nasce_sem_anomalias()
+    {
+        async Task<string> Criar()
+        {
+            using var criado = await _admin.PostAsJsonAsync(U("/admin/instituicoes"), new { nome = "Banco Passageiro" }, _ct);
+            Assert.Equal(HttpStatusCode.Created, criado.StatusCode);
+            using var json = JsonDocument.Parse(await criado.Content.ReadAsStringAsync(_ct));
+            return json.RootElement.GetProperty("endereco").GetString()!;
+        }
+
+        var endereco = await Criar();
+        using (var ligada = await _admin.PostAsync(U($"/admin/cenarios/anomalias/{endereco}/revogado-com-403/ligar"), null, _ct))
+        {
+            Assert.Equal(HttpStatusCode.OK, ligada.StatusCode);
+        }
+
+        using (var detalhe = JsonDocument.Parse(await _admin.GetStringAsync(U($"/admin/instituicoes/{endereco}"), _ct)))
+        {
+            Assert.Equal(1, detalhe.RootElement.GetProperty("anomaliasLigadas").GetArrayLength());
+        }
+
+        using (var apagado = await _admin.DeleteAsync(U($"/admin/instituicoes/{endereco}"), _ct))
+        {
+            Assert.True(apagado.IsSuccessStatusCode, await apagado.Content.ReadAsStringAsync(_ct));
+        }
+
+        Assert.Equal(endereco, await Criar());
+        var estado = await _admin.GetFromJsonAsync<List<EstadoDaAnomalia>>(U($"/admin/cenarios/anomalias/{endereco}"), JsonDosCenarios.Opcoes, _ct);
+        Assert.All(estado!, a => Assert.False(a.Ligada));
+        using var recriado = JsonDocument.Parse(await _admin.GetStringAsync(U($"/admin/instituicoes/{endereco}"), _ct));
+        Assert.Equal(0, recriado.RootElement.GetProperty("anomaliasLigadas").GetArrayLength());
+    }
+}
+
+/// <summary>Revisão da 009, achado 6: com o cache de cenários sem leitura (MongoDB fora), o 401 do portão segue 401.</summary>
+public sealed class AnomaliasSemLeituraTests : IDisposable
+{
+    private readonly FabricaDoSimulador _fabrica = new FabricaDoSimulador().ComComportamento().ComServicos(s =>
+    {
+        s.RemoveAll<IRepositorioDeCenarios>();
+        s.AddSingleton<IRepositorioDeCenarios>(new RepositorioForaDoAr());
+    });
+
+    public void Dispose() => _fabrica.Dispose();
+
+    [Fact]
+    public async Task Sem_token_segue_401_e_devolve_a_mesma_correlacao()
+    {
+        using var api = _fabrica.ClienteOpenFinance();
+        using var resposta = await AtalhosDeConsentimento.Chamar(api, HttpMethod.Get, AtalhosDeConsentimento.Caminho("banco-estavel", "accounts", "/accounts"), null);
+        Assert.Equal(HttpStatusCode.Unauthorized, resposta.StatusCode);
+        Assert.Equal(AtalhosDeConsentimento.Correlacao, resposta.Headers.GetValues("x-fapi-interaction-id").Single());
+    }
+
+    private sealed class RepositorioForaDoAr : IRepositorioDeCenarios
+    {
+        private static Task<T> Falha<T>() => Task.FromException<T>(new TimeoutException("MongoDB fora do ar"));
+
+        public Task<IReadOnlyList<RegraDeCenario>> ListarRegras(CancellationToken cancelamento) => Falha<IReadOnlyList<RegraDeCenario>>();
+
+        public Task<RegraDeCenario?> ObterRegra(string id, CancellationToken cancelamento) => Falha<RegraDeCenario?>();
+
+        public Task SalvarRegra(RegraDeCenario regra, CancellationToken cancelamento) => Falha<bool>();
+
+        public Task ApagarRegra(string id, CancellationToken cancelamento) => Falha<bool>();
+
+        public Task<IReadOnlyList<PacoteDeCenario>> ListarPacotes(CancellationToken cancelamento) => Falha<IReadOnlyList<PacoteDeCenario>>();
+
+        public Task<PacoteDeCenario?> ObterPacote(string nome, CancellationToken cancelamento) => Falha<PacoteDeCenario?>();
+
+        public Task SalvarPacote(PacoteDeCenario pacote, CancellationToken cancelamento) => Falha<bool>();
+
+        public Task ApagarPacote(string nome, CancellationToken cancelamento) => Falha<bool>();
+
+        public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Falha<IReadOnlyList<AnomaliaDaInstituicao>>();
+
+        public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento) => Falha<bool>();
+
+        public Task ApagarAnomalias(string instituicao, CancellationToken cancelamento) => Falha<bool>();
     }
 }

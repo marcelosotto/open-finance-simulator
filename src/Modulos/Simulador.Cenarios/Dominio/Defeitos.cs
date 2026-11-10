@@ -17,22 +17,28 @@ public static class Defeitos
     public const string DataForaDaJanela = "data-fora-da-janela";
     public const string DadoMudaNaPaginacao = "dado-muda-na-paginacao";
 
+    /// <summary>Teto, em módulo, da <c>quantidade</c> de <c>dado-muda-na-paginacao</c>: o maior page-size (RN117).</summary>
+    public const int QuantidadeMaxima = 1000;
+
     public static IReadOnlyList<ItemDoCatalogo> Catalogo { get; } =
     [
-        new(CampoObrigatorioAusente, "Tira um campo obrigatório do primeiro item; sem campo, o primeiro obrigatório terminado em Amount ou o último obrigatório."),
-        new(FormatoInvalido, "Reescreve em dd/MM/aaaa um campo date ou date-time do primeiro item."),
-        new(EnumInvalido, "Troca um enum do primeiro item (type, se for enum) por VALOR_FORA_DA_LISTA."),
+        new(CampoObrigatorioAusente, "Tira um campo obrigatório do primeiro item; sem campo, o primeiro obrigatório presente, começando pelo terminado em Amount e depois do último para o primeiro."),
+        new(FormatoInvalido, "Reescreve em dd/MM/aaaa um campo de data em texto do primeiro item; sem campo, o primeiro presente."),
+        new(EnumInvalido, "Troca um enum do primeiro item por VALOR_FORA_DA_LISTA; sem campo, type ou o primeiro enum presente."),
         new(ValorIncoerente, "Troca a currency do primeiro objeto de valor do primeiro item por USD."),
         new(TransactionIdRepetido, "Copia o transactionId do primeiro item no segundo."),
         new(TotalRecordsIncoerente, "Soma 1 a meta.totalRecords."),
         new(DataForaDaJanela, "Leva as datas da primeira transação para dois anos antes do instante da chamada."),
-        new(DadoMudaNaPaginacao, "Na página seguinte, acrescenta (quantidade positiva) ou tira (negativa) itens e ajusta totalRecords e totalPages."),
+        new(DadoMudaNaPaginacao, "Na página seguinte, acrescenta (quantidade positiva) ou tira (negativa, de -1000 a 1000) itens e ajusta totalRecords e totalPages."),
     ];
 
     /// <summary>Os defeitos que aceitam <c>campo</c> (RN117).</summary>
     public static IReadOnlySet<string> DeCampo { get; } = new HashSet<string>(StringComparer.Ordinal) { CampoObrigatorioAusente, FormatoInvalido, EnumInvalido };
 
     public static bool Existe(string? nome) => nome is not null && Catalogo.Any(d => d.Nome == nome);
+
+    /// <summary>De -1000 a 1000, sem o zero (RN117).</summary>
+    public static bool QuantidadeValida(int quantidade) => quantidade is not 0 and >= -QuantidadeMaxima and <= QuantidadeMaxima;
 }
 
 /// <summary>Catálogo de anomalias de protocolo (RN113).</summary>
@@ -94,7 +100,7 @@ public static class AplicacaoDeDefeito
             Defeitos.TransactionIdRepetido => lista is not null && RepetirId(lista),
             Defeitos.TotalRecordsIncoerente => SomarAoTotal(corpo, 1, null),
             Defeitos.DataForaDaJanela => TirarDaJanela(lista ?? Enumerable.Repeat<JsonNode?>(dados, 1), esquema, instante),
-            Defeitos.DadoMudaNaPaginacao => paginaSeguinte && lista is not null && Mudar(corpo, lista, esquema, defeito.Quantidade ?? 1),
+            Defeitos.DadoMudaNaPaginacao => paginaSeguinte && lista is not null && Mudar(corpo, lista, esquema, Math.Clamp(defeito.Quantidade ?? 1, -Defeitos.QuantidadeMaxima, Defeitos.QuantidadeMaxima)),
             _ => false,
         };
     }
@@ -120,23 +126,32 @@ public static class AplicacaoDeDefeito
         _ => null,
     };
 
+    /// <summary>O campo informado, ou o primeiro candidato presente no item, para o defeito não falhar em silêncio (RN117).</summary>
+    private static string? Alvo(JsonObject item, string? campo, IEnumerable<string> candidatos, Func<string, bool> elegivel) =>
+        campo is not null
+            ? (item.ContainsKey(campo) && elegivel(campo) ? campo : null)
+            : candidatos.FirstOrDefault(n => item.ContainsKey(n) && elegivel(n));
+
     private static bool TirarObrigatorio(JsonObject item, JsonObject? esquema, string? campo)
     {
         var obrigatorios = Obrigatorios(esquema);
-        var alvo = campo ?? obrigatorios.FirstOrDefault(n => n.EndsWith(SufixoDeValor, StringComparison.Ordinal)) ?? obrigatorios.LastOrDefault();
+        var deValor = obrigatorios.Where(n => n.EndsWith(SufixoDeValor, StringComparison.Ordinal)).Take(1);
+        var alvo = Alvo(item, campo, deValor.Concat(Enumerable.Reverse(obrigatorios)), static _ => true);
         return alvo is not null && item.Remove(alvo);
     }
 
+    /// <summary>Só reescreve texto: um objeto, lista ou número informado em <c>campo</c> deixa a resposta normal (RN117).</summary>
     private static bool QuebrarFormato(JsonObject item, JsonObject? esquema, string? campo, DateTimeOffset instante)
     {
-        var alvo = campo ?? CamposDo(esquema).FirstOrDefault(c => FormatoDeData(c.Key, c.Value) is not null).Key;
-        if (alvo is null || !item.ContainsKey(alvo))
+        var datas = CamposDo(esquema).Where(c => FormatoDeData(c.Key, c.Value) is not null).Select(c => c.Key);
+        var alvo = Alvo(item, campo, datas, n => Texto(item[n]) is not null);
+        if (alvo is null)
         {
             return false;
         }
 
-        var valor = Texto(item[alvo]);
-        var dia = valor is { Length: >= 10 } && DateOnly.TryParseExact(valor[..10], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var lido)
+        var valor = Texto(item[alvo])!;
+        var dia = valor.Length >= 10 && DateOnly.TryParseExact(valor[..10], "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var lido)
             ? lido
             : DateOnly.FromDateTime(instante.UtcDateTime);
         item[alvo] = dia.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
@@ -145,11 +160,9 @@ public static class AplicacaoDeDefeito
 
     private static bool QuebrarEnum(JsonObject item, JsonObject? esquema, string? campo)
     {
-        var campos = CamposDo(esquema).ToList();
-        var alvo = campo
-            ?? (campos.Any(c => c.Key == Tipo && c.Value?[Lista] is not null) ? Tipo : null)
-            ?? campos.FirstOrDefault(c => c.Value?[Lista] is not null).Key;
-        if (alvo is null || !item.ContainsKey(alvo))
+        var enums = CamposDo(esquema).Where(c => c.Value?[Lista] is not null).Select(c => c.Key).ToList();
+        var alvo = Alvo(item, campo, enums.Where(n => n == Tipo).Concat(enums), static _ => true);
+        if (alvo is null)
         {
             return false;
         }

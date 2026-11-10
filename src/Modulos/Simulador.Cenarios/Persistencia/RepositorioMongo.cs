@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Simulador.Cenarios.Contratos;
@@ -55,6 +56,11 @@ internal sealed class RepositorioMongo : IRepositorioDeCenarios, IDisposable
         ArgumentNullException.ThrowIfNull(anomalia);
         return Salvar($"{PrefixoDeAnomalia}{anomalia.Instituicao}:{anomalia.Nome}", anomalia, cancelamento);
     }
+
+    public async Task ApagarAnomalias(string instituicao, CancellationToken cancelamento) =>
+        await _cenarios.DeleteManyAsync(
+            Builders<BsonDocument>.Filter.Regex(Id, new BsonRegularExpression($"^{Regex.Escape($"{PrefixoDeAnomalia}{instituicao}:")}")),
+            cancelamento).ConfigureAwait(false);
 
     public void Dispose() => _cliente.Dispose();
 

@@ -53,3 +53,17 @@ Também por isso, as transações de Contas não têm `totalRecords` (`MetaOnlyR
 ## R08. Instituições
 
 **Decisão:** a porta `IConsultaDeAnomalias` fica em `Simulador.Instituicoes.Contratos`, com a implementação vazia `SemAnomalias`, como `IConsultaDeClientes`. O host a implementa lendo o cache de Cenários.
+
+## R09. Revisão independente (2026-11-10)
+
+Correções aprovadas pelo Marcelo depois da revisão:
+
+1. Apagar o banco (RN06) apaga as anomalias dele, pela porta `ILimpezaDeAnomalias` de Instituições, que o host implementa com Cenários. O banco recriado com o mesmo nome nasce sem anomalias (RN113, RN114).
+2. A `quantidade` de `dado-muda-na-paginacao` vai de -1000 a 1000, sem o zero. Fora disso, a gravação recusa com erro de validação, e a aplicação ainda limita o valor, de modo que `int.MinValue` não estoura (RN115).
+3. Sem `campo`, o alvo é o primeiro candidato presente no item; o defeito não falha em silêncio quando falta o campo preferido (RN117).
+4. Um teste prova que a chamada com erro do perfil também avança a sequência do defeito (Q2, RN111).
+5. O sorteio sem semente do defeito usa um gerador próprio (`GeradorDosDefeitos`), com a semente do ambiente deslocada. Assim, as outras sequências não se deslocam (RN111, ADR-004).
+6. Se a leitura das anomalias falhar (MongoDB fora), a anomalia conta como desligada: o 401 do portão segue 401, sem virar 500 (RN113, ADR-008).
+7. Docs: RN15 ganha a exceção das regras de estado e de defeito, RN38 a nota de `interacao-diferente`, e a ADR-008 diz onde agem anomalias e defeitos. Perfis deixa claro que anomalias e defeitos não fazem parte do perfil.
+8. Schema em cache: o `JsonObject` de `JsonNode.Parse` monta os filhos na primeira leitura, sem trava. Como chamadas simultâneas compartilham o schema, a árvore é montada inteira antes de entrar no cache.
+9. `formato-invalido` só reescreve texto: com `campo` objeto, lista ou número, a resposta sai normal (RN117).

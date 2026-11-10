@@ -47,7 +47,7 @@ public sealed class RevisaoDaSpec007Tests
     public async Task Cache_le_uma_vez_e_respeita_a_invalidacao()
     {
         var repositorio = new RepositorioControlado();
-        var servico = new ServicoDeCenarios(repositorio, new AmbienteSimples(), new HoraReal(new FakeTimeProvider(Agora)), new GeradorAleatorioComSemente(1));
+        var servico = new ServicoDeCenarios(repositorio, new AmbienteSimples(), new HoraReal(new FakeTimeProvider(Agora)), new GeradorAleatorioComSemente(1), new GeradorDosDefeitos(new GeradorAleatorioComSemente(2)));
         var perfil = new PerfilDaChamada(0, 0, 0m, 0m, new Dictionary<int, decimal>());
 
         var primeira = servico.Decidir(Chamada, perfil, Agora, Declarados, CancellationToken.None);
@@ -115,5 +115,7 @@ public sealed class RevisaoDaSpec007Tests
         public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<AnomaliaDaInstituicao>>([]);
 
         public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento) => Task.CompletedTask;
+
+        public Task ApagarAnomalias(string instituicao, CancellationToken cancelamento) => Task.CompletedTask;
     }
 }

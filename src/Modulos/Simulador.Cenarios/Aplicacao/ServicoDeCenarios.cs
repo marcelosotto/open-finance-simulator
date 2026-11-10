@@ -35,12 +35,22 @@ internal sealed record Saida<T>(TipoDeSaida Tipo, T? Valor = default, IReadOnlyL
 /// <summary>O que o cache guarda: regras ativas e anomalias ligadas por banco (RNF12).</summary>
 internal sealed record RetratoDosCenarios(IReadOnlyList<RegraDeCenario> Regras, IReadOnlyDictionary<string, IReadOnlySet<string>> Anomalias);
 
+/// <summary>
+/// Gerador só dos sorteios de defeito sem semente: como eles correm em toda chamada que chega à etapa,
+/// usar o gerador comum deslocaria o perfil, as outras regras e os identificadores (RN111, princípio VI).
+/// </summary>
+internal sealed class GeradorDosDefeitos(IGeradorAleatorio gerador)
+{
+    public IGeradorAleatorio Gerador { get; } = gerador;
+}
+
 /// <summary>Regras e pacotes (UC04), e a avaliação na chamada.</summary>
 internal sealed class ServicoDeCenarios(
     IRepositorioDeCenarios repositorio,
     IAmbienteDosCenarios ambiente,
     HoraReal hora,
-    IGeradorAleatorio aleatorio) : ICenarios
+    IGeradorAleatorio aleatorio,
+    GeradorDosDefeitos geradorDosDefeitos) : ICenarios
 {
     private const int Escala = 1_000_000;
     private const string AlvoGeral = "cenarios";
@@ -56,7 +66,9 @@ internal sealed class ServicoDeCenarios(
     private long _numeroDaCarga;
     private DateTimeOffset _inicioDaCarga;
 
-    public double Sorteio() => aleatorio.ProximoInteiro(Escala) / (double)Escala;
+    public double Sorteio() => Sortear(aleatorio);
+
+    private static double Sortear(IGeradorAleatorio gerador) => gerador.ProximoInteiro(Escala) / (double)Escala;
 
     public async Task<DecisaoDeComportamento> Decidir(ChamadaAvaliada chamada, PerfilDaChamada perfil, DateTimeOffset instante, IReadOnlySet<int> declarados, CancellationToken cancelamento)
     {
@@ -64,11 +76,11 @@ internal sealed class ServicoDeCenarios(
 
         // O defeito sorteia em toda chamada que chega à etapa, para a sequência não depender do perfil (RN111).
         var deDefeito = SelecaoDeRegras.VencedoraDeDefeito(regras, chamada, instante);
-        var defeito = deDefeito is not null && await Dispara(deDefeito, cancelamento).ConfigureAwait(false)
+        var defeito = deDefeito is not null && await Dispara(deDefeito, geradorDosDefeitos.Gerador, cancelamento).ConfigureAwait(false)
             ? new DefeitoDaChamada(deDefeito.Efeito.Defeito!, deDefeito.Efeito.Campo, deDefeito.Efeito.Quantidade)
             : null;
         var vencedora = SelecaoDeRegras.Vencedora(regras, chamada, instante, declarados);
-        var efeito = vencedora is not null && await Dispara(vencedora, cancelamento).ConfigureAwait(false) ? vencedora.Efeito : null;
+        var efeito = vencedora is not null && await Dispara(vencedora, aleatorio, cancelamento).ConfigureAwait(false) ? vencedora.Efeito : null;
         var decisao = AvaliacaoDoPerfil.Decidir(perfil, efeito, instante, declarados, Sorteio);
         return defeito is not null && decisao.Status is null && decisao.Transporte != Efeitos.ConexaoCortada ? decisao with { Defeito = defeito } : decisao;
     }
@@ -78,6 +90,12 @@ internal sealed class ServicoDeCenarios(
 
     public async Task<IReadOnlySet<string>> AnomaliasLigadas(string instituicao, CancellationToken cancelamento) =>
         (await Ativas(cancelamento).ConfigureAwait(false)).Anomalias.GetValueOrDefault(instituicao) ?? Nenhuma;
+
+    public async Task ApagarAnomalias(string instituicao, CancellationToken cancelamento)
+    {
+        await repositorio.ApagarAnomalias(instituicao, cancelamento).ConfigureAwait(false);
+        Invalidar();
+    }
 
     /// <summary>O estado de cada anomalia no banco, lido do repositório; nulo se o banco não existe (RN113).</summary>
     public async Task<IReadOnlyList<EstadoDaAnomalia>?> AnomaliasDe(string instituicao, CancellationToken cancelamento)
@@ -334,7 +352,7 @@ internal sealed class ServicoDeCenarios(
         return new RetratoDosCenarios([.. regras.Where(r => r.Ligada && (r.Pacote is null || ligados.Contains(r.Pacote)))], anomalias);
     }
 
-    private async Task<bool> Dispara(RegraDeCenario regra, CancellationToken cancelamento)
+    private async Task<bool> Dispara(RegraDeCenario regra, IGeradorAleatorio gerador, CancellationToken cancelamento)
     {
         if (regra.FrequenciaPct >= 100)
         {
@@ -357,6 +375,6 @@ internal sealed class ServicoDeCenarios(
             }
         }
 
-        return Sorteio() < limite;
+        return Sortear(gerador) < limite;
     }
 }

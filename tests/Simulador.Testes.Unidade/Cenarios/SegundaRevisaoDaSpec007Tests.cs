@@ -20,7 +20,7 @@ public sealed class SegundaRevisaoDaSpec007Tests
     private static PedidoDeRegra Pedido500 => new(null, "banco", null, null, null, new EfeitoDaRegra(Efeitos.Status, Status: 500), null, null, null, null, null, null);
 
     private static ServicoDeCenarios Servico(IRepositorioDeCenarios repositorio, FakeTimeProvider relogio) =>
-        new(repositorio, new AmbienteSimples(), new HoraReal(relogio), new GeradorAleatorioComSemente(1));
+        new(repositorio, new AmbienteSimples(), new HoraReal(relogio), new GeradorAleatorioComSemente(1), new GeradorDosDefeitos(new GeradorAleatorioComSemente(2)));
 
     /// <summary>Achado 1: leitura que falha não fica guardada; a chamada seguinte lê de novo, sem escrita no meio.</summary>
     [Fact]
@@ -170,6 +170,8 @@ public sealed class SegundaRevisaoDaSpec007Tests
         public Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<AnomaliaDaInstituicao>>([]);
 
         public Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento) => Task.CompletedTask;
+
+        public Task ApagarAnomalias(string instituicao, CancellationToken cancelamento) => Task.CompletedTask;
 
         private async Task<IReadOnlyList<RegraDeCenario>> Esperar(IReadOnlyList<RegraDeCenario> copia)
         {

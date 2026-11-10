@@ -41,6 +41,7 @@ internal sealed record ResultadoDoCadastro(TipoDeResultado Tipo, Instituicao? In
 internal sealed class CadastroDeInstituicoes(
     IRepositorioDeInstituicoes repositorio,
     IConsultaDeClientes clientes,
+    ILimpezaDeAnomalias anomalias,
     IAmbienteDasInstituicoes ambiente,
     TimeProvider relogio) : IConsultaDeInstituicoes
 {
@@ -159,6 +160,7 @@ internal sealed class CadastroDeInstituicoes(
         if (!atual.Pronta && !await clientes.TemClientes(endereco, cancelamento).ConfigureAwait(false))
         {
             await repositorio.Apagar(endereco, cancelamento).ConfigureAwait(false);
+            await anomalias.Apagar(endereco, cancelamento).ConfigureAwait(false);
             await Registrar(endereco, autor, "apagada", [], cancelamento).ConfigureAwait(false);
             return ResultadoDoCadastro.Sucesso(atual, "apagada");
         }
@@ -282,7 +284,9 @@ internal sealed class SemClientes : IConsultaDeClientes
 }
 
 /// <summary>Sem o módulo de cenários, nenhuma anomalia está ligada (RN114).</summary>
-internal sealed class SemAnomalias : IConsultaDeAnomalias
+internal sealed class SemAnomalias : IConsultaDeAnomalias, ILimpezaDeAnomalias
 {
     public Task<IReadOnlyList<string>> Ligadas(string endereco, CancellationToken cancelamento) => Task.FromResult<IReadOnlyList<string>>([]);
+
+    public Task Apagar(string endereco, CancellationToken cancelamento) => Task.CompletedTask;
 }

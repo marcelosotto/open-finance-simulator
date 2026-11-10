@@ -101,4 +101,14 @@ public sealed class RepositorioDeCenariosEmMemoria : IRepositorioDeCenarios
         _anomalias[(anomalia.Instituicao, anomalia.Nome)] = anomalia;
         return Task.CompletedTask;
     }
+
+    public Task ApagarAnomalias(string instituicao, CancellationToken cancelamento)
+    {
+        foreach (var chave in _anomalias.Keys.Where(k => k.Item1 == instituicao))
+        {
+            _anomalias.TryRemove(chave, out _);
+        }
+
+        return Task.CompletedTask;
+    }
 }

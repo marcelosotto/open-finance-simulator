@@ -151,6 +151,38 @@ internal sealed class ResultadoComDefeito(IResult original, DefeitoDaChamada def
         }
     }
 
+    /// <summary>
+    /// O nó lido por <c>JsonNode.Parse</c> monta os filhos na primeira
+    /// leitura, sem trava. O schema fica no cache para chamadas simultâneas, então a árvore é montada inteira antes de
+    /// ser publicada; depois disso, só há leitura.
+    /// </summary>
+    private static JsonObject? Materializado(JsonNode? no)
+    {
+        Percorrer(no);
+        return no as JsonObject;
+    }
+
+    private static void Percorrer(JsonNode? no)
+    {
+        switch (no)
+        {
+            case JsonObject objeto:
+                foreach (var (_, filho) in objeto)
+                {
+                    Percorrer(filho);
+                }
+
+                break;
+            case JsonArray lista:
+                foreach (var filho in lista)
+                {
+                    Percorrer(filho);
+                }
+
+                break;
+        }
+    }
+
     private byte[]? Alterado(HttpContext contexto, byte[] corpo)
     {
         var status = contexto.Response.StatusCode;
@@ -160,7 +192,7 @@ internal sealed class ResultadoComDefeito(IResult original, DefeitoDaChamada def
         }
 
         var codigo = status.ToString(CultureInfo.InvariantCulture);
-        var schema = Schemas.GetOrAdd((operacao.OperationId, codigo), _ => operacao.Respostas.TryGetValue(codigo, out var texto) ? JsonNode.Parse(texto) as JsonObject : null);
+        var schema = Schemas.GetOrAdd((operacao.OperationId, codigo), _ => operacao.Respostas.TryGetValue(codigo, out var texto) ? Materializado(JsonNode.Parse(texto)) : null);
         JsonObject? json;
         try
         {
@@ -178,18 +210,36 @@ internal sealed class ResultadoComDefeito(IResult original, DefeitoDaChamada def
     }
 }
 
-/// <summary>Anomalias do banco pelo cache de Cenários (RN113).</summary>
-internal sealed class AnomaliasDaChamada(ICenarios cenarios) : IAnomaliasDaChamada
+/// <summary>
+/// Anomalias do banco pelo cache de Cenários (RN113). Se a leitura falha (MongoDB fora), a anomalia conta como
+/// desligada: o 401 do portão segue 401 e a chave segue o caminho normal, em vez de virar 500.
+/// </summary>
+internal sealed partial class AnomaliasDaChamada(ICenarios cenarios, ILogger<AnomaliasDaChamada> registro) : IAnomaliasDaChamada
 {
-    public async Task<bool> Ligada(string instituicao, string nome, CancellationToken cancelamento) =>
-        (await cenarios.AnomaliasLigadas(instituicao, cancelamento).ConfigureAwait(false)).Contains(nome);
+    public async Task<bool> Ligada(string instituicao, string nome, CancellationToken cancelamento)
+    {
+        try
+        {
+            return (await cenarios.AnomaliasLigadas(instituicao, cancelamento).ConfigureAwait(false)).Contains(nome);
+        }
+        catch (Exception erro) when (erro is MongoDB.Driver.MongoException or TimeoutException)
+        {
+            LeituraFalhou(registro, nome, instituicao, erro);
+            return false;
+        }
+    }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Anomalia {Nome} do banco {Banco} sem leitura; segue desligada.")]
+    private static partial void LeituraFalhou(ILogger registro, string nome, string banco, Exception erro);
 }
 
 /// <summary>Anomalias ligadas, para a lista de instituições (RN114).</summary>
-internal sealed class ConsultaDeAnomalias(ICenarios cenarios) : IConsultaDeAnomalias
+internal sealed class ConsultaDeAnomalias(ICenarios cenarios) : IConsultaDeAnomalias, ILimpezaDeAnomalias
 {
     public async Task<IReadOnlyList<string>> Ligadas(string endereco, CancellationToken cancelamento) =>
         [.. (await cenarios.AnomaliasLigadas(endereco, cancelamento).ConfigureAwait(false)).Order(StringComparer.Ordinal)];
+
+    public Task Apagar(string endereco, CancellationToken cancelamento) => cenarios.ApagarAnomalias(endereco, cancelamento);
 }
 
 /// <summary>Etapa de regra de cenário e perfil (RN39), com a instituição já lida na chamada.</summary>
@@ -328,7 +378,9 @@ internal static class ExtensoesDosAdaptadoresDeCenarios
         servicos.AddSingleton<RelogioDosBancos>();
         servicos.AddSingleton<FiltroDaChamada>();
         servicos.AddSingleton<IAnomaliasDaChamada, AnomaliasDaChamada>();
-        servicos.AddSingleton<IConsultaDeAnomalias, ConsultaDeAnomalias>();
+        servicos.AddSingleton<ConsultaDeAnomalias>();
+        servicos.AddSingleton<IConsultaDeAnomalias>(p => p.GetRequiredService<ConsultaDeAnomalias>());
+        servicos.AddSingleton<ILimpezaDeAnomalias>(p => p.GetRequiredService<ConsultaDeAnomalias>());
         return servicos;
     }
 }

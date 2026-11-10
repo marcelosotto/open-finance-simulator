@@ -129,10 +129,10 @@ public sealed class DefeitosEAnomaliasTests
         Assert.True(Aplicar(comFormato, Defeitos.FormatoInvalido, schema: Schema("""{"properties":{"data":{"type":"array","items":{"properties":{"type":{},"x":{"format":"date-time"}}}}}}""")));
         Assert.Equal("05/11/2026", Primeiro(comFormato)["x"]!.GetValue<string>());
 
-        var curto = Corpo();
-        Primeiro(curto)["type"] = 7;
-        Assert.True(Aplicar(curto, Defeitos.FormatoInvalido, campo: "type"));
-        Assert.Equal("05/11/2026", Primeiro(curto)["type"]!.GetValue<string>());
+        var numero = Corpo();
+        Primeiro(numero)["type"] = 7;
+        Assert.False(Aplicar(numero, Defeitos.FormatoInvalido, campo: "type"));
+        Assert.Equal(7, Primeiro(numero)["type"]!.GetValue<int>());
 
         var pequeno = Corpo();
         Assert.True(Aplicar(pequeno, Defeitos.FormatoInvalido, campo: "transactionId"));

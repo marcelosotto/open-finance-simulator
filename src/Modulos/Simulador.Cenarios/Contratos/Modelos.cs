@@ -87,6 +87,9 @@ public interface IRepositorioDeCenarios
     Task<IReadOnlyList<AnomaliaDaInstituicao>> ListarAnomalias(CancellationToken cancelamento);
 
     Task SalvarAnomalia(AnomaliaDaInstituicao anomalia, CancellationToken cancelamento);
+
+    /// <summary>Apaga as anomalias do banco, quando o banco é apagado (RN113).</summary>
+    Task ApagarAnomalias(string instituicao, CancellationToken cancelamento);
 }
 
 /// <summary>O que o módulo precisa do ambiente; o host implementa (ADR-007).</summary>
@@ -113,6 +116,9 @@ public interface ICenarios
 
     /// <summary>Anomalias ligadas no banco, pelo cache de até 5 s (RN113, RNF12).</summary>
     Task<IReadOnlySet<string>> AnomaliasLigadas(string instituicao, CancellationToken cancelamento);
+
+    /// <summary>Esquece as anomalias do banco apagado: o banco recriado com o mesmo nome nasce sem elas (RN113).</summary>
+    Task ApagarAnomalias(string instituicao, CancellationToken cancelamento);
 
     /// <summary>Número em [0, 1).</summary>
     double Sorteio();
