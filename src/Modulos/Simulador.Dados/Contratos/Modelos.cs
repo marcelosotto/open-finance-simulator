@@ -32,9 +32,6 @@ public interface IAmbienteDosDados
 
     Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento);
 
-    /// <summary>Como o recurso estava no instante da chave; nulo se ainda não existia (RN37).</summary>
-    Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento);
-
     Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento);
 
     /// <summary>Transações vistas no instante pedido, sem ajustes posteriores (RN37).</summary>

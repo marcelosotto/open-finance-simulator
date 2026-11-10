@@ -43,8 +43,6 @@ public class FiltroSemGerarTests
 
         public Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento) => Task.FromResult<RecursoDeDados?>(Conta);
 
-        public Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) => Task.FromResult<RecursoDeDados?>(Conta);
-
         public Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) => Task.FromResult<ClienteDeDados?>(null);
 
         public Task<IReadOnlyList<TransacaoDeDados>> Transacoes(string resourceId, DateOnly de, DateOnly ate, DateTimeOffset instante, CancellationToken cancelamento) =>

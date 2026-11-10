@@ -13,7 +13,7 @@ public sealed class ComportamentoNulo : IComportamentoDaChamada
 
     public Task<bool> RecursoIndisponivel(HttpContext contexto) => Task.FromResult(false);
 
-    public Task<string> EstadoDoRecurso(string resourceId, string estado, DateTimeOffset? instante, CancellationToken cancelamento) => Task.FromResult(estado);
+    public Task<string> EstadoDoRecurso(string resourceId, string estado, CancellationToken cancelamento) => Task.FromResult(estado);
 }
 
 /// <summary>Registra as esperas; pode avançar o relógio falso, segurar a resposta e observar o momento da espera.</summary>

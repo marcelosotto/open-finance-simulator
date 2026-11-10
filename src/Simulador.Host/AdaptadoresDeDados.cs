@@ -30,17 +30,8 @@ internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, ICons
 
     public async Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento) =>
         await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r
-            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, null, cancelamento).ConfigureAwait(false), r.Natureza, r.InicioDoHistorico)
+            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, cancelamento).ConfigureAwait(false), r.Natureza, r.InicioDoHistorico)
             : null;
-
-    public async Task<RecursoDeDados?> RecursoNoInstante(string resourceId, DateTimeOffset instante, CancellationToken cancelamento) =>
-        await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r && (r.Natureza == Naturezas.Virtual || await CriadoNoBanco(r, cancelamento).ConfigureAwait(false) <= instante)
-            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, await comportamento.EstadoDoRecurso(r.ResourceId, NoInstante.Estado(r.Estado, r.EstadosAnteriores, instante), instante, cancelamento).ConfigureAwait(false), r.Natureza, r.InicioDoHistorico)
-            : null;
-
-    /// <summary>A criação, gravada em hora real, levada à hora do banco pelo relógio em vigor (RN37, RN73).</summary>
-    private async Task<DateTimeOffset> CriadoNoBanco(Recurso recurso, CancellationToken cancelamento) =>
-        (await instituicoes.Obter(recurso.Banco, cancelamento).ConfigureAwait(false))?.Relogio?.Agora(recurso.CriadoEm) ?? recurso.CriadoEm;
 
     public async Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) =>
         await consulta.ObterCliente(documento, cancelamento).ConfigureAwait(false) is { } m

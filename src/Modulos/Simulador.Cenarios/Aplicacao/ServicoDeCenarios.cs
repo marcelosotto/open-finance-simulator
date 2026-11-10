@@ -49,6 +49,8 @@ internal sealed class ServicoDeCenarios(
     private long _geracao;
     private Task<IReadOnlyList<RegraDeCenario>>? _carga;
     private long _geracaoDaCarga = -1;
+    private long _numeroDaCarga;
+    private DateTimeOffset _inicioDaCarga;
 
     public double Sorteio() => aleatorio.ProximoInteiro(Escala) / (double)Escala;
 
@@ -205,43 +207,74 @@ internal sealed class ServicoDeCenarios(
     }
 
     /// <summary>
-    /// Regras em cache por até 5 s (RNF12). Chamadas simultâneas esperam a mesma leitura, e uma leitura
-    /// que começou antes de uma escrita não é guardada: a próxima chamada lê de novo.
+    /// Regras em cache por até 5 s desde o início da leitura (RNF12). Chamadas simultâneas esperam a mesma
+    /// leitura, que guarda o resultado sozinha; quem recebe uma leitura atravessada por escrita lê de novo (R08).
     /// </summary>
     private async Task<IReadOnlyList<RegraDeCenario>> Ativas(CancellationToken cancelamento)
     {
-        var agora = hora.Relogio.GetUtcNow();
-        Task<IReadOnlyList<RegraDeCenario>> carga;
-        long geracao;
-        lock (_trava)
+        while (true)
         {
-            if (_ativas is not null && agora < _validoAte)
+            var agora = hora.Relogio.GetUtcNow();
+            Task<IReadOnlyList<RegraDeCenario>> carga;
+            long geracao;
+            lock (_trava)
             {
-                return _ativas;
+                if (_ativas is not null && agora < _validoAte)
+                {
+                    return _ativas;
+                }
+
+                if (_carga is null || _geracaoDaCarga != _geracao || agora >= _inicioDaCarga + ValidadeDoCache)
+                {
+                    _numeroDaCarga++;
+                    _geracaoDaCarga = _geracao;
+                    _inicioDaCarga = agora;
+                    _carga = Carga(_numeroDaCarga, _geracao, agora);
+                }
+
+                carga = _carga;
+                geracao = _geracaoDaCarga;
             }
 
-            if (_carga is null || _geracaoDaCarga != _geracao)
+            var ativas = await carga.WaitAsync(cancelamento).ConfigureAwait(false);
+            lock (_trava)
             {
-                _carga = Carregar();
-                _geracaoDaCarga = _geracao;
+                if (geracao == _geracao)
+                {
+                    return ativas;
+                }
             }
-
-            carga = _carga;
-            geracao = _geracaoDaCarga;
         }
+    }
 
-        var ativas = await carga.WaitAsync(cancelamento).ConfigureAwait(false);
-        lock (_trava)
+    /// <summary>Uma leitura, iniciada fora da trava; guarda o resultado se ainda for a vez dela, e se descarta ao falhar.</summary>
+    private async Task<IReadOnlyList<RegraDeCenario>> Carga(long numero, long geracao, DateTimeOffset inicio)
+    {
+        await Task.Yield();
+        try
         {
-            if (geracao == _geracao && ReferenceEquals(carga, _carga))
+            var ativas = await Carregar().ConfigureAwait(false);
+            lock (_trava)
             {
-                _ativas = ativas;
-                _validoAte = agora + ValidadeDoCache;
-                _carga = null;
+                if (numero == _numeroDaCarga && geracao == _geracao)
+                {
+                    _ativas = ativas;
+                    _validoAte = inicio + ValidadeDoCache;
+                }
+            }
+
+            return ativas;
+        }
+        finally
+        {
+            lock (_trava)
+            {
+                if (numero == _numeroDaCarga)
+                {
+                    _carga = null;
+                }
             }
         }
-
-        return ativas;
     }
 
     private async Task<IReadOnlyList<RegraDeCenario>> Carregar()

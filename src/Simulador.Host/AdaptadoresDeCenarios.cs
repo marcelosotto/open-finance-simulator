@@ -147,14 +147,14 @@ internal sealed class ComportamentoDaChamada(
             && cenarios.Sorteio() * 100 < (double)instituicao.Comportamento.RecursoIndisponivelPct;
     }
 
-    public async Task<string> EstadoDoRecurso(string resourceId, string estado, DateTimeOffset? instante, CancellationToken cancelamento)
+    public async Task<string> EstadoDoRecurso(string resourceId, string estado, CancellationToken cancelamento)
     {
         if (acesso.HttpContext is not { } contexto || Operacao(contexto) is not { } operacao)
         {
             return estado;
         }
 
-        return await cenarios.EstadoSobreposto(Chamada(contexto, operacao, resourceId), instante ?? relogio.GetUtcNow(), cancelamento).ConfigureAwait(false) ?? estado;
+        return await cenarios.EstadoSobreposto(Chamada(contexto, operacao, resourceId), relogio.GetUtcNow(), cancelamento).ConfigureAwait(false) ?? estado;
     }
 
     private static OperacaoDoCatalogo? Operacao(HttpContext contexto) => contexto.Items[OperacaoDoCatalogo.ItemDaChamada] as OperacaoDoCatalogo;

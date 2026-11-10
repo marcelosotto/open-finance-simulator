@@ -33,8 +33,8 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
     private const decimal LimiteDoCartao = 50_000m;
     private static readonly ConcurrentDictionary<string, JsonObject> Schemas = new(StringComparer.Ordinal);
 
-    /// <summary>Itens a responder, ou a recusa.</summary>
-    private readonly record struct Itens(IReadOnlyList<Preenchimento> Lista, IResult? Recusa = null);
+    /// <summary>Itens a responder, ou a recusa; nas listas de recursos, o conjunto que vai na chave.</summary>
+    private readonly record struct Itens(IReadOnlyList<Preenchimento> Lista, IResult? Recusa = null, string? Recursos = null);
 
     public bool Atende(string contrato) => Familias.De(contrato) is not null;
 
@@ -81,16 +81,17 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         var consulta = $"{operacao.OperationId}|{consentimento.ConsentId}|{contexto.Request.Path}|{de}|{ate}|{string.Join(',', filtros)}";
         var agora = relogio.GetUtcNow();
         var emissao = operacao.TemChave
-            ? ChaveDePaginacao.Ler(query["pagination-key"], consulta, segredo.Valor, agora, limites.ValidadeDaChaveMin)
+            ? ChaveDePaginacao.Abrir(query["pagination-key"], consulta, segredo.Valor, agora, limites.ValidadeDaChaveMin)
             : null;
-        var instante = emissao ?? agora;
-        var chave = operacao.TemChave ? ChaveDePaginacao.Emitir(instante, consulta, segredo.Valor) : null;
+        var instante = emissao?.Emissao ?? agora;
 
-        var itens = await Montar(tipo, familia, consentimento, recurso, contexto.Request.RouteValues["billId"] as string, de, ate, instante, operacao.SchemaDaResposta, cancelamento).ConfigureAwait(false);
+        var itens = await Montar(tipo, familia, consentimento, recurso, contexto.Request.RouteValues["billId"] as string, de, ate, instante, emissao?.Recursos, operacao.SchemaDaResposta, cancelamento).ConfigureAwait(false);
         if (itens.Recusa is not null)
         {
             return itens.Recusa;
         }
+
+        var chave = operacao.TemChave ? ChaveDePaginacao.Emitir(instante, consulta, segredo.Valor, itens.Recursos) : null;
 
         // Chave válida é página seguinte: não confere nem conta a cota (RN27, UC19).
         var cota = emissao is null ? await ambiente.Cota(contexto, operacao, consentimento, cancelamento).ConfigureAwait(false) : null;
@@ -126,6 +127,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         string? de,
         string? ate,
         DateTimeOffset instante,
+        string? recursosDaChave,
         string schema,
         CancellationToken cancelamento)
     {
@@ -135,7 +137,7 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
             case TipoDeOperacao.Cadastral:
                 return await Cadastro(consentimento, cancelamento).ConfigureAwait(false);
             case TipoDeOperacao.ListaDeRecursos:
-                return new Itens(await Disponiveis(familia, consentimento, instante, cancelamento).ConfigureAwait(false));
+                return await Disponiveis(familia, consentimento, recursosDaChave, cancelamento).ConfigureAwait(false);
             case TipoDeOperacao.Transacoes or TipoDeOperacao.TransacoesRecentes:
                 var periodo = JanelaDeDatas.Transacoes(de, ate, hoje, tipo == TipoDeOperacao.TransacoesRecentes, familia.AceitaFuturo);
                 return await DasTransacoes(recurso!, periodo, instante, cancelamento).ConfigureAwait(false);
@@ -167,19 +169,31 @@ internal sealed class ServicoDeDados(IAmbienteDosDados ambiente, TimeProvider re
         return new Itens([new Preenchimento(valores, IdsDerivados.BaseDoConsentimento(consentimento.ConsentId), Documentos.Semente(consentimento.Cliente))]);
     }
 
-    private async Task<IReadOnlyList<Preenchimento>> Disponiveis(Familia familia, ConsentimentoDaChamada consentimento, DateTimeOffset instante, CancellationToken cancelamento)
+    /// <summary>
+    /// Na primeira página, os recursos disponíveis agora. Nas seguintes, o conjunto que a chave levou,
+    /// sem reavaliar criação, estado ou regra de estado (RN37).
+    /// </summary>
+    private async Task<Itens> Disponiveis(Familia familia, ConsentimentoDaChamada consentimento, string? recursosDaChave, CancellationToken cancelamento)
     {
+        var naEmissao = recursosDaChave is null ? null : RecursosDaChave.Posicoes(recursosDaChave);
         var itens = new List<Preenchimento>();
-        foreach (var id in consentimento.Recursos)
+        var posicoes = new List<int>();
+        for (var posicao = 0; posicao < consentimento.Recursos.Count; posicao++)
         {
-            var recurso = await ambiente.RecursoNoInstante(id, instante, cancelamento).ConfigureAwait(false);
-            if (recurso?.Tipo == familia.TipoDeRecurso && recurso!.Estado == Disponivel)
+            if (naEmissao?.Contains(posicao) == false)
+            {
+                continue;
+            }
+
+            var recurso = await ambiente.Recurso(consentimento.Recursos[posicao], cancelamento).ConfigureAwait(false);
+            if (recurso is not null && recurso.Tipo == familia.TipoDeRecurso && (naEmissao is not null || recurso.Estado == Disponivel))
             {
                 itens.Add(Item(recurso, new Dictionary<string, string>(StringComparer.Ordinal), recurso.ResourceId));
+                posicoes.Add(posicao);
             }
         }
 
-        return itens;
+        return new Itens(itens, Recursos: recursosDaChave ?? RecursosDaChave.Marcar(posicoes, consentimento.Recursos.Count));
     }
 
     private async Task<Itens> DasTransacoes(RecursoDeDados recurso, Periodo periodo, DateTimeOffset instante, CancellationToken cancelamento)

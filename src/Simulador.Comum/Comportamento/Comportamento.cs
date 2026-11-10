@@ -28,8 +28,8 @@ public interface IComportamentoDaChamada
     /// <summary>Sorteio de recurso indisponível no acesso direto (RN109).</summary>
     Task<bool> RecursoIndisponivel(HttpContext contexto);
 
-    /// <summary>O estado do recurso no instante dado (o da chamada, se nulo), com a regra de estado que valer (RN37, RN108).</summary>
-    Task<string> EstadoDoRecurso(string resourceId, string estado, DateTimeOffset? instante, CancellationToken cancelamento);
+    /// <summary>O estado do recurso no instante da chamada, com a regra de estado que valer (RN108).</summary>
+    Task<string> EstadoDoRecurso(string resourceId, string estado, CancellationToken cancelamento);
 }
 
 /// <summary>Acesso à etapa pelos módulos que respondem às operações.</summary>

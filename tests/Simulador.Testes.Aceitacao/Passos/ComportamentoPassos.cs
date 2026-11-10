@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -177,10 +178,17 @@ public sealed class ContextoDeComportamento : IDisposable
     /// <summary>Verdadeiro quando a última chamada só respondeu depois de liberada a espera.</summary>
     public bool SegurouAteLiberar { get; private set; }
 
+    /// <summary>As esperas feitas só pela última chamada segura.</summary>
+    public IReadOnlyList<TimeSpan> EsperasDaChamada { get; private set; } = [];
+
     /// <summary>Segura a espera da etapa, confere que a resposta não saiu e só então libera.</summary>
     public async Task ChamarSegurando(Uri caminho)
     {
         await RenovarToken();
+        while (Fabrica.Esperas.Duracoes.TryDequeue(out _))
+        {
+        }
+
         Fabrica.Esperas.Segurar = true;
         using var requisicao = Pedido(caminho);
         var envio = Api.SendAsync(requisicao);
@@ -195,6 +203,7 @@ public sealed class ContextoDeComportamento : IDisposable
         Resposta?.Dispose();
         Resposta = await envio;
         Corpo = await Resposta.Content.ReadAsStringAsync();
+        EsperasDaChamada = [.. Fabrica.Esperas.Duracoes];
     }
 
     public void Status(int esperado) => Assert.True((int)Resposta!.StatusCode == esperado, $"esperado {esperado}, veio {(int)Resposta.StatusCode}: {Corpo}");
@@ -265,9 +274,11 @@ public sealed partial class ComportamentoPassos(ContextoDeComportamento c)
                 await c.RenovarToken();
             }
 
+            // Tempo de resposta: a espera simulada, que avança o relógio falso, mais o tempo real de processamento.
             var inicio = c.Fabrica.Relogio.GetUtcNow();
+            var cronometro = Stopwatch.StartNew();
             await c.Chamar(c.Saldos, renovar: false);
-            _tempos.Add((c.Fabrica.Relogio.GetUtcNow() - inicio).TotalMilliseconds);
+            _tempos.Add((c.Fabrica.Relogio.GetUtcNow() - inicio + cronometro.Elapsed).TotalMilliseconds);
             _status.Add((int)c.Resposta!.StatusCode);
         }
 
@@ -298,7 +309,7 @@ public sealed partial class ComportamentoPassos(ContextoDeComportamento c)
     public void DepoisDe15()
     {
         Assert.True(c.SegurouAteLiberar, "a resposta saiu antes de terminar a espera");
-        Assert.Equal(TimeSpan.FromSeconds(15), c.Fabrica.Esperas.Duracoes.Last());
+        Assert.Equal([TimeSpan.FromSeconds(15)], c.EsperasDaChamada);
     }
 
     [Then(@"^a resposta deve ter status (\d+)$")]

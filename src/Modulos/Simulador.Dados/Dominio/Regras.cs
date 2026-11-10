@@ -237,34 +237,70 @@ internal static class JanelaDeDatas
     }
 }
 
-/// <summary>Chave de paginação assinada: instante e consulta, sem gravar nada (RN35 a RN37).</summary>
+/// <summary>O que uma chave válida leva: o instante de emissão e, nas listas de recursos, o conjunto da emissão.</summary>
+internal sealed record LeituraDaChave(DateTimeOffset Emissao, string? Recursos);
+
+/// <summary>Chave de paginação assinada: instante, consulta e, nas listas de recursos, o conjunto da emissão, sem gravar nada (RN35 a RN37).</summary>
 internal static class ChaveDePaginacao
 {
     private const char Separador = '.';
 
-    public static string Emitir(DateTimeOffset instante, string consulta, byte[] segredo)
+    public static string Emitir(DateTimeOffset instante, string consulta, byte[] segredo, string? recursos = null)
     {
         var corpo = instante.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
+        corpo = recursos is null ? corpo : $"{corpo}{Separador}{recursos}";
         return $"{corpo}{Separador}{Assinar(corpo, consulta, segredo)}";
     }
 
     /// <summary>O instante de emissão, ou nulo se a chave for inválida ou expirada.</summary>
-    public static DateTimeOffset? Ler(string? texto, string consulta, byte[] segredo, DateTimeOffset agora, int validadeMin)
+    public static DateTimeOffset? Ler(string? texto, string consulta, byte[] segredo, DateTimeOffset agora, int validadeMin) =>
+        Abrir(texto, consulta, segredo, agora, validadeMin)?.Emissao;
+
+    /// <summary>O que a chave leva, ou nulo se ela for inválida ou expirada.</summary>
+    public static LeituraDaChave? Abrir(string? texto, string consulta, byte[] segredo, DateTimeOffset agora, int validadeMin)
     {
-        var partes = (texto ?? string.Empty).Split(Separador);
-        if (partes.Length != 2 || !long.TryParse(partes[0], NumberStyles.None, CultureInfo.InvariantCulture, out var milissegundos)
-            || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(partes[1]), Encoding.UTF8.GetBytes(Assinar(partes[0], consulta, segredo)))
+        var chave = texto ?? string.Empty;
+        var fim = chave.LastIndexOf(Separador);
+        var corpo = fim < 0 ? string.Empty : chave[..fim];
+        var partes = corpo.Split(Separador);
+        if (fim < 0 || partes.Length > 2 || !long.TryParse(partes[0], NumberStyles.None, CultureInfo.InvariantCulture, out var milissegundos)
+            || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(chave[(fim + 1)..]), Encoding.UTF8.GetBytes(Assinar(corpo, consulta, segredo)))
             || milissegundos > DateTimeOffset.MaxValue.ToUnixTimeMilliseconds())
         {
             return null;
         }
 
         var emissao = DateTimeOffset.FromUnixTimeMilliseconds(milissegundos);
-        return agora <= emissao.AddMinutes(validadeMin) ? emissao : null;
+        return agora <= emissao.AddMinutes(validadeMin) ? new LeituraDaChave(emissao, partes.Length == 2 ? partes[1] : null) : null;
     }
 
     private static string Assinar(string corpo, string consulta, byte[] segredo) =>
         Base64Url.EncodeToString(HMACSHA256.HashData(segredo, Encoding.UTF8.GetBytes($"{corpo}|{consulta}")));
+}
+
+/// <summary>
+/// Quais posições da lista de recursos do consentimento entraram na lista na emissão (RN37).
+/// O consentimento só ganha recursos no fim, então as posições da emissão não mudam.
+/// </summary>
+internal static class RecursosDaChave
+{
+    public static string Marcar(IEnumerable<int> posicoes, int total)
+    {
+        ArgumentNullException.ThrowIfNull(posicoes);
+        var bytes = new byte[(total + 7) / 8];
+        foreach (var posicao in posicoes)
+        {
+            bytes[posicao / 8] |= (byte)(1 << (posicao % 8));
+        }
+
+        return Base64Url.EncodeToString(bytes);
+    }
+
+    public static HashSet<int> Posicoes(string marcados)
+    {
+        var bytes = Base64Url.DecodeFromChars(marcados);
+        return [.. Enumerable.Range(0, bytes.Length * 8).Where(p => (bytes[p / 8] & (1 << (p % 8))) != 0)];
+    }
 }
 
 /// <summary>Identificadores derivados do recurso dono (RN105).</summary>
