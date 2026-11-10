@@ -93,7 +93,7 @@ public static class AplicacaoDeDefeito
             Defeitos.ValorIncoerente => primeiro is not null && TrocarMoeda(primeiro),
             Defeitos.TransactionIdRepetido => lista is not null && RepetirId(lista),
             Defeitos.TotalRecordsIncoerente => SomarAoTotal(corpo, 1, null),
-            Defeitos.DataForaDaJanela => TirarDaJanela(lista is null ? [dados] : lista, esquema, instante),
+            Defeitos.DataForaDaJanela => TirarDaJanela(lista ?? Enumerable.Repeat<JsonNode?>(dados, 1), esquema, instante),
             Defeitos.DadoMudaNaPaginacao => paginaSeguinte && lista is not null && Mudar(corpo, lista, esquema, defeito.Quantidade ?? 1),
             _ => false,
         };
@@ -225,7 +225,7 @@ public static class AplicacaoDeDefeito
             return true;
         }
 
-        if (lista[0] is not JsonObject modelo || Identificador(modelo, esquema) is not { } campo || Texto(modelo[campo]) is not { } id)
+        if (lista[0] is not JsonObject modelo || Identificador(modelo, esquema) is not { } identificador)
         {
             return false;
         }
@@ -233,7 +233,7 @@ public static class AplicacaoDeDefeito
         for (var n = 1; n <= quantidade; n++)
         {
             var copia = modelo.DeepClone().AsObject();
-            copia[campo] = ComSufixo(id, n);
+            copia[identificador.Campo] = ComSufixo(identificador.Id, n);
             lista.Insert(n - 1, copia);
         }
 
@@ -241,9 +241,13 @@ public static class AplicacaoDeDefeito
         return true;
     }
 
-    private static string? Identificador(JsonObject item, JsonObject? esquema) =>
+    private static (string Campo, string Id)? Identificador(JsonObject item, JsonObject? esquema) =>
         Obrigatorios(esquema).Concat(item.Select(c => c.Key))
-            .FirstOrDefault(n => n.EndsWith(Sufixo, StringComparison.Ordinal) && Texto(item[n]) is not null);
+            .Where(n => n.EndsWith(Sufixo, StringComparison.Ordinal))
+            .Select(n => (Campo: n, Id: Texto(item[n])))
+            .Where(p => p.Id is not null)
+            .Select(p => ((string Campo, string Id)?)(p.Campo, p.Id!))
+            .FirstOrDefault();
 
     private static string ComSufixo(string id, int n)
     {
