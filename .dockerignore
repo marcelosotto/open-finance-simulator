@@ -9,3 +9,9 @@ site/
 docs/
 specs/
 *.md
+front/node_modules/
+front/dist/
+front/coverage/
+front/relatorios/
+front/test-results/
+front/playwright-report/

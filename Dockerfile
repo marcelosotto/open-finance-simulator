@@ -1,6 +1,14 @@
 # syntax=docker/dockerfile:1.7
 # Imagem do simulador com as specs travadas embutidas (ADR-002): sobe sem rede.
 
+# Build do back-office (spec 010, Q3): o simulador serve o resultado na porta de administração.
+FROM node:22 AS front
+WORKDIR /front
+COPY front/package.json front/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY front/ ./
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig specs.lock.json ./
@@ -23,6 +31,7 @@ RUN dotnet publish src/Simulador.Host/Simulador.Host.csproj -c Release -o /app -
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /app .
+COPY --from=front /front/dist ./backoffice
 ENV ASPNETCORE_HTTP_PORTS="" \
     Simulador__PastaDasSpecs=/app/specs \
     Simulador__PortaOpenFinance=8080 \
