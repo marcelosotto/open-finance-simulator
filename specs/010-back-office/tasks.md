@@ -120,3 +120,16 @@ Comandos do front sem Node local: `sh front/scripts/docker.sh <args do npm>` (R4
 ## Implementation Strategy
 
 MVP = Setup + Foundational + US5 + US1: o cadastro de bancos completo é o padrão das outras telas (guia, regra 10). Depois US2 (P1), US3 e US4 (P2), e por fim empacotamento e Playwright.
+
+## Phase 10: Usabilidade (Q11 a Q14)
+
+- [ ] T054 [P] Testes de integração de `GET /admin/massa/clientes?banco=` (lista por banco em ordem, paginação com `temMais`, sem banco lista todos, 422 fora da faixa, 404 banco inexistente) e de `GET /admin/massa/resumo` em `tests/Simulador.Testes.Integracao/Massa/ClientesDoBancoTests.cs`, também com MongoDB
+- [ ] T055 Rotas, serviço e repositório (MongoDB e memória) em `src/Modulos/Simulador.Massa/` e `tests/ComumHost/RepositorioDeMassaEmMemoria.cs`
+- [ ] T056 [P] Testes da receptora padrão (sobe com `XP`; nome, id e credenciais configuráveis; idempotente ao subir de novo com o mesmo MongoDB; nome vazio desliga; histórico com autor `sistema`; token emitido com as credenciais) em `tests/Simulador.Testes.Integracao/Consentimentos/ReceptoraPadraoTests.cs`
+- [ ] T057 Receptora padrão no início do módulo Consentimentos (RN124), desligada por padrão só na fábrica de testes
+- [ ] T058 Front: caso de uso e repositório de clientes do banco e resumo; componente `SeletorDeCliente` (UI19) usado no menu de consentimento, na massa e nos cenários; mensagens claras para 404
+- [ ] T059 Front: menu de consentimento em banco, cliente e receptora (receptora só com mais de uma) (UI10)
+- [ ] T060 Front: ajuda no topo de cada tela (UI17) e página Primeiros passos como página inicial (UI18)
+- [ ] T061 `docs/08-front-end/guia-de-uso.md` em português simples
+- [ ] T062 Testes do front (core, casos de uso, repositório, telas) e Playwright atualizado (seletor de cliente, receptora padrão, primeiros passos)
+- [ ] T063 Rodar todos os portões de novo

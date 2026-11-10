@@ -22,3 +22,15 @@ Porta de administração, sem autenticação (RN71). Erros: `{ "erros": [...] }`
 - `GET /<arquivo>` (js, css, imagens): o arquivo do build, ou 404.
 - Na porta Open Finance nada disso existe: as respostas não mudam.
 - Sem a pasta do build (`Simulador:PastaDoBackOffice`), nada é servido.
+
+## `GET /admin/massa/clientes?banco=&inicio=0&quantidade=100` (UI19)
+- Lista os clientes **persistidos** (de lote e avulsos) que têm pelo menos um produto no `banco`, em ordem de documento. Sem `banco`, lista todos os persistidos. Clientes do mundo virtual não entram, porque não são gravados (RN52).
+- 200: `{ "clientes": [{ "documento", "tipo", "nome", "natureza", "loteId" }], "inicio": 0, "quantidade": 100, "temMais": false }`.
+- `inicio` ≥ 0 (padrão 0); `quantidade` de 1 a 1000 (padrão 100). Fora disso: 422.
+- 404: `{ "erros": ["banco não encontrado: {banco}"] }`.
+
+## `GET /admin/massa/resumo` (UI18)
+- 200: `{ "clientes": 12, "consentimentos": 30, "recursos": 41, "lotes": 2 }`, contagem do que está persistido. Serve para Primeiros passos marcar o que já foi feito.
+
+## Receptora padrão (RN124)
+- Ao subir, o simulador cadastra a receptora de `Simulador:ReceptoraPadrao` (nome padrão `XP`) se o `organisationId` ainda não existe. Ela aparece em `GET /admin/receptoras` como qualquer outra, com usuário e senha de teste.

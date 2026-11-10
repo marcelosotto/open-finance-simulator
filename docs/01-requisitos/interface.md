@@ -16,7 +16,10 @@ Detalhes de interface que **não são regra de negócio**. Ao mudar um botão, a
 ## Consentimento no painel
 | ID | Tela | Comportamento | Regra |
 |---|---|---|---|
-| <a id="ui10"></a>UI10 | Novo consentimento | Um menu em passos: cliente, instituição e receptora, permissões e prazo. | [RN80](regras-de-negocio.md#rn80) |
+| <a id="ui10"></a>UI10 | Novo consentimento | Um menu em passos: banco, cliente e receptora; permissões; prazo; confirmação. O cliente é escolhido numa lista dos clientes daquele banco ([UI19](#ui19)). A receptora só é pedida quando há mais de uma; com uma só, ela é usada direto ([RN124](regras-de-negocio.md#rn124)). | [RN80](regras-de-negocio.md#rn80) |
 | <a id="ui13"></a>UI13 | Seleção de origem | Contas e cartões do cliente naquele banco, já marcados, só os de produto que o banco ainda oferece. Com opção, pelo menos um fica marcado; sem opção, a seção não aparece. Crédito, investimento, câmbio e cadastro aparecem só como grupos, sem seleção. | [RN95](regras-de-negocio.md#rn95), [RN96](regras-de-negocio.md#rn96) |
 | <a id="ui14"></a>UI14 | Alçadas | Mostra quantas aprovações faltam, com botões de aprovar e recusar. | [RN98](regras-de-negocio.md#rn98) |
 | <a id="ui16"></a>UI16 | Todas | Faixa fixa: "Ambiente simulado, dados fictícios". | [PR03](../00-visao-geral/premissas.md#pr03) |
+| <a id="ui17"></a>UI17 | Todas | No topo, duas ou três linhas dizem para que a tela serve e o que precisa existir antes, com link para Primeiros passos. | — |
+| <a id="ui18"></a>UI18 | Primeiros passos | Página inicial. Mostra os passos em ordem (criar banco, gerar clientes, criar consentimento, ver, aprovar ou revogar, testar o app pela API), com link para a tela de cada um, marca como feito o que já existe e traz a tabela "tela → para que serve". | — |
+| <a id="ui19"></a>UI19 | Escolha de cliente | Onde se pede um cliente, ele é escolhido numa lista dos clientes daquele banco, com nome, documento e PF ou PJ. Banco sem clientes mostra "O {banco} ainda não tem clientes" com link para gerar massa. Erro de cliente ou banco inexistente diz o que faltou e como resolver. | — |

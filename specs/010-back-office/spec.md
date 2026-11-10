@@ -27,6 +27,15 @@ Marcelo aprovou a opção A de Q1 a Q10 ("Siga as recomendações"), repassada p
 - Q9: rota nova `GET /admin/cenarios/regras/vencedora`, com `SelecaoDeRegras`; frequência não entra.
 - Q10: Playwright em `front/e2e/` contra o Compose, com job próprio no CI.
 
+### Session 2026-11-10 (usabilidade)
+
+Marcelo travou no menu de consentimento ao digitar um documento que não era de um cliente da massa e pediu melhorias de uso: "Sim, incluir tudo", repassado pela sessão controladora. Registrado em `docs/`: [RN124](../../docs/01-requisitos/regras-de-negocio.md#rn124) (e a exceção em RN120), UI10, UI17, UI18 e UI19 em `interface.md`, e o [guia de uso](../../docs/08-front-end/guia-de-uso.md).
+
+- Q11: cada tela tem duas ou três linhas de ajuda no topo, com link para Primeiros passos (UI17).
+- Q12: o cliente é escolhido numa lista dos clientes do banco (UI19), com a rota nova `GET /admin/massa/clientes?banco=`; banco sem clientes leva à tela de lotes; 404 vira mensagem do que faltou e de como resolver.
+- Q13: página Primeiros passos como página inicial, com o que já foi feito marcado (rota `GET /admin/massa/resumo`) e a tabela "tela → para que serve" (UI18), repetida no guia de uso.
+- Q14: receptora padrão `XP`, configurável e idempotente, com `organisationId` fictício (RN124); o menu só pede receptora quando há mais de uma.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Cadastro de bancos (Priority: P1)
