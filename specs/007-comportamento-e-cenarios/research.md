@@ -32,6 +32,7 @@
 
 ## R08. Cache
 - **Decision**: lista de regras ativas em memória por 5 s (RNF12), invalidada por escrita na mesma instância.
+- **Leitura**: uma só por vez, compartilhada por quem chega durante ela, e iniciada fora da trava. Quem guarda o resultado é a própria leitura, não quem espera: o cancelamento de todos os que esperam não deixa leitura velha pendurada. A validade conta do início da leitura. Leitura que falha é descartada, e a chamada seguinte tenta de novo. Quem espera confere a geração ao receber o resultado: se houve escrita durante a leitura, lê de novo.
 
 ## R09. Latência
 - **Decision**: curva por partes: 0–50% vai de típico − variação (mínimo 0) ao típico; 50–95% do típico ao típico + variação; 95–100% até típico + 2 × variação.
