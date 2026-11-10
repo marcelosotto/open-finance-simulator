@@ -22,7 +22,7 @@ Marcelo aprovou a opção A de Q1 a Q18, repassada pela sessão controladora. De
 - Q4: status de regra → 200, erros declarados e 503; endpoint que não declara não é afetado, salvo 503.
 - Q5: chamada lenta → cauda e todo 504 simulado esperam 15 s reais; regra pode mudar a duração.
 - Q6: `recursoIndisponivelPct` → sorteio por chamada, 403 no acesso direto (RN109).
-- Q7: escritas da administração → relógio do banco quando entram em resposta ou comparação; histórico, lotes e massa na hora real.
+- Q7: escritas da administração → relógio do banco quando entram em resposta ou comparação; histórico, lotes e massa na hora real. Revisão de Marcelo (3ª revisão): o ajuste de valor também grava a hora real, e a chave leva a hora real da emissão; a visibilidade nas páginas seguintes compara só hora real (RN37).
 - Q8: vencedora → uma só, substitui só o que define.
 - Q9: frequência sem disparo → segue o perfil.
 - Q10: semente → sequência por regra nos contadores.
@@ -120,7 +120,7 @@ Como QA, quero fixar ou acelerar o relógio de um banco, para testar expiração
 - Erro simulado, timeout e conexão cortada não contam na cota (RN27, Q13).
 - Regra de frequência parcial que não dispara: vale o perfil (Q9).
 - Relógio volta para trás: nada é corrigido; tempo decorrido negativo conta como zero (Q17).
-- Cliente desiste durante a espera: a chamada é cancelada, sem contar na cota.
+- Cliente desiste durante a espera: a chamada é cancelada, mas a unidade da cota já foi contada quando o 2XX foi decidido, antes da espera (RN27, ADR-008).
 - Transação com relógio simulado: continua limitada ao instante simulado da consulta (RN44), um só instante por chamada.
 
 ## Requirements *(mandatory)*
@@ -160,7 +160,7 @@ Como QA, quero fixar ou acelerar o relógio de um banco, para testar expiração
 - **FR-020**: O relógio do banco MUST valer para datas das respostas, expirações (token, chave, consentimento, preparação de Recursos), cota mensal e horário das regras, com um único instante por chamada (RN44, RN73, RN25).
 - **FR-021**: TPM, capacidade, latência e os 15 s MUST seguir a hora real (RN73, Q16).
 - **FR-022**: Com relógio alterado, toda resposta das rotas oficiais do banco MUST trazer `x-sim-clock` com a hora simulada em ISO-8601 UTC; com relógio real, MUST NOT trazer (RN73).
-- **FR-023**: Escritas da administração ligadas a um banco e usadas em resposta ou comparação MUST usar o relógio do banco; histórico, lotes e criação de massa MUST usar a hora real (RN37, Q7).
+- **FR-023**: Escritas da administração ligadas a um banco e exibidas em resposta MUST usar o relógio do banco; histórico, lotes e criação de massa MUST usar a hora real (Q7). O ajuste de valor MUST gravar também a hora real, e a visibilidade dele nas páginas seguintes MUST comparar só a hora real do ajuste com a hora real da emissão da chave (RN37).
 
 **Geral**
 

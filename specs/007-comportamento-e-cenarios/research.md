@@ -34,6 +34,13 @@
 - **Decision**: lista de regras ativas em memória por 5 s (RNF12), invalidada por escrita na mesma instância.
 - **Leitura**: uma só por vez, compartilhada por quem chega durante ela, e iniciada fora da trava. Quem guarda o resultado é a própria leitura, não quem espera: o cancelamento de todos os que esperam não deixa leitura velha pendurada. A validade conta do início da leitura. Leitura que falha é descartada, e a chamada seguinte tenta de novo. Quem espera confere a geração ao receber o resultado: se houve escrita durante a leitura, lê de novo.
 
+## R08a. Ajustes de valor na paginação
+- **Decision**: o ajuste de valor e cada valor anterior guardam a hora do banco, que é a exibida, e a hora real. A chave leva o instante do banco e o instante real da emissão. Nas páginas seguintes, um ajuste vale se foi feito, em hora real, até a emissão real.
+- **Rationale**: decisão de Marcelo na 3ª revisão, revendo a Q7 só nesse ponto. Com a hora do banco dos dois lados, o banco fixado ou retrocedido fazia o ajuste novo aparecer na página seguinte.
+- **Ajuste antigo, sem hora real**: usa a hora gravada. Antes da 007 ela era a hora real.
+- **Chave sem hora real**: é inválida e segue a RN36, como uma chave expirada. Chaves duram 60 minutos, e recusar evita comparar hora do banco com hora real.
+- **Estado do recurso**: não guarda mais estados anteriores. A lista de recursos congela pelo conjunto da emissão (RN37), e nada mais lia esse histórico.
+
 ## R09. Latência
 - **Decision**: curva por partes: 0–50% vai de típico − variação (mínimo 0) ao típico; 50–95% do típico ao típico + variação; 95–100% até típico + 2 × variação.
 - **Rationale**: dá p50 e p95 configurados, sem biblioteca.
