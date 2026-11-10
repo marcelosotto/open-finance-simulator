@@ -66,7 +66,21 @@ public sealed class HostForjadoTests : IDisposable
         using var token = await Pedir(FabricaDoSimulador.PortaOpenFinance, "outro-nome:9999", HttpMethod.Post, "/banco-estavel/token");
 
         Assert.Equal(HttpStatusCode.OK, admin.StatusCode);
-        Assert.NotEqual(HttpStatusCode.NotFound, token.StatusCode);
+        // Sem corpo, o token responde a recusa OAuth: a rota foi alcançada pela porta pública com qualquer Host.
+        Assert.Equal(HttpStatusCode.BadRequest, token.StatusCode);
+        Assert.Contains("invalid_request", await token.Content.ReadAsStringAsync(_ct), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("DELETE", "/admin/ambiente")]
+    [InlineData("PUT", "/admin/receptoras")]
+    public async Task Metodo_errado_na_administracao_responde_404_como_rota_inexistente(string metodo, string caminho)
+    {
+        // As rotas Open Finance têm um fallback para qualquer método; ele é da outra porta e sai na escolha da rota,
+        // então o método errado na 8081 responde 404, e não 405 (contrato da 010, "Portas").
+        using var resposta = await Pedir(FabricaDoSimulador.PortaAdministracao, "localhost:8081", new HttpMethod(metodo), caminho);
+        Assert.Equal(HttpStatusCode.NotFound, resposta.StatusCode);
+        Assert.NotEqual("text/html", resposta.Content.Headers.ContentType?.MediaType);
     }
 
     [Theory]

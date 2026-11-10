@@ -37,7 +37,7 @@ Porta de administração, sem autenticação (RN71). Erros: `{ "erros": [...] }`
 
 ## Portas (revisão da 010)
 - As APIs Open Finance e a administração se separam pela **porta do socket** (`Connection.LocalPort`), nunca pelo cabeçalho Host. Um Host forjado (`x:8081` enviado à 8080, ou o inverso) cai em 404: a administração, com as senhas de teste das receptoras, e o back-office ficam só na 8081, que o Compose publica em `127.0.0.1`.
-- Na 8081, método diferente de GET ou HEAD em caminho de página responde 404, como um arquivo inexistente. Em `/admin` e `/saude`, o método errado continua 405.
+- Na 8081, método errado responde 404, como rota inexistente: em caminho de página (diferente de GET ou HEAD) e também em `/admin` e `/saude` (por exemplo, `DELETE /admin/ambiente`). As rotas Open Finance têm um fallback que aceita qualquer método; ele pertence à outra porta e sai na escolha da rota, depois da checagem de método, e por isso não sobra o 405.
 - `index.html` sai com `Cache-Control: no-cache`; os arquivos do build com hash no nome, com `public, max-age=31536000, immutable`.
 
 ## Autor (revisão da 010)

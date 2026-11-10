@@ -1,5 +1,8 @@
 import type { Config } from 'jest';
 
+// Fuso fixo e diferente de UTC: as conversões de hora local para UTC aparecem nos testes (revisão da 010).
+process.env.TZ = 'America/Sao_Paulo';
+
 // 100% no core e 80% no total, travado aqui (guia de front-end, regra 8).
 const config: Config = {
   testEnvironment: '<rootDir>/tests/ambiente-jsdom.js',

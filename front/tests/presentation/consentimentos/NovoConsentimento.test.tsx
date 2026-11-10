@@ -57,7 +57,8 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
       201,
     );
     responder('get', '/admin/consentimentos/urn%3Ahml%3Ap-c5x0', visaoPJ(0, { alcada: null }));
-    const { usuario } = abrir('/consentimentos/novo');
+    const { usuario, consultas } = abrir('/consentimentos/novo');
+    const invalidacoes = jest.spyOn(consultas, 'invalidateQueries');
 
     expect(await screen.findByText('1. Banco, cliente e receptora')).toHaveAttribute('aria-current', 'step');
     expect(screen.getByRole('complementary', { name: 'Primeiros passos' })).toHaveTextContent(
@@ -88,6 +89,9 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Criar consentimento' }));
 
     expect(await screen.findByTestId('estado')).toHaveTextContent('Autorizado');
+    // Primeiros passos e a página do cliente contam consentimentos: são relidos (revisão da 010).
+    expect(invalidacoes).toHaveBeenCalledWith({ queryKey: ['massa', 'resumo'] });
+    expect(invalidacoes).toHaveBeenCalledWith({ queryKey: ['massa', 'clientes', '95000000080'] });
     expect(criados[0]!.corpo).toEqual({
       cliente: '95000000080',
       banco: 'banco-estavel',

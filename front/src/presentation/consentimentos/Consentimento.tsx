@@ -127,7 +127,7 @@ export const Consentimento = () => {
                   <dt>{t('consentimentos.visao.rejeitadoPor')}</dt>
                   <dd>
                     <span title={visao.rejeitadoPor}>{rotulos.rejeitadoPor(visao.rejeitadoPor)}</span>{' '}
-                    {visao.razao !== null && `(${visao.razao})`}
+                    {visao.razao !== null && <span title={visao.razao}>({rotulos.razao(visao.razao)})</span>}
                   </dd>
                 </>
               )}

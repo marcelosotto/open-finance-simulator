@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-type Grupo = 'estados' | 'alcadas' | 'decisoes' | 'rejeitadoPor' | 'grupos';
+type Grupo = 'estados' | 'alcadas' | 'decisoes' | 'rejeitadoPor' | 'razoes' | 'grupos';
 
 /** Nome em português de um código da API; o código desconhecido aparece como veio. */
 export const useRotulos = () => {
@@ -11,6 +11,7 @@ export const useRotulos = () => {
     alcada: (codigo: string) => rotulo('alcadas', codigo),
     decisao: (codigo: string) => rotulo('decisoes', codigo),
     rejeitadoPor: (codigo: string) => rotulo('rejeitadoPor', codigo),
+    razao: (codigo: string) => rotulo('razoes', codigo),
     grupo: (codigo: string) => rotulo('grupos', codigo),
   };
 };

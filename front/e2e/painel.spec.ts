@@ -40,17 +40,16 @@ test.describe('Funcionalidade: Criar consentimento no painel', () => {
   });
 
   // RN95
-  test('Cenário: Pelo menos uma origem', async ({ page, request }) => {
+  // O menu só chega à confirmação pelo botão Avançar. Sem origem marcada ele fica desabilitado, então o que se
+  // prova aqui é isto: o aviso aparece, o botão trava e o menu continua nas permissões, sem botão de confirmar.
+  test('Cenário: Pelo menos uma origem (sem origem marcada, o menu não avança)', async ({ page, request }) => {
     await abrirPermissoes(page, await prepararMassa(request, 'PF'));
     await marcarGrupo(page, 'Contas: saldos');
     const contas = page.getByRole('group', { name: 'Contas' }).getByRole('checkbox');
     for (const conta of await contas.all()) await conta.uncheck();
 
     await expect(page.getByRole('alert')).toContainText('Marque pelo menos uma: Contas.');
-    // Tenta seguir para a confirmação: o botão está travado e o menu não sai do passo das permissões.
-    const avancarBotao = page.getByRole('button', { name: 'Avançar' });
-    await expect(avancarBotao).toBeDisabled();
-    await avancarBotao.click({ force: true });
+    await expect(page.getByRole('button', { name: 'Avançar' })).toBeDisabled();
     await expect(page.getByText('2. Permissões')).toHaveAttribute('aria-current', 'step');
     await expect(page.getByRole('button', { name: 'Criar consentimento' })).toHaveCount(0);
   });

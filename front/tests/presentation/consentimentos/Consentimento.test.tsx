@@ -81,7 +81,8 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
   it('revogar pede confirmação; REJECTED mostra quem rejeitou e não oferece revogar', async () => {
     responder('get', VISAO, visaoPJ(0, { alcada: null, expiraEm: '2027-11-10T10:50:03Z' }));
     const revogacoes = capturar('post', `${VISAO}/revogar`, { estado: 'REJECTED' });
-    const { usuario } = abrir(TELA);
+    const { usuario, consultas } = abrir(TELA);
+    const invalidacoes = jest.spyOn(consultas, 'invalidateQueries');
 
     expect(await screen.findByText('Sem alçada.')).toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Revogar' }));
@@ -93,10 +94,12 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
     await usuario.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }));
 
     expect(await screen.findByText('Pelo cliente')).toHaveAttribute('title', 'USER');
-    expect(screen.getByText(/(CUSTOMER_MANUALLY_REVOKED)/)).toBeInTheDocument();
+    expect(screen.getByText('(o cliente revogou)')).toHaveAttribute('title', 'CUSTOMER_MANUALLY_REVOKED');
     expect(screen.getByTestId('estado')).toHaveTextContent('Rejeitado');
     expect(screen.queryByRole('button', { name: 'Revogar' })).not.toBeInTheDocument();
     await waitFor(() => expect(revogacoes).toHaveLength(1));
+    expect(invalidacoes).toHaveBeenCalledWith({ queryKey: ['massa', 'resumo'] });
+    expect(invalidacoes).toHaveBeenCalledWith({ queryKey: ['massa', 'clientes', 'P0000001000182'] });
   });
 
   it('busca por consentId abre a visão (Q7)', async () => {

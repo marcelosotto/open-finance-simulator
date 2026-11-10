@@ -208,6 +208,35 @@ describe('Qual regra vale para esta chamada? (Q9)', () => {
     expect(pedidos).toHaveLength(1);
   });
 
+  it('consultar de novo com os mesmos dados refaz a consulta e atualiza a hora do banco', async () => {
+    comBase({ regras: [doBanco] });
+    const depois = '2026-11-05T12:05:00+00:00';
+    const pedidos = capturar('get', '/admin/cenarios/regras/vencedora', {
+      instante,
+      comportamento: doBanco,
+      estado: null,
+      defeito: null,
+    });
+    const { usuario } = abrir('/cenarios');
+    const painel = within(await screen.findByRole('region', { name: 'Qual regra vale para esta chamada?' }));
+    await usuario.selectOptions(await painel.findByRole('combobox', { name: 'Banco' }), 'Banco Estável');
+    await usuario.type(painel.getByRole('combobox', { name: 'Endpoint (operationId)' }), 'accountsGetAccounts');
+    await usuario.click(painel.getByRole('button', { name: 'Consultar' }));
+    expect(await painel.findByText(`Hora do banco: ${dataHora(instante)}`)).toBeInTheDocument();
+
+    const segundos = capturar('get', '/admin/cenarios/regras/vencedora', {
+      instante: depois,
+      comportamento: doBanco,
+      estado: null,
+      defeito: null,
+    });
+    await usuario.click(painel.getByRole('button', { name: 'Consultar' }));
+
+    expect(await painel.findByText(`Hora do banco: ${dataHora(depois)}`)).toBeInTheDocument();
+    expect(pedidos).toHaveLength(1);
+    expect(segundos).toHaveLength(1);
+  });
+
   it('mostra as três vencedoras quando há estado e defeito', async () => {
     const deEstado = regra({
       id: 'r-estado',

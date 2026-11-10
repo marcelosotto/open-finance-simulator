@@ -71,7 +71,11 @@ export const PainelDaVencedora = () => {
     <Secao titulo={t('cenarios.vencedora.titulo')}>
       <p className="mb-3 text-sm text-slate-600">{t('cenarios.vencedora.explicacao')}</p>
       <form
-        onSubmit={handleSubmit((dados) => setPedido({ ...dados }))}
+        onSubmit={handleSubmit((dados) => {
+          // A mesma pergunta de novo refaz a consulta: a hora do banco e as regras podem ter mudado.
+          if (pedido !== null && JSON.stringify(pedido) === JSON.stringify(dados)) void consulta.refetch();
+          else setPedido({ ...dados });
+        })}
         className="grid gap-3 md:grid-cols-5 md:items-end"
       >
         <Selecao rotulo={t('cenarios.vencedora.banco')} {...register('instituicao')}>

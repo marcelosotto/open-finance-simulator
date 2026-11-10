@@ -21,6 +21,11 @@ public sealed class AutorComAcentoTests : IDisposable
     [InlineData("Diego", "Diego")]
     [InlineData("Ana%20Moura", "Ana Moura")]
     [InlineData("100%", "100%")]
+    [InlineData("%E9", "%E9")]
+    [InlineData("Bruno%0D%0A%5BINFO%5D%20falso", "Bruno [INFO] falso")]
+    [InlineData("Ana%00Moura", "Ana Moura")]
+    [InlineData("%0D%0A", "operador")]
+    [InlineData("%00", "operador")]
     public async Task Grava_o_autor_decodificado_e_ascii_puro_continua_igual(string enviado, string gravado)
     {
         using var pedido = new HttpRequestMessage(HttpMethod.Post, new Uri("/admin/instituicoes", UriKind.Relative))
@@ -33,5 +38,22 @@ public sealed class AutorComAcentoTests : IDisposable
 
         var historico = await _admin.GetStringAsync(new Uri("/admin/instituicoes/banco-do-autor/historico", UriKind.Relative), _ct);
         Assert.Contains($"\"autor\":\"{gravado}\"", historico, StringComparison.Ordinal);
+    }
+}
+
+/// <summary>Limpeza do autor sem subir o host (revisão da 010).</summary>
+public sealed class LimpezaDoAutorTests
+{
+    [Fact]
+    public void Limita_o_tamanho()
+    {
+        var longo = new string('a', 500);
+        Assert.Equal(Simulador.Comum.Http.AutorDoPedido.TamanhoMaximo, Simulador.Comum.Http.AutorDoPedido.Limpar(longo)!.Length);
+    }
+
+    [Fact]
+    public void Tabulacao_e_espacos_repetidos_viram_um_espaco_e_as_pontas_somem()
+    {
+        Assert.Equal("Ana Moura", Simulador.Comum.Http.AutorDoPedido.Limpar("  Ana\t\t Moura \u0007"));
     }
 }

@@ -186,7 +186,8 @@ describe('Novo banco e edição (UI03 a UI05)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Voltar ao relógio real' }));
     expect(await screen.findByText('Relógio real.')).toBeInTheDocument();
     expect(fixados.map((p) => p.corpo)).toEqual([
-      { fixadoEm: new Date('2030-01-01T00:00:00').toISOString() },
+      // 00:00 em São Paulo (UTC-3) é 03:00 em UTC.
+      { fixadoEm: '2030-01-01T03:00:00.000Z' },
       { fator: 60 },
     ]);
     expect(reais).toHaveLength(1);

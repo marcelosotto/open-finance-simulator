@@ -27,12 +27,13 @@ export const abrir = (caminho: string) => {
   montarContainer();
   const roteador = createMemoryRouter(rotas, { initialEntries: [caminho], future: FUTURO_DO_ROTEADOR });
   const usuario = userEvent.setup();
+  const consultas = novoQueryClient();
   const tela = render(
-    <QueryClientProvider client={novoQueryClient()}>
+    <QueryClientProvider client={consultas}>
       <RouterProvider router={roteador} future={{ v7_startTransition: true }} />
     </QueryClientProvider>,
   );
-  return { ...tela, usuario, roteador };
+  return { ...tela, usuario, roteador, consultas };
 };
 
 /** Renderiza um componente solto, com as rotas extras que ele precisar. */

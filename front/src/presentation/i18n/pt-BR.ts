@@ -43,6 +43,15 @@ export const comum = {
     },
     decisoes: { aprovada: 'Aprovou', recusada: 'Recusou' },
     rejeitadoPor: { USER: 'Pelo cliente', ASPSP: 'Pelo banco', TPP: 'Pela receptora' },
+    razoes: {
+      CUSTOMER_MANUALLY_REVOKED: 'o cliente revogou',
+      CUSTOMER_MANUALLY_REJECTED: 'o cliente recusou',
+      CONSENT_EXPIRED: 'o prazo de autorização acabou',
+      CONSENT_MAX_DATE_REACHED: 'chegou à data final',
+      CONSENT_TECHNICAL_ISSUE: 'problema técnico',
+      CONSENT_PENDING_AUTHORISATION: 'a autorização ficou pendente',
+      INTERNAL_SECURITY_REASON: 'motivo de segurança do banco',
+    },
     grupos: {
       'cadastro-identificacao': 'Dados cadastrais: identificação',
       'cadastro-complementar': 'Dados cadastrais: informações complementares',
