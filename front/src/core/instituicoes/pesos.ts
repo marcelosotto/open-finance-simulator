@@ -10,8 +10,8 @@ export const lerPesos = (texto: string): Either<Falha, Record<string, number>> =
     .filter((p) => p.length > 0)) {
     const casou = /^(\d{3})\s*:\s*(\d+(?:\.\d+)?)$/.exec(parte);
     if (casou === null) return left(falhaDeValidacao('PESOS_INVALIDOS'));
-    const [, status = '', peso = ''] = casou;
-    pesos[status] = Number(peso);
+    // A expressão garante os dois grupos.
+    pesos[String(casou[1])] = Number(casou[2]);
   }
   return right(pesos);
 };
