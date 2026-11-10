@@ -43,7 +43,7 @@
 ## Phase 6: Polish
 
 - [X] T016 Testes de integração da administração e do cache em `tests/Simulador.Testes.Integracao/Cenarios/DefeitosEAnomaliasTests.cs`, inclusive anomalias simultâneas no mesmo banco
-- [ ] T017 Rodar os portões: formatação, build, specs, testes, cobertura e `docker build`
+- [X] T017 Rodar os portões: formatação, build, specs, testes, cobertura e `docker build`
 
 ## Dependencies
 

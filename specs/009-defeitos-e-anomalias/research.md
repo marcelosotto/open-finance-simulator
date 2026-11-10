@@ -42,6 +42,14 @@ A chave `v2`, o corte por hora real e o conjunto de recursos não mudam.
 
 **Decisão:** o filtro usa o schema da resposta do status que saiu (`OperacaoDoCatalogo.Respostas`, com `$ref` resolvidos). Sem `properties.data`, o defeito não age. `totalPages` de RN115 é recalculado pelo `page-size` do link `self`.
 
+## R07a. Campo de data sem `format`
+
+**Achado na implementação:** `transactionDateTime` de Contas (`accounts-2.5.1.yaml:956`) não declara `format`, só `pattern`. Pelo `format`, `formato-invalido` e `data-fora-da-janela` não achariam nenhum campo nas transações de Contas.
+
+**Decisão:** campo de data é o que tem `format` `date` ou `date-time`, ou, sem `format`, o que tem nome terminado em `Date` (data) ou `DateTime` (data e hora). Registrado em RN117.
+
+Também por isso, as transações de Contas não têm `totalRecords` (`MetaOnlyRequestDateTime`). Os passos de `total-records-incoerente` e de RN115 usam as transações da fatura do cartão, cujo `meta` tem os totais.
+
 ## R08. Instituições
 
 **Decisão:** a porta `IConsultaDeAnomalias` fica em `Simulador.Instituicoes.Contratos`, com a implementação vazia `SemAnomalias`, como `IConsultaDeClientes`. O host a implementa lendo o cache de Cenários.
