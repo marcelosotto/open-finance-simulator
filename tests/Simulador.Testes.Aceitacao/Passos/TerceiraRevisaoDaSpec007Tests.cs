@@ -77,5 +77,11 @@ public sealed class TerceiraRevisaoDaSpec007Tests : IDisposable
         _c.Status(200);
         Assert.DoesNotContain("111.11", _c.Corpo, StringComparison.Ordinal);
         Assert.DoesNotContain("222.22", _c.Corpo, StringComparison.Ordinal);
+
+        // Controle positivo: sem chave, a consulta nova mostra os dois valores ajustados.
+        await _c.Chamar(_c.Em("/accounts/{accountId}/transactions"));
+        _c.Status(200);
+        Assert.Contains("111.11", _c.Corpo, StringComparison.Ordinal);
+        Assert.Contains("222.22", _c.Corpo, StringComparison.Ordinal);
     }
 }

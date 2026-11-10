@@ -35,15 +35,34 @@ public sealed class ChaveComRecursosTests
         Assert.Empty(RecursosDaChave.Posicoes(leitura!.Recursos!));
     }
 
+    /// <summary>Formato anterior, sem versão, é recusado pela estrutura, mesmo com o conjunto só de dígitos (RN36).</summary>
+    [Fact]
+    public void Chave_sem_versao_e_recusada()
+    {
+        var digitos = RecursosDaChave.Posicoes("1234");
+        var conjunto = RecursosDaChave.Marcar(digitos, 24);
+        Assert.Equal("1234", conjunto);
+        var banco = Agora.ToUnixTimeMilliseconds().ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+        Assert.Null(ChaveDePaginacao.Abrir(Assinada($"{banco}.{conjunto}"), "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir(Assinada($"{banco}.{banco}"), "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir(Assinada($"v1.{banco}.{banco}"), "c", Segredo, Agora, 60));
+        Assert.StartsWith("v2.", ChaveDePaginacao.Emitir(Agora, Agora, "c", Segredo), StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Conjunto_trocado_invalida_a_chave()
     {
         var chave = ChaveDePaginacao.Emitir(Agora, Agora, "c", Segredo, RecursosDaChave.Marcar([0], 2));
         var partes = chave.Split('.');
-        var trocada = $"{partes[0]}.{partes[1]}.{RecursosDaChave.Marcar([0, 1], 2)}.{partes[3]}";
+        var trocada = $"{partes[0]}.{partes[1]}.{partes[2]}.{RecursosDaChave.Marcar([0, 1], 2)}.{partes[4]}";
 
         Assert.Null(ChaveDePaginacao.Abrir(trocada, "c", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Abrir($"{partes[0]}.{partes[1]}.a.b.{partes[3]}", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir($"{partes[0]}.{partes[1]}.{partes[2]}.a.b.{partes[4]}", "c", Segredo, Agora, 60));
         Assert.Null(ChaveDePaginacao.Abrir("semponto", "c", Segredo, Agora, 60));
     }
+
+    /// <summary>Assina um corpo como a chave assina, para montar formatos que o emissor atual não produz.</summary>
+    private static string Assinada(string corpo) =>
+        $"{corpo}.{System.Buffers.Text.Base64Url.EncodeToString(System.Security.Cryptography.HMACSHA256.HashData(Segredo, System.Text.Encoding.UTF8.GetBytes($"{corpo}|c")))}";
 }

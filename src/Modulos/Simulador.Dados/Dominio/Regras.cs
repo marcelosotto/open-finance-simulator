@@ -251,9 +251,12 @@ internal static class ChaveDePaginacao
 {
     private const char Separador = '.';
 
+    /// <summary>Versão do formato; qualquer formato anterior é recusado pela estrutura (RN36).</summary>
+    private const string Versao = "v2";
+
     public static string Emitir(DateTimeOffset instante, DateTimeOffset real, string consulta, byte[] segredo, string? recursos = null)
     {
-        var corpo = string.Create(CultureInfo.InvariantCulture, $"{instante.ToUnixTimeMilliseconds()}{Separador}{real.ToUnixTimeMilliseconds()}");
+        var corpo = string.Create(CultureInfo.InvariantCulture, $"{Versao}{Separador}{instante.ToUnixTimeMilliseconds()}{Separador}{real.ToUnixTimeMilliseconds()}");
         corpo = recursos is null ? corpo : $"{corpo}{Separador}{recursos}";
         return $"{corpo}{Separador}{Assinar(corpo, consulta, segredo)}";
     }
@@ -265,13 +268,13 @@ internal static class ChaveDePaginacao
         var fim = chave.LastIndexOf(Separador);
         var corpo = fim < 0 ? string.Empty : chave[..fim];
         var partes = corpo.Split(Separador);
-        if (fim < 0 || partes.Length is < 2 or > 3 || Instante(partes[0]) is not { } emissao || Instante(partes[1]) is not { } real
+        if (fim < 0 || partes.Length is < 3 or > 4 || partes[0] != Versao || Instante(partes[1]) is not { } emissao || Instante(partes[2]) is not { } real
             || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(chave[(fim + 1)..]), Encoding.UTF8.GetBytes(Assinar(corpo, consulta, segredo))))
         {
             return null;
         }
 
-        return agora <= emissao.AddMinutes(validadeMin) ? new LeituraDaChave(emissao, real, partes.Length == 3 ? partes[2] : null) : null;
+        return agora <= emissao.AddMinutes(validadeMin) ? new LeituraDaChave(emissao, real, partes.Length == 4 ? partes[3] : null) : null;
     }
 
     private static DateTimeOffset? Instante(string texto) =>

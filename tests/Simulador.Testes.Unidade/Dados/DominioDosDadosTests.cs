@@ -147,11 +147,11 @@ public class DominioDosDadosTests
         Assert.Null(ChaveDePaginacao.Abrir(chave, "c", Segredo, Agora.AddMinutes(61), 60));
         Assert.Null(ChaveDePaginacao.Abrir(chave, "outra", Segredo, Agora, 60));
         Assert.Null(ChaveDePaginacao.Abrir(null, "c", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Abrir("x.1.y", "c", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Abrir("1.x.y", "c", Segredo, Agora, 60));
-        Assert.Null(ChaveDePaginacao.Abrir("1.1.y", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir("v2.x.1.y", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir("v2.1.x.y", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir("v2.1.1.y", "c", Segredo, Agora, 60));
         var partes = chave.Split('.');
-        Assert.Null(ChaveDePaginacao.Abrir($"9999999999999999.{partes[1]}.{partes[2]}", "c", Segredo, Agora, 60));
+        Assert.Null(ChaveDePaginacao.Abrir($"v2.9999999999999999.{partes[2]}.{partes[3]}", "c", Segredo, Agora, 60));
     }
 
     /// <summary>Chave no formato anterior, sem o instante real, é inválida (RN36, RN37).</summary>
