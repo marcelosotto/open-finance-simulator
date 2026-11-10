@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react';
+import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from './cn';
 
 type Variante = 'primario' | 'secundario' | 'perigo';
@@ -9,13 +9,13 @@ const ESTILOS: Readonly<Record<Variante, string>> = {
   perigo: 'bg-red-700 text-white hover:bg-red-800',
 };
 
-export const Botao = ({
-  variante = 'primario',
-  className,
-  type = 'button',
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { readonly variante?: Variante }) => (
+/** Com ref, para o Radix (`asChild`) poder usar o botão como gatilho. */
+export const Botao = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & { readonly variante?: Variante }
+>(({ variante = 'primario', className, type = 'button', ...props }, ref) => (
   <button
+    ref={ref}
     type={type}
     className={cn(
       'rounded px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
@@ -24,4 +24,5 @@ export const Botao = ({
     )}
     {...props}
   />
-);
+));
+Botao.displayName = 'Botao';
