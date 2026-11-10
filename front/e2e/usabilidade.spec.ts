@@ -5,7 +5,10 @@ import { criarBanco } from './apoio';
 test.describe('Funcionalidade: Usar o back-office sem saber os identificadores', () => {
   // RN124
   test('Cenário: O ambiente sobe com a receptora padrão XP', async ({ request }) => {
-    const receptoras = (await (await request.get('/admin/receptoras')).json()) as { nome: string; organisationId: string }[];
+    const receptoras = (await (await request.get('/admin/receptoras')).json()) as {
+      nome: string;
+      organisationId: string;
+    }[];
     const xp = receptoras.find((r) => r.nome === 'XP');
     expect(xp, 'a receptora padrão deveria existir').toBeDefined();
     expect(xp?.organisationId).toMatch(/p-receptora-padrao$/);
@@ -31,7 +34,11 @@ test.describe('Funcionalidade: Usar o back-office sem saber os identificadores',
     await expect(page.getByRole('heading', { name: /^1\. Criar um banco/ })).toContainText('Feito');
     await expect(page.getByLabel('Exemplo de pedido de token')).toContainText('scope=consents');
 
-    await page.getByRole('list', { name: 'Primeiros passos' }).getByRole('link', { name: 'Abrir a tela' }).nth(2).click();
+    await page
+      .getByRole('list', { name: 'Primeiros passos' })
+      .getByRole('link', { name: 'Abrir a tela' })
+      .nth(2)
+      .click();
     await expect(page.getByRole('complementary', { name: 'Primeiros passos' })).toContainText(
       'Simula um cliente autorizando outra instituição a ler os dados dele.',
     );
