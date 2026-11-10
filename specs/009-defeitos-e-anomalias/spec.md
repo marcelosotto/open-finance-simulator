@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-10
 
-**Status**: Rascunho (aguarda as respostas de [perguntas.md](perguntas.md))
+**Status**: Aprovada
 
 **Input**: User description: "Defeitos e anomalias: UC22. Usar docs/ e defeitos-e-anomalias.feature. Nome curto: defeitos-e-anomalias"
 
@@ -12,7 +12,23 @@
 
 ## Clarifications
 
-_Pendente: respostas de Q1 a Q13 em [perguntas.md](perguntas.md). O texto abaixo segue as recomendações (opção A)._
+### Session 2026-11-10
+
+Marcelo aprovou a opção A de Q1 a Q13 ("siga as recomendações"), repassada pela sessão controladora. Decisões registradas em `docs/`: RN110 a RN115 reescritas, RN116 e RN117 novas, notas em RN36, RN37 e RN88, UC22, modelo de dados, perfis e a linha da 010 em `sequencia-de-specs.md`. Evidências em [perguntas.md](perguntas.md).
+
+- Q1: defeito → efeito `defeito` de regra de cenário; disputa só com defeitos.
+- Q2: age só em 2XX com corpo JSON; sorteio em toda chamada que chega à etapa.
+- Q3: conta na cota; não muda chave nem links; defeito antes da falha de transporte.
+- Q4: `campo` opcional, critério fixo, só o primeiro item.
+- Q5: `transactionId` copiado no segundo item; `totalRecords` + 1; data dois anos antes.
+- Q6: `valor-incoerente` com `currency` `USD`.
+- Q7: RN115 é o defeito `dado-muda-na-paginacao`, só na página seguinte.
+- Q8: anomalia por banco, ligada ou desligada, com API em `/admin/cenarios/anomalias`.
+- Q9: todo 401 do portão vira 403 `FORBIDDEN`, no host.
+- Q10: chave ruim → 422 `PARAMETRO_INVALIDO`, antes da cota.
+- Q11: outro UUID em toda resposta em que o portão devolveria o recebido.
+- Q12: `anomaliasLigadas` na lista e no detalhe de instituições; aviso visual na 010.
+- Q13: mudanças em `docs/` como propostas.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -118,7 +134,7 @@ Como QA, quero que registros apareçam ou sumam entre as páginas, para ver se a
 
 ### Measurable Outcomes
 
-- **SC-001**: Os 7 cenários do escopo (15 casos com os exemplos) passam no CI, sem etiqueta.
+- **SC-001**: Os 7 cenários do escopo (14 casos com os exemplos) passam no CI, sem etiqueta.
 - **SC-002**: Sem regra de defeito e sem anomalia, 100% das respostas validam contra o schema oficial.
 - **SC-003**: A mesma regra de defeito, com a mesma semente, afeta as mesmas posições da sequência em 100% das repetições.
 - **SC-004**: Cobertura de 100% no domínio e 80% no total (RNF08).

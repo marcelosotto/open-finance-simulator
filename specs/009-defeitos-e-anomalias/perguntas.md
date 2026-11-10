@@ -1,6 +1,6 @@
 # Spec 009: divergências e perguntas
 
-**Aguardando respostas.** Formato: `Q1: A`. A recomendação é sempre a opção A.
+**Respondidas em 2026-11-10.** Marcelo aprovou a opção A de todas as perguntas ("siga as recomendações"), repassada pela sessão controladora. Decisões na seção Clarifications da [spec](spec.md). Bloco de RN combinado com a 008: esta spec usa RN116 e RN117; a 008 usa RN96, RN97 e RN99.
 
 Conferi `docs/` e os `.feature` contra os contratos em `.specs/7bdb9c1a6c4c265d7aabcdbc662f94c61718135e/contracts/expansion/snapshots/` (15 arquivos, 75 operações) e contra `src/` no commit `087cc0f`.
 

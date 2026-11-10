@@ -23,4 +23,4 @@ Na configuração por classe ([RN10](../01-requisitos/regras-de-negocio.md#rn10)
 
 O Banco Instável mostra 503 nas janelas de indisponibilidade, e não no sorteio de erros ([RN13](../01-requisitos/regras-de-negocio.md#rn13)).
 
-Todo banco nasce com os limites oficiais, e o Banco Restritivo já vem com os dele alterados. Qualquer banco pode ter os limites alterados depois ([RN26](../01-requisitos/regras-de-negocio.md#rn26)). Nenhum perfil nasce com anomalias ligadas ([RN114](../01-requisitos/regras-de-negocio.md#rn114)).
+Todo banco nasce com os limites oficiais, e o Banco Restritivo já vem com os dele alterados. Qualquer banco pode ter os limites alterados depois ([RN26](../01-requisitos/regras-de-negocio.md#rn26)). Nenhum perfil nasce com anomalias ligadas, e nenhum perfil traz defeitos: defeitos são regras de cenário ([RN111](../01-requisitos/regras-de-negocio.md#rn111)), e anomalias se ligam por banco ([RN113](../01-requisitos/regras-de-negocio.md#rn113), [RN114](../01-requisitos/regras-de-negocio.md#rn114)).

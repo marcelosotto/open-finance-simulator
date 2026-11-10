@@ -18,7 +18,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `mundo_virtual` | Total, semente e distribuição | Um por ambiente; reproduz o mesmo mundo |
 | `ajustes` | Mudanças sobre transação ou dado virtual | Chave: alvo; vence o cálculo |
 | `lotes` | Parâmetros, semente, progresso e situação | Apagar leva tudo junto |
-| `cenarios` | Regras e pacotes de cenário; defeitos e anomalias na spec 009 | Lidas por cache de até 5 s ([RNF12](../01-requisitos/requisitos.md#rnf12)) |
+| `cenarios` | Regras e pacotes de cenário, inclusive as regras de defeito ([RN111](../01-requisitos/regras-de-negocio.md#rn111)), e as anomalias ligadas, um documento por banco e anomalia (`anomalia:{banco}:{nome}`) ([RN113](../01-requisitos/regras-de-negocio.md#rn113)) | Lidas por cache de até 5 s ([RNF12](../01-requisitos/requisitos.md#rnf12)) |
 | `historico` | Quem mudou o quê, com antes e depois | Toda escrita de administração |
 
 ## Redis
