@@ -11,6 +11,9 @@ services:
       Simulador__Mongo__Conexao: mongodb://mongo:27017
       Simulador__Redis__Conexao: redis:6379
       Simulador__MarcaDoAmbiente: ${Simulador__MarcaDoAmbiente-hml}
+      # Receptora padrão já cadastrada ao subir (RN124). Identificador fictício; credenciais de teste geradas
+      # na primeira subida, se não forem informadas. Nome vazio desliga.
+      Simulador__ReceptoraPadrao__Nome: ${Simulador__ReceptoraPadrao__Nome-XP}
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     depends_on:
       otel-collector:

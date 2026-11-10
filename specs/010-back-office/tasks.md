@@ -130,6 +130,6 @@ MVP = Setup + Foundational + US5 + US1: o cadastro de bancos completo é o padr�
 - [X] T058 Front: caso de uso e repositório de clientes do banco e resumo; componente `SeletorDeCliente` (UI19) usado no menu de consentimento, na massa e nos cenários; mensagens claras para 404
 - [X] T059 Front: menu de consentimento em banco, cliente e receptora (receptora só com mais de uma) (UI10)
 - [X] T060 Front: ajuda no topo de cada tela (UI17) e página Primeiros passos como página inicial (UI18)
-- [ ] T061 `docs/08-front-end/guia-de-uso.md` em português simples
+- [X] T061 `docs/08-front-end/guia-de-uso.md` em português simples
 - [ ] T062 Testes do front (core, casos de uso, repositório, telas) e Playwright atualizado (seletor de cliente, receptora padrão, primeiros passos)
 - [ ] T063 Rodar todos os portões de novo

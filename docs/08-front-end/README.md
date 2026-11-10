@@ -1,6 +1,6 @@
 # Guia de front-end
 
-Relacionados: [ADR-010](../05-adr/ADR-010-front-end-react.md) · [comportamento de tela](../01-requisitos/interface.md) · [estratégia de testes](../06-testes/estrategia-de-testes.md)
+Relacionados: [ADR-010](../05-adr/ADR-010-front-end-react.md) · [comportamento de tela](../01-requisitos/interface.md) · [estratégia de testes](../06-testes/estrategia-de-testes.md) · [guia de uso](guia-de-uso.md)
 
 Regras do back-office do simulador. Valem para todo código em `front/`. As telas e o que elas fazem estão em [comportamento de tela](../01-requisitos/interface.md); aqui fica só **como** construir.
 

@@ -45,9 +45,9 @@ export const fixarRelogio = (api: APIRequestContext, banco: string, fixadoEm: st
 export const abrirPermissoes = async (pagina: Page, massa: Massa) => {
   await pagina.goto('/consentimentos/novo');
   await pagina.getByRole('button', { name: 'Recomeçar' }).click();
-  await pagina.getByRole('textbox', { name: /Documento do cliente/ }).fill(massa.documento);
-  await avancar(pagina);
+  // Passo 1 (UI10, UI19): banco, cliente da lista do banco e receptora (há mais de uma: a XP e a do teste).
   await pagina.getByRole('combobox', { name: 'Banco' }).selectOption(massa.banco);
+  await pagina.getByRole('combobox', { name: 'Cliente' }).selectOption(massa.documento);
   await pagina.getByRole('combobox', { name: 'Receptora' }).selectOption(massa.receptora.organisationId);
   await avancar(pagina);
   await expect(pagina.getByRole('group', { name: 'Grupos de permissões' })).toBeVisible();
