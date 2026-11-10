@@ -47,14 +47,18 @@ internal static class Alcadas
         _ => "sem-alcada",
     };
 
-    /// <summary>O que a visão da administração mostra: consentimento <c>REJECTED</c> não tem aprovação pendente (RN99).</summary>
-    public static (SituacaoDaAlcada Situacao, int Pendentes) NaVisao(DadosDoConsentimento efetivo, DateTimeOffset agora)
+    /// <summary>Situação no consentimento efetivo: em <c>REJECTED</c>, pendente ou vencida vira encerrada (RN97, RN99).</summary>
+    public static SituacaoDaAlcada SituacaoEfetiva(DadosDoConsentimento efetivo, DateTimeOffset agora)
     {
         var situacao = Situacao(efetivo, agora);
         return efetivo.Estado == Ciclo.Rejeitado && situacao is SituacaoDaAlcada.Pendente or SituacaoDaAlcada.Vencida
-            ? (SituacaoDaAlcada.Encerrada, 0)
-            : (situacao, efetivo.AprovacoesPendentes);
+            ? SituacaoDaAlcada.Encerrada
+            : situacao;
     }
+
+    /// <summary>O que a visão da administração mostra: consentimento <c>REJECTED</c> nunca tem aprovação pendente (RN99).</summary>
+    public static (SituacaoDaAlcada Situacao, int Pendentes) NaVisao(DadosDoConsentimento efetivo, DateTimeOffset agora) =>
+        (SituacaoEfetiva(efetivo, agora), efetivo.Estado == Ciclo.Rejeitado ? 0 : efetivo.AprovacoesPendentes);
 
     /// <summary>Fim do prazo da alçada; nulo sem alçada (RN99).</summary>
     public static DateTimeOffset? FimDoPrazo(DadosDoConsentimento consentimento) =>
@@ -62,11 +66,11 @@ internal static class Alcadas
             ? consentimento.CriadoEm + Prazo
             : null;
 
-    /// <summary>O estado do recurso naquele consentimento, antes da regra de cenário (RN97).</summary>
+    /// <summary>O estado do recurso naquele consentimento, antes da regra de cenário; em <c>REJECTED</c> nunca fica pendente (RN97).</summary>
     public static string EstadoNoConsentimento(DadosDoConsentimento consentimento, string estadoGravado, DateTimeOffset agora) =>
-        Situacao(consentimento, agora) switch
+        SituacaoEfetiva(consentimento, agora) switch
         {
-            SituacaoDaAlcada.Recusada or SituacaoDaAlcada.Vencida => EstadosDeRecurso.Indisponivel,
+            SituacaoDaAlcada.Recusada or SituacaoDaAlcada.Vencida or SituacaoDaAlcada.Encerrada => EstadosDeRecurso.Indisponivel,
             SituacaoDaAlcada.Pendente when estadoGravado != EstadosDeRecurso.Indisponivel => EstadosDeRecurso.Pendente,
             _ => estadoGravado,
         };

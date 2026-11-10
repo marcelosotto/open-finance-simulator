@@ -16,7 +16,7 @@ Corpo: `{ cliente, banco, receptora, permissoes[], contas?: [resourceId], cartoe
 - Seleção de contas ou cartões sem a permissão do grupo correspondente, ou fora do menu (produto que o banco não oferece): `ORIGEM_INVALIDA`.
 
 ## `GET /admin/consentimentos/{consentId}`
-- 200: `{ consentId, cliente, banco, receptora, estado, permissoes, criadoEm, expiraEm?, rejeitadoPor?, razao?, alcada: { situacao, aprovacoesPendentes, prazo? }, decisoes: [{ autor, decisao, em }], recursos: [{ resourceId, tipo, estado }] }`. `estado` e `recursos[].estado` são os efetivos (vencimento, RN97), pelo relógio do banco, sem a regra de cenário de estado (RN108), que só age em chamadas Open Finance. Com `estado` `REJECTED` e pendência, `alcada.situacao` é `encerrada` e `aprovacoesPendentes` é 0.
+- 200: `{ consentId, cliente, banco, receptora, estado, permissoes, criadoEm, expiraEm?, rejeitadoPor?, razao?, alcada: { situacao, aprovacoesPendentes, prazo? }, decisoes: [{ autor, decisao, em }], recursos: [{ resourceId, tipo, estado }] }`. `estado` e `recursos[].estado` são os efetivos (vencimento, RN97), pelo relógio do banco, sem a regra de cenário de estado (RN108), que só age em chamadas Open Finance. Com `estado` `REJECTED`, `aprovacoesPendentes` é sempre 0; `alcada.situacao` é `encerrada` se estava pendente ou vencida (aprovada e recusada ficam), e nenhum recurso aparece `PENDING_AUTHORISATION`.
 - 404: inexistente.
 
 ## `POST /admin/consentimentos/{consentId}/aprovar` e `/recusar`

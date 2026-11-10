@@ -345,13 +345,30 @@ public sealed class PainelTests : IDisposable
     }
 
     [Fact]
-    public async Task Visao_de_consentimento_revogado_nao_mostra_aprovacao_pendente()
+    public async Task Visao_de_consentimento_rejeitado_nao_mostra_aprovacao_pendente()
     {
-        var id = await Criar(await Cliente("PJ"), 2);
-        Assert.Equal(HttpStatusCode.OK, (await Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/revogar")).Status);
-        var alcada = (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{id}")).Corpo.GetProperty("alcada");
-        Assert.Equal("encerrada", alcada.GetProperty("situacao").GetString());
-        Assert.Equal(0, alcada.GetProperty("aprovacoesPendentes").GetInt32());
+        var aurora = await Cliente("PJ");
+        var revogado = await Criar(aurora, 2);
+        var recusado = await Criar(aurora, 2);
+        await Decidir(recusado, "recusar", HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, (await Enviar(HttpMethod.Post, $"/admin/consentimentos/{revogado}/revogar")).Status);
+        Assert.Equal(HttpStatusCode.OK, (await Enviar(HttpMethod.Post, $"/admin/consentimentos/{recusado}/revogar")).Status);
+
+        var (status, corpo) = await Enviar(HttpMethod.Post, "/admin/consentimentos", new { cliente = aurora.Cliente.Documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = Contas, prazoMeses = 1, aprovacoesPendentes = 3 });
+        Assert.True(status == HttpStatusCode.Created, corpo.ToString());
+        var expirado = corpo.GetProperty("consentId").GetString()!;
+        Assert.All(corpo.GetProperty("recursos").EnumerateArray(), r => Assert.Equal("PENDING_AUTHORISATION", r.GetProperty("estado").GetString()));
+        await FixarRelogioDoBanco(_fabrica.Relogio.GetUtcNow().AddMonths(1));
+
+        foreach (var (id, situacao) in new[] { (revogado, "encerrada"), (recusado, "recusada"), (expirado, "encerrada") })
+        {
+            var visao = (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{id}")).Corpo;
+            Assert.Equal("REJECTED", visao.GetProperty("estado").GetString());
+            Assert.Equal(situacao, visao.GetProperty("alcada").GetProperty("situacao").GetString());
+            Assert.Equal(0, visao.GetProperty("alcada").GetProperty("aprovacoesPendentes").GetInt32());
+            Assert.NotEmpty(visao.GetProperty("recursos").EnumerateArray());
+            Assert.All(visao.GetProperty("recursos").EnumerateArray(), r => Assert.Equal("UNAVAILABLE", r.GetProperty("estado").GetString()));
+        }
     }
 
     [Fact]

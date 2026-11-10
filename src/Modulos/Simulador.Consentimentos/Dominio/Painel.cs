@@ -53,6 +53,8 @@ internal static class Painel
             .Where(g => Permissoes.Aplicaveis(g.Permissoes, produtosDoBanco).Count == g.Permissoes.Length)
             .Select(g => new GrupoDoMenu(g.Nome, g.Permissoes))
             .ToList();
+
+        // Só contas e cartões dependem dos produtos do banco; os agrupados ficam, como nos grupos (RN08, RN96).
         return new OpcoesDoMenu(
             doBanco.Count == 0,
             grupos,
@@ -105,7 +107,7 @@ internal static class Painel
 
     private static IReadOnlyList<string>? AvaliarPermissoes(IReadOnlyList<string>? pedidas, bool pj, IReadOnlyList<string> produtosDoBanco, List<string> erros)
     {
-        if (pedidas is null)
+        if (pedidas is null || pedidas.Any(p => !Permissoes.Conhecida(p)))
         {
             erros.Add(PedidoInvalido);
             return null;

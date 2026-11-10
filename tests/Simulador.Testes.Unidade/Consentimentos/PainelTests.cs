@@ -101,10 +101,11 @@ public class PainelTests
     }
 
     [Fact]
-    public void Grupo_incompleto_ou_permissao_desconhecida_e_combinacao_incorreta()
+    public void Grupo_incompleto_e_combinacao_incorreta_e_permissao_desconhecida_e_pedido_invalido()
     {
         Assert.Equal([Permissoes.Combinacao], Avaliar(["ACCOUNTS_READ"]).Erros);
-        Assert.Equal([Permissoes.Combinacao], Avaliar(["NAO_EXISTE"]).Erros);
+        Assert.Equal([Painel.PedidoInvalido], Avaliar(["NAO_EXISTE"]).Erros);
+        Assert.Equal([Painel.PedidoInvalido], Avaliar([.. Contas, "NAO_EXISTE"]).Erros);
         Assert.Equal([Permissoes.Combinacao], Avaliar([]).Erros);
     }
 
@@ -183,6 +184,8 @@ public class PainelTests
         var opcoes = Painel.Opcoes(Cliente(), Banco, ["contas"]);
         Assert.Equal(["conta-1", "conta-2"], opcoes.Contas);
         Assert.Empty(opcoes.Cartoes);
+        Assert.Equal(["LOAN"], opcoes.Agrupados);
+        Assert.Contains(opcoes.Grupos, g => g.Nome == "operacoes-de-credito");
 
         Assert.Equal([Painel.OrigemInvalida], Avaliar([.. Contas, .. Cartoes], cartoes: ["cartao-1"], produtos: ["contas"]).Erros);
         var semSelecao = Avaliar([.. Contas, .. Cartoes], produtos: ["contas"]);
@@ -204,7 +207,11 @@ public class PainelTests
         Assert.Equal((SituacaoDaAlcada.Pendente, 2), Alcadas.NaVisao(Consentimento(2), Agora));
         Assert.Equal((SituacaoDaAlcada.Encerrada, 0), Alcadas.NaVisao(Consentimento(2, estado: Ciclo.Rejeitado), Agora));
         Assert.Equal((SituacaoDaAlcada.Encerrada, 0), Alcadas.NaVisao(Consentimento(2, estado: Ciclo.Rejeitado), Agora.AddDays(16)));
-        Assert.Equal((SituacaoDaAlcada.Recusada, 1), Alcadas.NaVisao(Consentimento(1, recusada: true, estado: Ciclo.Rejeitado), Agora));
+        Assert.Equal((SituacaoDaAlcada.Recusada, 0), Alcadas.NaVisao(Consentimento(1, recusada: true, estado: Ciclo.Rejeitado), Agora));
+        Assert.Equal((SituacaoDaAlcada.Aprovada, 0), Alcadas.NaVisao(Consentimento(decisoes: [new("b", Alcadas.Aprovada, Agora)], estado: Ciclo.Rejeitado), Agora));
+        Assert.Equal("UNAVAILABLE", Alcadas.EstadoNoConsentimento(Consentimento(2, estado: Ciclo.Rejeitado), "AVAILABLE", Agora));
+        Assert.Equal("UNAVAILABLE", Alcadas.EstadoNoConsentimento(Consentimento(2, estado: Ciclo.Rejeitado), "PENDING_AUTHORISATION", Agora));
+        Assert.Equal("AVAILABLE", Alcadas.EstadoNoConsentimento(Consentimento(estado: Ciclo.Rejeitado), "AVAILABLE", Agora));
         Assert.Equal((SituacaoDaAlcada.SemAlcada, 0), Alcadas.NaVisao(Consentimento(estado: Ciclo.Rejeitado), Agora));
     }
 
