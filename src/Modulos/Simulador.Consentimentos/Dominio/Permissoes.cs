@@ -17,27 +17,31 @@ internal static class Permissoes
     private const string ContaBase = "ACCOUNTS_READ";
     private const string CartaoBase = "CREDIT_CARDS_ACCOUNTS_READ";
 
-    private static readonly string[][] Grupos =
+    /// <summary>Grupos oficiais com nome para o menu do painel e o tipo de pessoa (nulo: PF e PJ) (RN96).</summary>
+    public static IReadOnlyList<(string Nome, string? Pessoa, string[] Permissoes)> GruposNomeados { get; } =
     [
-        ["CUSTOMERS_PERSONAL_IDENTIFICATIONS_READ"],
-        ["CUSTOMERS_PERSONAL_ADITTIONALINFO_READ"],
-        ["CUSTOMERS_BUSINESS_IDENTIFICATIONS_READ"],
-        ["CUSTOMERS_BUSINESS_ADITTIONALINFO_READ"],
-        [ContaBase, "ACCOUNTS_BALANCES_READ"],
-        [ContaBase, "ACCOUNTS_OVERDRAFT_LIMITS_READ"],
-        [ContaBase, "ACCOUNTS_TRANSACTIONS_READ"],
-        [CartaoBase, "CREDIT_CARDS_ACCOUNTS_LIMITS_READ"],
-        [CartaoBase, "CREDIT_CARDS_ACCOUNTS_TRANSACTIONS_READ"],
-        [CartaoBase, "CREDIT_CARDS_ACCOUNTS_BILLS_READ", "CREDIT_CARDS_ACCOUNTS_BILLS_TRANSACTIONS_READ"],
+        ("cadastro-identificacao", "PF", ["CUSTOMERS_PERSONAL_IDENTIFICATIONS_READ"]),
+        ("cadastro-complementar", "PF", ["CUSTOMERS_PERSONAL_ADITTIONALINFO_READ"]),
+        ("cadastro-identificacao", "PJ", ["CUSTOMERS_BUSINESS_IDENTIFICATIONS_READ"]),
+        ("cadastro-complementar", "PJ", ["CUSTOMERS_BUSINESS_ADITTIONALINFO_READ"]),
+        ("contas-saldos", null, [ContaBase, "ACCOUNTS_BALANCES_READ"]),
+        ("contas-limites", null, [ContaBase, "ACCOUNTS_OVERDRAFT_LIMITS_READ"]),
+        ("contas-transacoes", null, [ContaBase, "ACCOUNTS_TRANSACTIONS_READ"]),
+        ("cartoes-limites", null, [CartaoBase, "CREDIT_CARDS_ACCOUNTS_LIMITS_READ"]),
+        ("cartoes-transacoes", null, [CartaoBase, "CREDIT_CARDS_ACCOUNTS_TRANSACTIONS_READ"]),
+        ("cartoes-faturas", null, [CartaoBase, "CREDIT_CARDS_ACCOUNTS_BILLS_READ", "CREDIT_CARDS_ACCOUNTS_BILLS_TRANSACTIONS_READ"]),
+        ("operacoes-de-credito", null,
         [
             "LOANS_READ", "LOANS_WARRANTIES_READ", "LOANS_SCHEDULED_INSTALMENTS_READ", "LOANS_PAYMENTS_READ",
             "FINANCINGS_READ", "FINANCINGS_WARRANTIES_READ", "FINANCINGS_SCHEDULED_INSTALMENTS_READ", "FINANCINGS_PAYMENTS_READ",
             "UNARRANGED_ACCOUNTS_OVERDRAFT_READ", "UNARRANGED_ACCOUNTS_OVERDRAFT_WARRANTIES_READ", "UNARRANGED_ACCOUNTS_OVERDRAFT_SCHEDULED_INSTALMENTS_READ", "UNARRANGED_ACCOUNTS_OVERDRAFT_PAYMENTS_READ",
             "INVOICE_FINANCINGS_READ", "INVOICE_FINANCINGS_WARRANTIES_READ", "INVOICE_FINANCINGS_SCHEDULED_INSTALMENTS_READ", "INVOICE_FINANCINGS_PAYMENTS_READ",
-        ],
-        ["BANK_FIXED_INCOMES_READ", "CREDIT_FIXED_INCOMES_READ", "FUNDS_READ", "VARIABLE_INCOMES_READ", "TREASURE_TITLES_READ"],
-        ["EXCHANGES_READ"],
+        ]),
+        ("investimentos", null, ["BANK_FIXED_INCOMES_READ", "CREDIT_FIXED_INCOMES_READ", "FUNDS_READ", "VARIABLE_INCOMES_READ", "TREASURE_TITLES_READ"]),
+        ("cambio", null, ["EXCHANGES_READ"]),
     ];
+
+    private static readonly string[][] Grupos = [.. GruposNomeados.Select(g => g.Permissoes)];
 
     private static readonly HashSet<string> Conhecidas = [.. Grupos.SelectMany(g => g), Recursos];
 
@@ -56,6 +60,8 @@ internal static class Permissoes
         ["FUND"] = "FUNDS_",
         ["EXCHANGE"] = "EXCHANGES_",
     };
+
+    public static bool Conhecida(string permissao) => Conhecidas.Contains(permissao);
 
     public static bool TodasConhecidas(IReadOnlyList<string> permissoes) => permissoes.Count > 0 && permissoes.All(Conhecidas.Contains);
 
@@ -87,6 +93,14 @@ internal static class Permissoes
         [.. permissoes.Where(p => !(
             (p.StartsWith(Contas, StringComparison.Ordinal) && !produtosDoBanco.Contains("contas"))
             || (p.StartsWith(Cartoes, StringComparison.Ordinal) && !produtosDoBanco.Contains("cartoes"))))];
+
+    /// <summary>Conta e cartão só valem se o banco ainda oferece o produto; os agrupados sempre (RN08, RN96).</summary>
+    public static bool Oferecido(string tipoDoRecurso, IReadOnlyList<string> produtosDoBanco) => tipoDoRecurso switch
+    {
+        "ACCOUNT" => produtosDoBanco.Contains("contas"),
+        "CREDIT_CARD_ACCOUNT" => produtosDoBanco.Contains("cartoes"),
+        _ => true,
+    };
 
     public static bool TemFuncional(IReadOnlyList<string> permissoes) => permissoes.Any(p => p != Recursos);
 

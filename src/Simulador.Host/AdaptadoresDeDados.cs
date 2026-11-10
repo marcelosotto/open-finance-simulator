@@ -11,7 +11,14 @@ using Simulador.Massa.Contratos;
 namespace Simulador.Host;
 
 /// <summary>Liga Dados a Consentimentos, Massa, Instituições e Marcação, sem referência entre os módulos (ADR-007).</summary>
-internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, IConsultaDeMassa consulta, ICatalogo catalogo, ILimites limites, IComportamentoDaChamada comportamento) : IAmbienteDosDados
+internal sealed class AmbienteDosDados(
+    InstituicoesDaChamada instituicoes,
+    IConsultaDeMassa consulta,
+    ICatalogo catalogo,
+    ILimites limites,
+    IComportamentoDaChamada comportamento,
+    IHttpContextAccessor acesso,
+    TimeProvider relogio) : IAmbienteDosDados
 {
     private readonly Lazy<Dictionary<string, OperacaoDoCatalogo>> _operacoes = new(() => catalogo.Operacoes.ToDictionary(o => o.OperationId, StringComparer.Ordinal));
 
@@ -30,8 +37,14 @@ internal sealed class AmbienteDosDados(InstituicoesDaChamada instituicoes, ICons
 
     public async Task<RecursoDeDados?> Recurso(string resourceId, CancellationToken cancelamento) =>
         await consulta.ObterRecurso(resourceId, cancelamento).ConfigureAwait(false) is { } r
-            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, await comportamento.EstadoDoRecurso(r.ResourceId, r.Estado, cancelamento).ConfigureAwait(false), r.Natureza, r.InicioDoHistorico)
+            ? new RecursoDeDados(r.ResourceId, r.Cliente, r.Tipo, await comportamento.EstadoDoRecurso(r.ResourceId, EstadoNoConsentimento(r.Estado), cancelamento).ConfigureAwait(false), r.Natureza, r.InicioDoHistorico)
             : null;
+
+    /// <summary>Estado no consentimento da chamada, antes da regra de cenário (RN97).</summary>
+    private string EstadoNoConsentimento(string estadoGravado) =>
+        acesso.HttpContext is { } contexto && ExtensoesDosConsentimentos.ConsentimentoDaChamada(contexto) is { } consentimento
+            ? ExtensoesDosConsentimentos.EstadoNoConsentimento(consentimento, estadoGravado, relogio.GetUtcNow())
+            : estadoGravado;
 
     public async Task<ClienteDeDados?> Cliente(string documento, CancellationToken cancelamento) =>
         await consulta.ObterCliente(documento, cancelamento).ConfigureAwait(false) is { } m

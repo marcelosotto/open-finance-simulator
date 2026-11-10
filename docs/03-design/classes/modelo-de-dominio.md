@@ -44,6 +44,7 @@ classDiagram
     permissoes
     expiraEm
     rejeitadoPor
+    aprovacoesPendentes
   }
   class Recurso {
     resourceId
@@ -54,7 +55,7 @@ classDiagram
   class Aprovacao {
     aprovador
     decisao
-    prazo
+    hora
   }
   class PerfilDeDados {
     transacoesPorDia

@@ -13,7 +13,7 @@ MongoDB e Redis foram decididos na revisão de 05/11/2026 ([PA01](../01-requisit
 | `distribuicoes` | Divisão da massa entre bancos, perfis e produtos, e porcentagem de PJ | Bancos e perfis somam 100%; produtos têm porcentagem própria |
 | `receptoras` | `organisationId` e credenciais de teste | O QCA sobrescrito fica em `instituicoes`, por `organisationId` da receptora ([PA10](../01-requisitos/regras-de-negocio.md#pa10)) |
 | `clientes` | Documento, nome, tipo, marca e natureza | Índice por documento; o cliente não pertence a um banco |
-| `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações | Mudança de estado atômica; índice para expirar |
+| `consentimentos` | Estado, permissões, validade, rejeição, extensões, aprovações pendentes e decisões de alçada ([RN99](../01-requisitos/regras-de-negocio.md#rn99)) | Mudança de estado atômica; índice para expirar |
 | `recursos` | Tipo, estado, perfil, saldo inicial, data de criação e marca | Índices por consentimento e por cliente e banco |
 | `mundo_virtual` | Total, semente e distribuição | Um por ambiente; reproduz o mesmo mundo |
 | `ajustes` | Mudanças sobre transação ou dado virtual | Chave: alvo; vence o cálculo |

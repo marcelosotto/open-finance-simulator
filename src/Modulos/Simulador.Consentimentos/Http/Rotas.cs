@@ -336,8 +336,9 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
     {
         var consentimento = (DadosDoConsentimento)contexto.Items[PortaoDeSeguranca.ItemDoConsentimento]!;
         var cancelamento = contexto.RequestAborted;
+        var agora = relogio.GetUtcNow();
         var banco = await ambiente.Banco(consentimento.Banco, cancelamento).ConfigureAwait(false);
-        switch (Preparacao.Situacao(consentimento.CriadoEm, banco!.PreparacaoSeg, relogio.GetUtcNow()))
+        switch (Preparacao.Situacao(consentimento.CriadoEm, banco!.PreparacaoSeg, agora))
         {
             case SituacaoDaPreparacao.Preparando:
                 return Results.StatusCode(StatusCodes.Status202Accepted);
@@ -348,7 +349,7 @@ internal sealed partial class ApiOficial(IAmbienteDosConsentimentos ambiente, Ti
         var itens = new List<DadosDoRecurso>();
         foreach (var id in consentimento.Recursos)
         {
-            if (await ambiente.Recurso(id, cancelamento).ConfigureAwait(false) is { } recurso)
+            if (await ambiente.RecursoNoConsentimento(id, consentimento, agora, cancelamento).ConfigureAwait(false) is { } recurso)
             {
                 itens.Add(recurso);
             }
@@ -542,11 +543,12 @@ internal static class Rotas
         administracao.MapPost("/admin/consentimentos/{consentId}/revogar", RevogarNaAdministracao);
         administracao.MapPut("/admin/recursos/{resourceId}/estado", MudarEstado);
         administracao.MapPost("/admin/clientes/{documento}/produtos", AdicionarProduto);
+        RotasDoPainel.Mapear(administracao);
     }
 
-    private static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    internal static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
 
-    private static IResult ErroAdmin(int status, string mensagem) => Results.Json(new { erros = new[] { mensagem } }, statusCode: status);
+    internal static IResult ErroAdmin(int status, string mensagem) => Results.Json(new { erros = new[] { mensagem } }, statusCode: status);
 
     private static IResult ErroOAuth(int status, string codigo) => Results.Json(new { error = codigo }, statusCode: status);
 
