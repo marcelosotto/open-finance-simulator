@@ -17,6 +17,6 @@ Detalhes de interface que **não são regra de negócio**. Ao mudar um botão, a
 | ID | Tela | Comportamento | Regra |
 |---|---|---|---|
 | <a id="ui10"></a>UI10 | Novo consentimento | Um menu em passos: cliente, instituição e receptora, permissões e prazo. | [RN80](regras-de-negocio.md#rn80) |
-| <a id="ui13"></a>UI13 | Seleção de origem | Contas e cartões já marcados, com no mínimo um. | [RN95](regras-de-negocio.md#rn95) |
+| <a id="ui13"></a>UI13 | Seleção de origem | Contas e cartões do cliente naquele banco, já marcados, só os de produto que o banco ainda oferece. Com opção, pelo menos um fica marcado; sem opção, a seção não aparece. Crédito, investimento, câmbio e cadastro aparecem só como grupos, sem seleção. | [RN95](regras-de-negocio.md#rn95), [RN96](regras-de-negocio.md#rn96) |
 | <a id="ui14"></a>UI14 | Alçadas | Mostra quantas aprovações faltam, com botões de aprovar e recusar. | [RN98](regras-de-negocio.md#rn98) |
 | <a id="ui16"></a>UI16 | Todas | Faixa fixa: "Ambiente simulado, dados fictícios". | [PR03](../00-visao-geral/premissas.md#pr03) |

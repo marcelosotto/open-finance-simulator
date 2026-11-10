@@ -47,6 +47,7 @@ internal static class Painel
     public static OpcoesDoMenu Opcoes(DadosDoCliente cliente, string banco, IReadOnlyList<string> produtosDoBanco)
     {
         var doBanco = cliente.Recursos.Where(r => r.Banco == banco).ToList();
+        var oferecidos = doBanco.Where(r => Permissoes.Oferecido(r.Tipo, produtosDoBanco)).ToList();
         var grupos = Permissoes.GruposNomeados
             .Where(g => g.Pessoa is null || g.Pessoa == cliente.Tipo)
             .Where(g => Permissoes.Aplicaveis(g.Permissoes, produtosDoBanco).Count == g.Permissoes.Length)
@@ -55,8 +56,8 @@ internal static class Painel
         return new OpcoesDoMenu(
             doBanco.Count == 0,
             grupos,
-            [.. doBanco.Where(r => r.Tipo == Conta).Select(r => r.ResourceId)],
-            [.. doBanco.Where(r => r.Tipo == Cartao).Select(r => r.ResourceId)],
+            [.. oferecidos.Where(r => r.Tipo == Conta).Select(r => r.ResourceId)],
+            [.. oferecidos.Where(r => r.Tipo == Cartao).Select(r => r.ResourceId)],
             [.. doBanco.Where(r => Permissoes.Agrupado(r.Tipo)).Select(r => r.Tipo).Distinct(StringComparer.Ordinal)]);
     }
 
@@ -86,8 +87,9 @@ internal static class Painel
         }
 
         var aplicaveis = AvaliarPermissoes(pedido.Permissoes, cliente.Tipo == Pj, produtosDoBanco, erros);
-        var contas = Selecao(pedido.Contas, Conta, doBanco, aplicaveis, erros);
-        var cartoes = Selecao(pedido.Cartoes, Cartao, doBanco, aplicaveis, erros);
+        var oferecidos = doBanco.Where(r => Permissoes.Oferecido(r.Tipo, produtosDoBanco)).ToList();
+        var contas = Selecao(pedido.Contas, Conta, oferecidos, aplicaveis, erros);
+        var cartoes = Selecao(pedido.Cartoes, Cartao, oferecidos, aplicaveis, erros);
         if (erros.Count > 0 || aplicaveis is null)
         {
             return new AvaliacaoDoPedido([.. erros.Distinct(StringComparer.Ordinal)], [], []);
@@ -110,8 +112,7 @@ internal static class Painel
         }
 
         var permissoes = pedidas.Append(Permissoes.Recursos).Distinct(StringComparer.Ordinal).ToList();
-        var codigo = Permissoes.TodasConhecidas(permissoes) ? Permissoes.Validar(permissoes, pj) : Permissoes.Combinacao;
-        if (codigo is not null)
+        if (Permissoes.Validar(permissoes, pj) is { } codigo)
         {
             erros.Add(codigo);
             return null;
@@ -127,10 +128,13 @@ internal static class Painel
         return aplicaveis;
     }
 
-    /// <summary>Ausente: todas. Vazia com opção: recusa. Id de fora ou sem o grupo: recusa (RN95, RN96).</summary>
-    private static HashSet<string> Selecao(IReadOnlyList<string>? selecao, string tipo, List<DadosDoRecurso> doBanco, IReadOnlyList<string>? aplicaveis, List<string> erros)
+    /// <summary>Permissão fora da tabela oficial: o pedido é malformado e responde 400, como a API oficial (RN96).</summary>
+    public static bool TemPermissaoDesconhecida(PedidoDoPainel pedido) => pedido.Permissoes is { } pedidas && pedidas.Any(p => !Permissoes.Conhecida(p));
+
+    /// <summary>Ausente: todas as oferecidas. Vazia com opção: recusa. Id fora do menu ou sem o grupo: recusa (RN95, RN96).</summary>
+    private static HashSet<string> Selecao(IReadOnlyList<string>? selecao, string tipo, List<DadosDoRecurso> oferecidos, IReadOnlyList<string>? aplicaveis, List<string> erros)
     {
-        var opcoes = doBanco.Where(r => r.Tipo == tipo).Select(r => r.ResourceId).ToHashSet(StringComparer.Ordinal);
+        var opcoes = oferecidos.Where(r => r.Tipo == tipo).Select(r => r.ResourceId).ToHashSet(StringComparer.Ordinal);
         if (selecao is null)
         {
             return opcoes;

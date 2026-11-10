@@ -178,6 +178,37 @@ public class PainelTests
     }
 
     [Fact]
+    public void Menu_e_selecao_so_com_contas_e_cartoes_que_o_banco_oferece()
+    {
+        var opcoes = Painel.Opcoes(Cliente(), Banco, ["contas"]);
+        Assert.Equal(["conta-1", "conta-2"], opcoes.Contas);
+        Assert.Empty(opcoes.Cartoes);
+
+        Assert.Equal([Painel.OrigemInvalida], Avaliar([.. Contas, .. Cartoes], cartoes: ["cartao-1"], produtos: ["contas"]).Erros);
+        var semSelecao = Avaliar([.. Contas, .. Cartoes], produtos: ["contas"]);
+        Assert.Empty(semSelecao.Erros);
+        Assert.DoesNotContain("cartao-1", semSelecao.Recursos);
+    }
+
+    [Fact]
+    public void Permissao_fora_da_tabela_e_pedido_malformado()
+    {
+        Assert.True(Painel.TemPermissaoDesconhecida(new PedidoDoPainel("doc", Banco, "org", ["ACCOUNTS_READ", "NAO_EXISTE"])));
+        Assert.False(Painel.TemPermissaoDesconhecida(new PedidoDoPainel("doc", Banco, "org", Contas)));
+        Assert.False(Painel.TemPermissaoDesconhecida(new PedidoDoPainel("doc", Banco, "org", null)));
+    }
+
+    [Fact]
+    public void Visao_de_consentimento_rejeitado_nao_mostra_aprovacao_pendente()
+    {
+        Assert.Equal((SituacaoDaAlcada.Pendente, 2), Alcadas.NaVisao(Consentimento(2), Agora));
+        Assert.Equal((SituacaoDaAlcada.Encerrada, 0), Alcadas.NaVisao(Consentimento(2, estado: Ciclo.Rejeitado), Agora));
+        Assert.Equal((SituacaoDaAlcada.Encerrada, 0), Alcadas.NaVisao(Consentimento(2, estado: Ciclo.Rejeitado), Agora.AddDays(16)));
+        Assert.Equal((SituacaoDaAlcada.Recusada, 1), Alcadas.NaVisao(Consentimento(1, recusada: true, estado: Ciclo.Rejeitado), Agora));
+        Assert.Equal((SituacaoDaAlcada.SemAlcada, 0), Alcadas.NaVisao(Consentimento(estado: Ciclo.Rejeitado), Agora));
+    }
+
+    [Fact]
     public void Situacao_da_alcada()
     {
         Assert.Equal(SituacaoDaAlcada.SemAlcada, Alcadas.Situacao(Consentimento(), Agora));
@@ -195,6 +226,7 @@ public class PainelTests
     [InlineData(2, "vencida")]
     [InlineData(3, "recusada")]
     [InlineData(4, "aprovada")]
+    [InlineData(5, "encerrada")]
     public void Nome_da_situacao(int situacao, string nome) => Assert.Equal(nome, Alcadas.Nome((SituacaoDaAlcada)situacao));
 
     [Fact]

@@ -10,6 +10,7 @@ internal enum SituacaoDaAlcada
     Vencida,
     Recusada,
     Aprovada,
+    Encerrada,
 }
 
 /// <summary>Múltiplas alçadas e estado do recurso no consentimento (RN97, RN98, RN99).</summary>
@@ -42,8 +43,18 @@ internal static class Alcadas
         SituacaoDaAlcada.Vencida => "vencida",
         SituacaoDaAlcada.Recusada => Recusada,
         SituacaoDaAlcada.Aprovada => Aprovada,
+        SituacaoDaAlcada.Encerrada => "encerrada",
         _ => "sem-alcada",
     };
+
+    /// <summary>O que a visão da administração mostra: consentimento <c>REJECTED</c> não tem aprovação pendente (RN99).</summary>
+    public static (SituacaoDaAlcada Situacao, int Pendentes) NaVisao(DadosDoConsentimento efetivo, DateTimeOffset agora)
+    {
+        var situacao = Situacao(efetivo, agora);
+        return efetivo.Estado == Ciclo.Rejeitado && situacao is SituacaoDaAlcada.Pendente or SituacaoDaAlcada.Vencida
+            ? (SituacaoDaAlcada.Encerrada, 0)
+            : (situacao, efetivo.AprovacoesPendentes);
+    }
 
     /// <summary>Fim do prazo da alçada; nulo sem alçada (RN99).</summary>
     public static DateTimeOffset? FimDoPrazo(DadosDoConsentimento consentimento) =>

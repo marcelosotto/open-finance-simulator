@@ -61,6 +61,8 @@ internal static class Permissoes
         ["EXCHANGE"] = "EXCHANGES_",
     };
 
+    public static bool Conhecida(string permissao) => Conhecidas.Contains(permissao);
+
     public static bool TodasConhecidas(IReadOnlyList<string> permissoes) => permissoes.Count > 0 && permissoes.All(Conhecidas.Contains);
 
     /// <summary>Código do erro 422 de RN84 e RN83; nulo se o pedido é válido.</summary>
@@ -91,6 +93,14 @@ internal static class Permissoes
         [.. permissoes.Where(p => !(
             (p.StartsWith(Contas, StringComparison.Ordinal) && !produtosDoBanco.Contains("contas"))
             || (p.StartsWith(Cartoes, StringComparison.Ordinal) && !produtosDoBanco.Contains("cartoes"))))];
+
+    /// <summary>Conta e cartão só valem se o banco ainda oferece o produto; os agrupados sempre (RN08, RN96).</summary>
+    public static bool Oferecido(string tipoDoRecurso, IReadOnlyList<string> produtosDoBanco) => tipoDoRecurso switch
+    {
+        "ACCOUNT" => produtosDoBanco.Contains("contas"),
+        "CREDIT_CARD_ACCOUNT" => produtosDoBanco.Contains("cartoes"),
+        _ => true,
+    };
 
     public static bool TemFuncional(IReadOnlyList<string> permissoes) => permissoes.Any(p => p != Recursos);
 

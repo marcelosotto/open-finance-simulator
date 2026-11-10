@@ -37,6 +37,15 @@
 - [X] T011 [P] Testes de integração da administração em `tests/Simulador.Testes.Integracao/Consentimentos/PainelTests.cs`: códigos de 422, 404, 409, concorrência, schema oficial de Recursos
 - [X] T012 Rodar os portões: formatação, build com `-warnaserror`, specs, suíte com cobertura, `cobertura conferir` e `docker build`
 
+## Phase 6: Achados da revisão
+
+- [X] T013 Docs: RN96 (400 para corpo malformado, campo ou permissão desconhecidos; menu só com produto oferecido), RN97 (endpoints de dados; a visão da administração ignora a regra de cenário), RN99 (visão de `REJECTED`), UI13 em `docs/01-requisitos/interface.md`, contrato e modelo de dados
+- [X] T014 Menu e seleção só com contas e cartões cujo produto o banco oferece, em `Dominio/Painel.cs` e `Dominio/Permissoes.cs`
+- [X] T015 Visão de consentimento `REJECTED` sem aprovação pendente (`encerrada`), em `Dominio/Alcadas.cs` e `Http/Painel.cs`
+- [X] T016 400 `PEDIDO_INVALIDO` para corpo malformado, campo desconhecido e permissão fora da tabela, em `Http/Painel.cs`
+- [X] T017 Testes de integração: relógio do banco diferente do real (criação, prazo, alçada, expiração), concorrência determinística na mesma versão, fluxo ponta a ponta com alçadas múltiplas, origem inválida e sem origem via HTTP
+- [X] T018 Rodar os portões
+
 ## Dependencies
 
-T001 → T002 → (T003, T004) → T005 → T006 → T007 → T008 → T009 → T010 → T011 → T012.
+T001 → T002 → (T003, T004) → T005 → T006 → T007 → T008 → T009 → T010 → T011 → T012 → T013 → (T014, T015, T016) → T017 → T018.

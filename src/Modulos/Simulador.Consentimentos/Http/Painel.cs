@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -14,6 +15,9 @@ internal static class RotasDoPainel
     private const string Pf = "PF";
     private const string Operador = "operador";
     private const int TentativasDeEscrita = 5;
+
+    /// <summary>Campo desconhecido, como <c>prazo</c> no lugar de <c>prazoMeses</c>, é recusado com 400 (RN96).</summary>
+    private static readonly JsonSerializerOptions OpcoesDoPedido = new(JsonDosConsentimentos.Opcoes) { UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow };
 
     public static void Mapear(IEndpointRouteBuilder administracao)
     {
@@ -60,6 +64,11 @@ internal static class RotasDoPainel
     {
         var cancelamento = contexto.RequestAborted;
         var pedido = await Ler(contexto).ConfigureAwait(false);
+        if (pedido is null || Painel.TemPermissaoDesconhecida(pedido))
+        {
+            return Erros(StatusCodes.Status400BadRequest, [Painel.PedidoInvalido]);
+        }
+
         if (pedido is not { Cliente: { Length: > 0 } documento, Banco: { Length: > 0 } banco })
         {
             return Erros(StatusCodes.Status422UnprocessableEntity, [Painel.PedidoInvalido]);
@@ -157,6 +166,7 @@ internal static class RotasDoPainel
     private static async Task<object> Visao(IAmbienteDosConsentimentos ambiente, DadosDoConsentimento guardado, DateTimeOffset agora, CancellationToken cancelamento)
     {
         var consentimento = Ciclo.Efetivo(guardado, agora);
+        var (situacao, pendentes) = Alcadas.NaVisao(consentimento, agora);
         var recursos = new List<object>();
         foreach (var id in consentimento.Recursos)
         {
@@ -180,8 +190,8 @@ internal static class RotasDoPainel
             razao = consentimento.Razao,
             alcada = new
             {
-                situacao = Alcadas.Nome(Alcadas.Situacao(consentimento, agora)),
-                aprovacoesPendentes = consentimento.AprovacoesPendentes,
+                situacao = Alcadas.Nome(situacao),
+                aprovacoesPendentes = pendentes,
                 prazo = Alcadas.FimDoPrazo(consentimento),
             },
             decisoes = (consentimento.Decisoes ?? []).Select(d => new { autor = d.Autor, decisao = d.Decisao, em = d.Em }),
@@ -198,7 +208,7 @@ internal static class RotasDoPainel
 
         try
         {
-            return await contexto.Request.ReadFromJsonAsync<PedidoDoPainel>(JsonDosConsentimentos.Opcoes, contexto.RequestAborted).ConfigureAwait(false);
+            return await contexto.Request.ReadFromJsonAsync<PedidoDoPainel>(OpcoesDoPedido, contexto.RequestAborted).ConfigureAwait(false);
         }
         catch (JsonException)
         {

@@ -15,12 +15,13 @@ Situação da alçada, calculada:
 - `vencida`: pendências > 0, sem recusa, a partir de criação + 15 dias.
 - `recusada`: com recusa.
 - `aprovada`: sem pendência, com decisões.
+- `encerrada` (só na visão da administração): consentimento `REJECTED` com pendência, pendente ou vencida; mostra zero pendências (RN99).
 
 ## Estado do recurso no consentimento (calculado, RN97)
 1. Alçada `recusada` ou `vencida` → `UNAVAILABLE`.
 2. Alçada `pendente` → `PENDING_AUTHORISATION`, salvo estado gravado `UNAVAILABLE`.
 3. Senão → estado gravado.
-4. Regra de cenário de estado (RN108), se houver, por cima.
+4. Regra de cenário de estado (RN108), se houver, por cima, só em chamadas Open Finance; a visão da administração não a aplica.
 
 ## Opções do menu (calculadas)
-Grupos do tipo do cliente, sem contas e cartões que o banco não oferece; contas e cartões do cliente no banco, marcados; tipos agrupados que o cliente tem no banco; receptoras.
+Grupos do tipo do cliente, sem contas e cartões que o banco não oferece; contas e cartões do cliente no banco, marcados, só se o banco ainda oferece o produto (senão a seleção os recusa com `ORIGEM_INVALIDA`); tipos agrupados que o cliente tem no banco; receptoras.

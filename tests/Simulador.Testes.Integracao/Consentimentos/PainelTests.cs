@@ -13,6 +13,9 @@ public sealed class PainelTests : IDisposable
     private static readonly string[] Contas = ["ACCOUNTS_READ", "ACCOUNTS_BALANCES_READ"];
     private static readonly string[] ContasECartoes = ["ACCOUNTS_READ", "ACCOUNTS_BALANCES_READ", "CREDIT_CARDS_ACCOUNTS_READ", "CREDIT_CARDS_ACCOUNTS_LIMITS_READ"];
     private static readonly string[] Incompleto = ["ACCOUNTS_READ"];
+    private static readonly string[] Desconhecida = ["ACCOUNTS_READ", "NAO_EXISTE"];
+    private static readonly string[] SemCartoes = ["contas", "emprestimos", "financiamentos", "adiantamentos", "direitos-creditorios", "investimentos", "cambio", "fundos", "renda-variavel", "renda-fixa-credito", "tesouro-direto"];
+    private static readonly DateTimeOffset Inicio = new(2026, 11, 5, 12, 0, 0, TimeSpan.Zero);
     private readonly FabricaDoSimulador _fabrica = new();
     private readonly HttpClient _admin;
     private readonly HttpClient _api;
@@ -179,19 +182,6 @@ public sealed class PainelTests : IDisposable
     }
 
     [Fact]
-    public async Task Duas_aprovacoes_da_ultima_pendencia_contam_uma_vez()
-    {
-        var id = await Criar(await Cliente("PJ"), 1);
-        var respostas = await Task.WhenAll(
-            Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/aprovar"),
-            Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/aprovar"));
-        Assert.Single(respostas, r => r.Status == HttpStatusCode.OK);
-        Assert.Single(respostas, r => r.Status == HttpStatusCode.Conflict);
-        var (_, visao) = await Enviar(HttpMethod.Get, $"/admin/consentimentos/{id}");
-        Assert.Single(visao.GetProperty("decisoes").EnumerateArray());
-    }
-
-    [Fact]
     public async Task Consentimento_revogado_nao_aceita_decisao()
     {
         var id = await Criar(await Cliente("PJ"), 1);
@@ -249,7 +239,7 @@ public sealed class PainelTests : IDisposable
     }
 
     [Fact]
-    public async Task Pedidos_invalidos_respondem_422_ou_404_sem_criar()
+    public async Task Pedidos_invalidos_respondem_400_422_ou_404_sem_criar()
     {
         var mariana = await Cliente();
         var documento = mariana.Cliente.Documento;
@@ -258,14 +248,21 @@ public sealed class PainelTests : IDisposable
         using (var texto = new StringContent("nao é json", System.Text.Encoding.UTF8, "application/json"))
         using (var resposta = await _admin.PostAsync(new Uri("/admin/consentimentos", UriKind.Relative), texto, Cancelamento))
         {
-            Assert.Equal(HttpStatusCode.UnprocessableEntity, resposta.StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
         }
 
         using (var semTipo = new StringContent("{}", System.Text.Encoding.UTF8, "text/plain"))
         using (var resposta = await _admin.PostAsync(new Uri("/admin/consentimentos", UriKind.Relative), semTipo, Cancelamento))
         {
-            Assert.Equal(HttpStatusCode.UnprocessableEntity, resposta.StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
         }
+
+        var desconhecido = await Enviar(HttpMethod.Post, "/admin/consentimentos", new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = Contas, prazo = 3 });
+        Assert.Equal(HttpStatusCode.BadRequest, desconhecido.Status);
+        Assert.Equal("PEDIDO_INVALIDO", Assert.Single(desconhecido.Corpo.GetProperty("erros").EnumerateArray()).GetString());
+        var permissao = await Enviar(HttpMethod.Post, "/admin/consentimentos", new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = Desconhecida });
+        Assert.Equal(HttpStatusCode.BadRequest, permissao.Status);
+        Assert.Equal("PEDIDO_INVALIDO", Assert.Single(permissao.Corpo.GetProperty("erros").EnumerateArray()).GetString());
 
         Assert.Equal(HttpStatusCode.NotFound, (await Enviar(HttpMethod.Post, "/admin/consentimentos", new { cliente = "00000000000", banco = Banco, permissoes = Contas })).Status);
         Assert.Equal(HttpStatusCode.NotFound, (await Enviar(HttpMethod.Post, "/admin/consentimentos", new { cliente = documento, banco = "nao-existe", permissoes = Contas })).Status);
@@ -300,6 +297,182 @@ public sealed class PainelTests : IDisposable
         Assert.Equal(HttpStatusCode.UnprocessableEntity, (await Enviar(HttpMethod.Get, $"/admin/consentimentos/opcoes?banco={Banco}")).Status);
         Assert.Equal(HttpStatusCode.NotFound, (await Enviar(HttpMethod.Get, $"/admin/consentimentos/opcoes?cliente=00000000000&banco={Banco}")).Status);
         Assert.Equal(HttpStatusCode.NotFound, (await Enviar(HttpMethod.Get, $"/admin/consentimentos/opcoes?cliente={aurora.Cliente.Documento}&banco=nao-existe")).Status);
+    }
+
+    [Fact]
+    public async Task Painel_usa_o_relogio_do_banco_na_criacao_no_prazo_na_alcada_e_na_expiracao()
+    {
+        var aurora = await Cliente("PJ");
+        var banco = new DateTimeOffset(2030, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        await FixarRelogioDoBanco(banco);
+
+        var (status, corpo) = await Enviar(HttpMethod.Post, "/admin/consentimentos", new
+        {
+            cliente = aurora.Cliente.Documento,
+            banco = Banco,
+            receptora = _receptora.OrganisationId,
+            permissoes = Contas,
+            prazoMeses = 1,
+            aprovacoesPendentes = 1,
+        });
+        Assert.True(status == HttpStatusCode.Created, corpo.ToString());
+        var comPrazo = corpo.GetProperty("consentId").GetString()!;
+        Assert.Equal(banco, corpo.GetProperty("criadoEm").GetDateTimeOffset());
+        Assert.Equal(banco.AddMonths(1), corpo.GetProperty("expiraEm").GetDateTimeOffset());
+        Assert.Equal(banco.AddDays(15), corpo.GetProperty("alcada").GetProperty("prazo").GetDateTimeOffset());
+        var semPrazo = await Criar(aurora, 1);
+
+        await FixarRelogioDoBanco(banco.AddDays(15).AddSeconds(-1));
+        var aprovada = JsonDocument.Parse(await Decidir(comPrazo, "aprovar", HttpStatusCode.OK)).RootElement;
+        Assert.Equal(banco.AddDays(15).AddSeconds(-1), aprovada.GetProperty("decisoes")[0].GetProperty("em").GetDateTimeOffset());
+
+        await FixarRelogioDoBanco(banco.AddDays(15));
+        Assert.Equal("vencida", (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{semPrazo}")).Corpo.GetProperty("alcada").GetProperty("situacao").GetString());
+        Assert.Contains("prazo da alçada encerrado", await Decidir(semPrazo, "aprovar", HttpStatusCode.Conflict), StringComparison.Ordinal);
+        Assert.Equal("AUTHORISED", (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{comPrazo}")).Corpo.GetProperty("estado").GetString());
+
+        await FixarRelogioDoBanco(banco.AddMonths(1));
+        Assert.Equal("REJECTED", (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{comPrazo}")).Corpo.GetProperty("estado").GetString());
+
+        Assert.Equal(Inicio, _fabrica.Relogio.GetUtcNow());
+        using (var solto = await _admin.DeleteAsync(new Uri($"/admin/instituicoes/{Banco}/relogio", UriKind.Relative), Cancelamento))
+        {
+            Assert.True(solto.IsSuccessStatusCode);
+        }
+
+        Assert.Equal("pendente", (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{semPrazo}")).Corpo.GetProperty("alcada").GetProperty("situacao").GetString());
+        Assert.Equal("AUTHORISED", (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{comPrazo}")).Corpo.GetProperty("estado").GetString());
+    }
+
+    [Fact]
+    public async Task Visao_de_consentimento_revogado_nao_mostra_aprovacao_pendente()
+    {
+        var id = await Criar(await Cliente("PJ"), 2);
+        Assert.Equal(HttpStatusCode.OK, (await Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/revogar")).Status);
+        var alcada = (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{id}")).Corpo.GetProperty("alcada");
+        Assert.Equal("encerrada", alcada.GetProperty("situacao").GetString());
+        Assert.Equal(0, alcada.GetProperty("aprovacoesPendentes").GetInt32());
+    }
+
+    [Fact]
+    public async Task Fluxo_do_painel_ponta_a_ponta_com_alcadas_multiplas()
+    {
+        var aurora = await Cliente("PJ");
+        var (_, opcoes) = await Enviar(HttpMethod.Get, $"/admin/consentimentos/opcoes?cliente={aurora.Cliente.Documento}&banco={Banco}");
+        var conta = opcoes.GetProperty("contas")[0].GetProperty("resourceId").GetString()!;
+        var grupo = opcoes.GetProperty("grupos").EnumerateArray().First(g => g.GetProperty("nome").GetString() == "contas-saldos");
+        var receptora = opcoes.GetProperty("receptoras").EnumerateArray().First(r => r.GetProperty("organisationId").GetString() == _receptora.OrganisationId);
+
+        var (status, criado) = await Enviar(HttpMethod.Post, "/admin/consentimentos", new
+        {
+            cliente = aurora.Cliente.Documento,
+            banco = Banco,
+            receptora = receptora.GetProperty("organisationId").GetString(),
+            permissoes = grupo.GetProperty("permissoes").EnumerateArray().Select(p => p.GetString()).ToArray(),
+            contas = new[] { conta },
+            aprovacoesPendentes = 3,
+        });
+        Assert.True(status == HttpStatusCode.Created, criado.ToString());
+        var id = criado.GetProperty("consentId").GetString()!;
+        Assert.Equal(conta, Assert.Single(criado.GetProperty("recursos").EnumerateArray()).GetProperty("resourceId").GetString());
+        Assert.Equal("PENDING_AUTHORISATION", Assert.Single(await EstadosEmRecursos(id)));
+
+        await Decidir(id, "aprovar", HttpStatusCode.OK, "ana");
+        var parcial = (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{id}")).Corpo;
+        Assert.Equal(2, parcial.GetProperty("alcada").GetProperty("aprovacoesPendentes").GetInt32());
+        Assert.Equal("PENDING_AUTHORISATION", Assert.Single(await EstadosEmRecursos(id)));
+        Assert.Equal(HttpStatusCode.Forbidden, (await Oficial("accounts", "/accounts/{accountId}", await Token(id), conta)).Status);
+
+        await Decidir(id, "aprovar", HttpStatusCode.OK, "ana");
+        var final = JsonDocument.Parse(await Decidir(id, "aprovar", HttpStatusCode.OK, "bruno")).RootElement;
+        Assert.Equal("aprovada", final.GetProperty("alcada").GetProperty("situacao").GetString());
+        Assert.Equal(["ana", "ana", "bruno"], final.GetProperty("decisoes").EnumerateArray().Select(d => d.GetProperty("autor").GetString()));
+        Assert.Equal("AVAILABLE", Assert.Single(await EstadosEmRecursos(id)));
+
+        var token = await Token(id);
+        var (_, lista) = await Oficial("accounts", "/accounts", token);
+        Assert.Equal(conta, Assert.Single(JsonDocument.Parse(lista).RootElement.GetProperty("data").EnumerateArray()).GetProperty("accountId").GetString());
+        Assert.Equal(HttpStatusCode.OK, (await Oficial("accounts", "/accounts/{accountId}", token, conta)).Status);
+        Assert.Contains("sem aprovação pendente", await Decidir(id, "aprovar", HttpStatusCode.Conflict), StringComparison.Ordinal);
+
+        var historico = (await Enviar(HttpMethod.Get, "/admin/massa/historico")).Corpo.ToString();
+        Assert.Contains("consentimento-criado-no-painel", historico, StringComparison.Ordinal);
+        Assert.Contains("pendente:1", historico, StringComparison.Ordinal);
+        Assert.Contains("aprovada:0", historico, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Origem_invalida_ou_sem_origem_responde_422_sem_criar()
+    {
+        var mariana = await Cliente();
+        var outro = await Cliente();
+        var documento = mariana.Cliente.Documento;
+        var cartao = mariana.Recursos.First(r => r.Banco == Banco && r.Tipo == "CREDIT_CARD_ACCOUNT").ResourceId;
+
+        Assert.Equal("ORIGEM_INVALIDA", await UnicoErro(new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = Contas, contas = new[] { Conta(outro) } }));
+        Assert.Equal("ORIGEM_INVALIDA", await UnicoErro(new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = Contas, cartoes = new[] { cartao } }));
+        Assert.Equal("SEM_ORIGEM_SELECIONADA", await UnicoErro(new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = Contas, contas = Array.Empty<string>() }));
+
+        using (var semCartoes = JsonContent.Create(new { produtos = SemCartoes }))
+        using (var alterado = await _admin.PatchAsync(new Uri($"/admin/instituicoes/{Banco}", UriKind.Relative), semCartoes, Cancelamento))
+        {
+            Assert.Equal(HttpStatusCode.OK, alterado.StatusCode);
+        }
+
+        var (_, opcoes) = await Enviar(HttpMethod.Get, $"/admin/consentimentos/opcoes?cliente={documento}&banco={Banco}");
+        Assert.Empty(opcoes.GetProperty("cartoes").EnumerateArray());
+        Assert.NotEmpty(opcoes.GetProperty("contas").EnumerateArray());
+        Assert.Equal("ORIGEM_INVALIDA", await UnicoErro(new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = ContasECartoes, cartoes = new[] { cartao } }));
+        Assert.Empty((await new AdminDaMassa(_admin).Ler<MassaGerada>($"/clientes/{documento}")).Consentimentos);
+
+        var (status, criado) = await Enviar(HttpMethod.Post, "/admin/consentimentos", new { cliente = documento, banco = Banco, receptora = _receptora.OrganisationId, permissoes = ContasECartoes });
+        Assert.True(status == HttpStatusCode.Created, criado.ToString());
+        Assert.DoesNotContain(criado.GetProperty("recursos").EnumerateArray(), r => r.GetProperty("resourceId").GetString() == cartao);
+    }
+
+    [Fact]
+    public async Task Duas_aprovacoes_na_mesma_versao_uma_vence_e_a_outra_recebe_conflito()
+    {
+        var id = await Criar(await Cliente("PJ"), 1);
+        (HttpStatusCode Status, JsonElement Corpo) concorrente = default;
+        _fabrica.Massa.AntesDaEscritaCondicional = async () => concorrente = await Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/aprovar", autor: "bruno");
+
+        var (status, corpo) = await Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/aprovar", autor: "ana");
+
+        Assert.Equal(HttpStatusCode.OK, concorrente.Status);
+        Assert.Equal(HttpStatusCode.Conflict, status);
+        Assert.Contains("sem aprovação pendente", corpo.ToString(), StringComparison.Ordinal);
+        var visao = (await Enviar(HttpMethod.Get, $"/admin/consentimentos/{id}")).Corpo;
+        Assert.Equal("bruno", Assert.Single(visao.GetProperty("decisoes").EnumerateArray()).GetProperty("autor").GetString());
+        Assert.Equal(0, visao.GetProperty("alcada").GetProperty("aprovacoesPendentes").GetInt32());
+    }
+
+    [Fact]
+    public async Task Aprovacao_que_perde_a_corrida_le_de_novo_e_nao_apaga_a_outra()
+    {
+        var id = await Criar(await Cliente("PJ"), 2);
+        (HttpStatusCode Status, JsonElement Corpo) concorrente = default;
+        _fabrica.Massa.AntesDaEscritaCondicional = async () => concorrente = await Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/aprovar", autor: "bruno");
+
+        var (status, corpo) = await Enviar(HttpMethod.Post, $"/admin/consentimentos/{id}/aprovar", autor: "ana");
+
+        Assert.Equal(HttpStatusCode.OK, concorrente.Status);
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.Equal(["bruno", "ana"], corpo.GetProperty("decisoes").EnumerateArray().Select(d => d.GetProperty("autor").GetString()));
+        Assert.Equal("aprovada", corpo.GetProperty("alcada").GetProperty("situacao").GetString());
+    }
+
+    private async Task<string?> UnicoErro(object pedido)
+    {
+        var (status, corpo) = await Enviar(HttpMethod.Post, "/admin/consentimentos", pedido);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, status);
+        return Assert.Single(corpo.GetProperty("erros").EnumerateArray()).GetString();
+    }
+
+    private async Task FixarRelogioDoBanco(DateTimeOffset instante)
+    {
+        using var resposta = await _admin.PutAsJsonAsync(new Uri($"/admin/instituicoes/{Banco}/relogio", UriKind.Relative), new { fixadoEm = instante }, Cancelamento);
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
     }
 
     public void Dispose()
