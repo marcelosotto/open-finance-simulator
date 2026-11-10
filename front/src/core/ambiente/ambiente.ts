@@ -9,8 +9,12 @@ const CORES: Readonly<Record<string, CorDaMarca>> = { dev: 'dev', hml: 'hml', st
 export class Ambiente {
   readonly marca: string;
 
-  constructor(marca: string) {
+  /** Porta das APIs Open Finance na configuração do simulador; nula quando a administração não informa. */
+  readonly portaOpenFinance: number | null;
+
+  constructor(marca: string, portaOpenFinance: number | null = null) {
     this.marca = marca.trim();
+    this.portaOpenFinance = portaOpenFinance;
   }
 
   get temMarca(): boolean {

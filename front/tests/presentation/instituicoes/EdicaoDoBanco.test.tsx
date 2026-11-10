@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { abrir } from '../../apoio/renderizar';
 import { capturar, comAmbiente, responder } from '../../apoio/api';
 import { bancoEstavel, resumo } from '../../apoio/dados';
@@ -172,7 +172,8 @@ describe('Novo banco e edição (UI03 a UI05)', () => {
     expect(screen.getByText('Relógio real.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Voltar ao relógio real' })).toBeDisabled();
 
-    await usuario.type(screen.getByRole('textbox', { name: /Fixar em/ }), '2030-01-01T00:00:00Z');
+    // Campo de data e hora (revisão da 010): o valor local vira ISO UTC no pedido.
+    fireEvent.change(screen.getByLabelText(/Fixar em/), { target: { value: '2030-01-01T00:00:00' } });
     responder('get', BANCO, fixado);
     await usuario.click(screen.getByRole('button', { name: 'Fixar' }));
     expect(await screen.findByText(/^Fixado em /)).toBeInTheDocument();
@@ -184,7 +185,10 @@ describe('Novo banco e edição (UI03 a UI05)', () => {
     responder('get', BANCO, azul);
     await usuario.click(screen.getByRole('button', { name: 'Voltar ao relógio real' }));
     expect(await screen.findByText('Relógio real.')).toBeInTheDocument();
-    expect(fixados.map((p) => p.corpo)).toEqual([{ fixadoEm: '2030-01-01T00:00:00Z' }, { fator: 60 }]);
+    expect(fixados.map((p) => p.corpo)).toEqual([
+      { fixadoEm: new Date('2030-01-01T00:00:00').toISOString() },
+      { fator: 60 },
+    ]);
     expect(reais).toHaveLength(1);
   });
 

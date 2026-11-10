@@ -27,6 +27,10 @@ internal sealed record ReceptoraPadrao(string Nome, string? OrganisationId, stri
             Preenchido(secao["Senha"]));
     }
 
+    /// <summary>A padrão é reconhecida pelo sufixo, com qualquer marca (RN124).</summary>
+    public static bool EhPadrao(string organisationId) =>
+        organisationId == Sufixo || organisationId.EndsWith("-" + Sufixo, StringComparison.Ordinal);
+
     public string OrganisationIdCom(string marca) => OrganisationId ?? (marca.Length == 0 ? Sufixo : $"{marca}-{Sufixo}");
 
     /// <summary>

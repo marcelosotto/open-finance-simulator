@@ -10,6 +10,7 @@ import {
   podeDecidir,
   podeRevogar,
   rascunhoVazio,
+  receptoraPadrao,
   type OpcoesDoMenu,
   type Rascunho,
   type VisaoDoConsentimento,
@@ -162,5 +163,15 @@ describe('Visão do consentimento (UI14, RN99)', () => {
   it('revoga enquanto não está REJECTED', () => {
     expect(podeRevogar(visao())).toBe(true);
     expect(podeRevogar(visao({ estado: 'REJECTED' }))).toBe(false);
+  });
+});
+
+describe('Receptora padrão (RN124)', () => {
+  it('acha a padrão pelo sufixo, com ou sem marca; sem ela, a primeira', () => {
+    const outra = { organisationId: 'hml-p-abc', nome: 'Outra' };
+    expect(receptoraPadrao([outra, { organisationId: 'hml-p-receptora-padrao', nome: 'XP' }])?.nome).toBe('XP');
+    expect(receptoraPadrao([outra, { organisationId: 'p-receptora-padrao', nome: 'XP' }])?.nome).toBe('XP');
+    expect(receptoraPadrao([outra])).toBe(outra);
+    expect(receptoraPadrao([])).toBeUndefined();
   });
 });

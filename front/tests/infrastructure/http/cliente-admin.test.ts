@@ -9,6 +9,16 @@ import { capturar, responder } from '../../apoio/api';
 const Item = z.object({ nome: z.string() });
 
 describe('ClienteAdmin', () => {
+  it.each([
+    ['João', 'Jo%C3%A3o'],
+    ['Conceição', 'Concei%C3%A7%C3%A3o'],
+    ['Diego', 'Diego'],
+  ])('manda o autor %s em percent-encoding, só com ASCII no cabeçalho', async (autor, enviado) => {
+    const pedidos = capturar('post', '/admin/x', { nome: 'b' });
+    await new ClienteAdmin(API, () => autor).post('/admin/x', Item, {});
+    expect(pedidos[0]!.cabecalhos.get('x-sim-autor')).toBe(enviado);
+  });
+
   it('envia x-sim-autor só nas escritas e só com autor (RN71, Q8)', async () => {
     let autor = 'Bruno';
     const cliente = new ClienteAdmin(API, () => autor);

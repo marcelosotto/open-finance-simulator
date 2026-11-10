@@ -53,7 +53,8 @@ export class ClienteAdmin {
   ): Promise<Either<Falha, T>> {
     const autor = this.autor().trim();
     const cabecalhos: Record<string, string> = {};
-    if (metodo !== 'GET' && autor.length > 0) cabecalhos[CABECALHO_DO_AUTOR] = autor;
+    // Cabeçalho HTTP só aceita ASCII: "João" vai como "Jo%C3%A3o", e a API decodifica (revisão da 010).
+    if (metodo !== 'GET' && autor.length > 0) cabecalhos[CABECALHO_DO_AUTOR] = encodeURIComponent(autor);
     if (pedido.corpo !== undefined) cabecalhos['Content-Type'] = pedido.tipo ?? 'application/json';
 
     let resposta;

@@ -7,6 +7,7 @@ import { Resultado, useConsulta } from '../comum/consultas';
 import { Secao, Tabela, Titulo } from '../comum/titulo';
 import { dataHora } from '../comum/datas';
 import { CHAVES, classeDoLink } from './chaves';
+import { Estado } from '../comum/rotulos';
 
 const Dados = ({ massa }: { readonly massa: MassaDoCliente }) => {
   const { t } = useTranslation();
@@ -63,7 +64,9 @@ const Recursos = ({ massa }: { readonly massa: MassaDoCliente }) => {
                 <td>{recurso.banco}</td>
                 <td>{recurso.tipo}</td>
                 <td>{recurso.produto}</td>
-                <td>{recurso.estado}</td>
+                <td>
+                  <Estado codigo={recurso.estado} />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -103,7 +106,9 @@ const Consentimentos = ({ massa }: { readonly massa: MassaDoCliente }) => {
                   </Link>
                 </td>
                 <td>{consentimento.banco}</td>
-                <td>{consentimento.estado}</td>
+                <td>
+                  <Estado codigo={consentimento.estado} />
+                </td>
                 <td className="break-all font-mono text-xs">{consentimento.permissoes.join(', ')}</td>
                 <td title={consentimento.criadoEm}>{dataHora(consentimento.criadoEm)}</td>
               </tr>

@@ -5,12 +5,14 @@ import { CircleCheck, Circle } from 'lucide-react';
 import { TOKENS_DAS_INSTITUICOES } from '@/application/instituicoes/casos';
 import { TOKENS_DA_MASSA } from '@/application/massa/casos';
 import { TOKENS_DOS_CONSENTIMENTOS } from '@/application/consentimentos/casos';
+import { TOKENS_DO_AMBIENTE } from '@/application/ambiente/obter-ambiente';
+import { receptoraPadrao } from '@/core/consentimentos/consentimento';
 import { useCaso } from '../comum/casos';
 import { useConsulta } from '../comum/consultas';
 import { Secao, Tabela, Titulo } from '../comum/titulo';
 import type { TelaComAjuda } from '../ajuda/textos';
 
-type Situacao = 'feito' | 'aFazer' | 'opcional';
+type Situacao = 'feito' | 'jaPronto' | 'aFazer' | 'opcional';
 
 interface PropsDoPasso {
   readonly numero: number;
@@ -24,7 +26,7 @@ const Passo = ({ numero, titulo, situacao, para, children }: PropsDoPasso) => {
   const { t } = useTranslation();
   return (
     <li className="flex gap-3 rounded border border-slate-200 bg-white p-3">
-      {situacao === 'feito' ? (
+      {situacao === 'feito' || situacao === 'jaPronto' ? (
         <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-green-700" aria-hidden />
       ) : (
         <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" aria-hidden />
@@ -66,13 +68,19 @@ export const PrimeirosPassos = () => {
   const consultaDeBancos = useConsulta(['instituicoes'], () => bancos.executar());
   const consultaDoResumo = useConsulta(['massa', 'resumo'], () => resumo.executar());
   const consultaDeReceptoras = useConsulta(['receptoras'], () => receptoras.executar());
+  const ambiente = useCaso(TOKENS_DO_AMBIENTE.ObterAmbiente);
+  const consultaDoAmbiente = useConsulta(['ambiente'], () => ambiente.executar());
 
   const ativos =
     consultaDeBancos.data?.isRight() === true ? consultaDeBancos.data.value.filter((b) => b.situacao === 'ativa') : [];
   const massa = consultaDoResumo.data?.isRight() === true ? consultaDoResumo.data.value : null;
-  const receptora = consultaDeReceptoras.data?.isRight() === true ? consultaDeReceptoras.data.value[0] : undefined;
+  // A receptora padrão (RN124), não a primeira da lista; sem ela, a primeira.
+  const receptora =
+    consultaDeReceptoras.data?.isRight() === true ? receptoraPadrao(consultaDeReceptoras.data.value) : undefined;
+  const porta = consultaDoAmbiente.data?.isRight() === true ? consultaDoAmbiente.data.value.portaOpenFinance : null;
   const banco = ativos[0]?.endereco ?? 'banco-estavel';
-  const api = `${window.location.protocol}//${window.location.hostname}:8080`;
+  // A porta vem da configuração do simulador; o endereço é o desta página (troque se o Compose mapear outro).
+  const api = `${window.location.protocol}//${window.location.hostname}:${porta ?? '<porta>'}`;
   const marcar = (feito: boolean): Situacao => (feito ? 'feito' : 'aFazer');
 
   return (
@@ -82,8 +90,8 @@ export const PrimeirosPassos = () => {
         <Passo
           numero={1}
           titulo={t('inicio.passos.banco.titulo')}
-          situacao={marcar(ativos.length > 0)}
-          para="/bancos/novo"
+          situacao={ativos.length > 0 ? 'jaPronto' : 'aFazer'}
+          para="/bancos"
         >
           {t('inicio.passos.banco.texto', { n: ativos.length })}
         </Passo>
@@ -107,7 +115,7 @@ export const PrimeirosPassos = () => {
           {t('inicio.passos.acompanhar.texto')}
         </Passo>
         <Passo numero={5} titulo={t('inicio.passos.api.titulo')} situacao="opcional" para="/receptoras">
-          <p>{t('inicio.passos.api.texto')}</p>
+          <p>{porta === null ? t('inicio.passos.api.semPorta') : t('inicio.passos.api.texto', { porta })}</p>
           <p className="mt-1">
             {receptora === undefined
               ? t('inicio.passos.api.semReceptora')

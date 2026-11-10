@@ -1,6 +1,6 @@
 export const textosDaMassa = {
   titulo: 'Massa',
-  explicacao: 'Perfis de dados, distribuições, lotes, clientes avulsos e limpeza do ambiente (UC05 a UC08).',
+  explicacao: 'Perfis de dados, distribuições, lotes, clientes avulsos e limpeza do ambiente.',
   menu: {
     perfis: 'Perfis de dados',
     distribuicoes: 'Distribuições',
@@ -63,7 +63,7 @@ export const textosDaMassa = {
     somaDeBancos: 'Soma dos bancos: {{soma}}%',
     somaDePerfis: 'Soma dos perfis: {{soma}}%',
     semSoma: 'Cada produto tem a sua porcentagem, sem soma.',
-    foraDe100: 'Bancos e perfis precisam somar 100%, e cada porcentagem fica entre 0 e 100 (UI07).',
+    foraDe100: 'Bancos e perfis precisam somar 100%, e cada porcentagem fica entre 0 e 100.',
     salva: 'Distribuição salva.',
     colunas: { nome: 'Nome', bancos: 'Bancos', perfis: 'Perfis', pjPct: 'PJ (%)', acoes: 'Ações' },
   },

@@ -30,7 +30,15 @@ export const MarcaDoAmbiente = () => {
   const { t } = useTranslation();
   const obter = useCaso(TOKENS_DO_AMBIENTE.ObterAmbiente);
   const consulta = useConsulta(['ambiente'], () => obter.executar());
-  const ambiente = consulta.data?.isRight() ? consulta.data.value : null;
+  if (consulta.data?.isLeft() === true) {
+    // Sem a marca, quem usa não sabe de qual ambiente vêm os dados: um aviso discreto, sem travar a tela.
+    return (
+      <span role="status" className="text-xs text-amber-200" title={consulta.data.value.erros.join(', ')}>
+        {t('layout.semAmbiente')}
+      </span>
+    );
+  }
+  const ambiente = consulta.data?.isRight() === true ? consulta.data.value : null;
   if (ambiente === null || !ambiente.temMarca) return null;
   return (
     <span

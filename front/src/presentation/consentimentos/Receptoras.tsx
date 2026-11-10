@@ -65,11 +65,21 @@ export const Receptoras = () => {
             <p>{t('consentimentos.receptoras.vazio')}</p>
           ) : (
             <Tabela rotulo={t('consentimentos.receptoras.titulo')}>
+              <thead>
+                <tr>
+                  <th>{t('consentimentos.receptoras.nome')}</th>
+                  <th>organisationId</th>
+                  <th>{t('consentimentos.receptoras.usuario')}</th>
+                  <th>{t('consentimentos.receptoras.senha')}</th>
+                </tr>
+              </thead>
               <tbody>
                 {lista.map((r) => (
                   <tr key={r.organisationId}>
                     <td>{r.nome}</td>
                     <td className="font-mono text-xs">{r.organisationId}</td>
+                    <td className="font-mono text-xs">{r.usuario ?? '—'}</td>
+                    <td className="font-mono text-xs">{r.senha ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>

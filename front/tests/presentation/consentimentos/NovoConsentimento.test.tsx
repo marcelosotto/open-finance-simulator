@@ -33,7 +33,7 @@ const chegarAsPermissoes = async (usuario: Usuario, cliente = MARIANA.documento)
   await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Banco' }), 'banco-estavel');
   await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Cliente' }), cliente);
   await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
-  await screen.findByRole('group', { name: 'Permissões de contas-saldos' });
+  await screen.findByRole('group', { name: 'Permissões de Contas: saldos' });
 };
 
 describe('Novo consentimento (UI10, UI13, UI19)', () => {
@@ -75,8 +75,8 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     await usuario.selectOptions(screen.getByRole('combobox', { name: 'Cliente' }), MARIANA.documento);
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
 
-    await usuario.click(await screen.findByRole('checkbox', { name: 'Grupo contas-saldos' }));
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo cartoes-limites' }));
+    await usuario.click(await screen.findByRole('checkbox', { name: 'Grupo Contas: saldos' }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Cartões: limites' }));
     expect(screen.getByRole('checkbox', { name: 'hml-p-r0x1' })).toBeChecked();
     expect(screen.getByRole('checkbox', { name: 'hml-p-r0x0' })).toBeChecked();
     expect(screen.getByText('Compartilhados por inteiro, sem seleção: LOAN')).toBeInTheDocument();
@@ -87,7 +87,7 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.click(screen.getByRole('button', { name: 'Criar consentimento' }));
 
-    expect(await screen.findByTestId('estado')).toHaveTextContent('AUTHORISED');
+    expect(await screen.findByTestId('estado')).toHaveTextContent('Autorizado');
     expect(criados[0]!.corpo).toEqual({
       cliente: '95000000080',
       banco: 'banco-estavel',
@@ -134,7 +134,7 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     const { usuario } = abrir('/consentimentos/novo');
 
     await chegarAsPermissoes(usuario);
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo cadastro-identificacao' }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Dados cadastrais: identificação' }));
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     expect(screen.getByText('Indeterminado')).toBeInTheDocument();
@@ -149,7 +149,7 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     const { usuario } = abrir('/consentimentos/novo');
     await chegarAsPermissoes(usuario);
 
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo contas-saldos' }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Contas: saldos' }));
     await usuario.click(screen.getByRole('checkbox', { name: 'hml-p-r0x1' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent('Marque pelo menos uma: Contas.');
@@ -161,8 +161,12 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     const { usuario } = abrir('/consentimentos/novo');
     await chegarAsPermissoes(usuario);
 
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo operacoes-de-credito' }));
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo contas-saldos' }));
+    await usuario.click(
+      screen.getByRole('checkbox', {
+        name: 'Grupo Operações de crédito (empréstimos, financiamentos e adiantamentos)',
+      }),
+    );
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Contas: saldos' }));
 
     expect(screen.queryByRole('group', { name: 'Contas' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'hml-p-r0x1' })).not.toBeInTheDocument();
@@ -174,14 +178,14 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     const { usuario } = abrir('/consentimentos/novo');
     await chegarAsPermissoes(usuario);
 
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo contas-saldos' }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Contas: saldos' }));
     await usuario.click(screen.getByRole('checkbox', { name: 'ACCOUNTS_BALANCES_READ' }));
-    expect(screen.getByRole('checkbox', { name: 'Grupo contas-saldos' })).not.toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'Grupo Contas: saldos' })).not.toBeChecked();
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.click(screen.getByRole('button', { name: 'Criar consentimento' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Grupo de permissões incompleto (RN83).');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Grupo de permissões incompleto.');
     expect(screen.getByRole('button', { name: 'Criar consentimento' })).toBeInTheDocument();
   });
 
@@ -202,7 +206,7 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     expect(screen.getByText('Cliente PJ')).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: 'CUSTOMERS_BUSINESS_IDENTIFICATIONS_READ' })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: 'CUSTOMERS_PERSONAL_IDENTIFICATIONS_READ' })).not.toBeInTheDocument();
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo contas-saldos' }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Contas: saldos' }));
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.type(screen.getByRole('spinbutton', { name: /Aprovações pendentes/ }), '2');
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
@@ -216,12 +220,12 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     responder('get', '/admin/consentimentos/opcoes', { ...opcoesPF, tipo: 'PJ' });
     const { usuario } = abrir('/consentimentos/novo');
     await chegarAsPermissoes(usuario);
-    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo cadastro-identificacao' }));
+    await usuario.click(screen.getByRole('checkbox', { name: 'Grupo Dados cadastrais: identificação' }));
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.type(screen.getByRole('spinbutton', { name: /Aprovações pendentes/ }), '11');
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
     await usuario.click(screen.getByRole('button', { name: 'Criar consentimento' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('Alçadas só em PJ, de 1 a 10 aprovações (RN99).');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Alçadas só em PJ, de 1 a 10 aprovações.');
   });
 
   it('documento digitado que não está na massa: diz o que faltou e deixa voltar', async () => {
@@ -245,7 +249,7 @@ describe('Novo consentimento (UI10, UI13, UI19)', () => {
     await usuario.selectOptions(await screen.findByRole('combobox', { name: 'Cliente' }), MARIANA.documento);
     await usuario.click(screen.getByRole('button', { name: 'Avançar' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('O cliente não tem produto neste banco (RN95).');
+    expect(await screen.findByRole('alert')).toHaveTextContent('O cliente não tem produto neste banco.');
     expect(screen.getByRole('button', { name: 'Avançar' })).toBeDisabled();
   });
 

@@ -67,4 +67,4 @@ A tela diz o que faltou e como resolver. Exemplos:
 - **"O Banco X ainda não tem clientes."** Gere um lote em *Massa → Lotes* ou crie um cliente avulso.
 - **"Esse cliente não existe na massa deste banco."** Volte e escolha o cliente na lista.
 - **"Nenhuma receptora cadastrada."** Crie uma em *Receptoras* (ou confira a configuração da receptora padrão).
-- **Recusas com código**, como "Grupo de permissões incompleto (RN83)", vêm das regras do Open Finance: ajuste as permissões e tente de novo.
+- **Recusas das regras do Open Finance**, como "Grupo de permissões incompleto", pedem que você ajuste as permissões e tente de novo.

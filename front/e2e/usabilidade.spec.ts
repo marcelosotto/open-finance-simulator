@@ -31,7 +31,7 @@ test.describe('Funcionalidade: Usar o back-office sem saber os identificadores',
   test('Cenário: Primeiros passos mostra o caminho e cada tela explica para que serve', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'Primeiros passos', level: 1 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /^1\. Criar um banco/ })).toContainText('Feito');
+    await expect(page.getByRole('heading', { name: /^1\. Escolher um banco/ })).toContainText('Já vem pronto');
     await expect(page.getByLabel('Exemplo de pedido de token')).toContainText('scope=consents');
 
     await page

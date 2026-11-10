@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Simulador.Testes.Host;
 
 namespace Simulador.Testes.Integracao.Consentimentos;
@@ -82,5 +84,82 @@ public sealed class ReceptoraPadraoTests
         var receptora = Assert.Single(await Receptoras(segunda));
         Assert.Equal("XP", receptora.GetProperty("nome").GetString());
         Assert.Equal(senha, receptora.GetProperty("senha").GetString());
+    }
+
+    [Fact]
+    public async Task Usuario_configurado_ja_em_uso_nao_cria_e_avisa_no_log()
+    {
+        var baseDeDados = MongoDeTeste.NovaBase();
+        string usuarioDeOutra;
+        using (var antes = new FabricaDoSimulador().ComMongo().Com("Simulador:Mongo:Base", baseDeDados))
+        {
+            (usuarioDeOutra, _, _) = await AtalhosDeConsentimento.CriarReceptora(antes.ClienteAdministracao(), "Outra");
+        }
+
+        var avisos = new RegistrosCapturados();
+        using var fabrica = new FabricaDoSimulador().ComMongo().Com("Simulador:Mongo:Base", baseDeDados)
+            .ComReceptoraPadrao().Com("Simulador:ReceptoraPadrao:Usuario", usuarioDeOutra)
+            .ComServicos(s => s.AddSingleton<ILoggerProvider>(avisos));
+
+        var receptoras = await Receptoras(fabrica);
+        Assert.DoesNotContain(receptoras, r => r.GetProperty("nome").GetString() == "XP");
+        Assert.Contains(avisos.Mensagens, m => m.Contains(usuarioDeOutra, StringComparison.Ordinal) && m.Contains("RN124", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Trocar_a_marca_no_mesmo_MongoDB_nao_cria_uma_segunda_XP()
+    {
+        var baseDeDados = MongoDeTeste.NovaBase();
+        using (var hml = new FabricaDoSimulador("hml").ComMongo().Com("Simulador:Mongo:Base", baseDeDados).ComReceptoraPadrao())
+        {
+            Assert.Single(await Receptoras(hml));
+        }
+
+        using var vazia = new FabricaDoSimulador(string.Empty).ComMongo().Com("Simulador:Mongo:Base", baseDeDados).ComReceptoraPadrao();
+        var receptora = Assert.Single(await Receptoras(vazia));
+        Assert.Equal("hml-p-receptora-padrao", receptora.GetProperty("organisationId").GetString());
+    }
+
+    [Fact]
+    public async Task Historico_perdido_numa_subida_e_gravado_na_proxima_uma_vez_so()
+    {
+        var baseDeDados = MongoDeTeste.NovaBase();
+        using (var repositorio = new Simulador.Consentimentos.Persistencia.RepositorioMongo(MongoDeTeste.Conexao, baseDeDados))
+        {
+            await repositorio.Preparar(_ct);
+            await repositorio.Inserir(new Simulador.Consentimentos.Contratos.Receptora("hml-p-receptora-padrao", "XP", "teste-u", "teste-s", DateTimeOffset.UnixEpoch), _ct);
+        }
+
+        for (var subida = 0; subida < 2; subida++)
+        {
+            using var fabrica = new FabricaDoSimulador().ComMongo().Com("Simulador:Mongo:Base", baseDeDados).ComReceptoraPadrao();
+            var historico = await fabrica.ClienteAdministracao().GetStringAsync(U("/admin/massa/historico"), _ct);
+            Assert.Equal(1, historico.Split("receptora-criada").Length - 1);
+        }
+    }
+}
+
+/// <summary>Guarda as mensagens de log para conferir avisos.</summary>
+internal sealed class RegistrosCapturados : ILoggerProvider
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _mensagens = new();
+
+    public IEnumerable<string> Mensagens => _mensagens;
+
+    public ILogger CreateLogger(string categoryName) => new Registro(_mensagens);
+
+    public void Dispose()
+    {
+    }
+
+    private sealed class Registro(System.Collections.Concurrent.ConcurrentQueue<string> mensagens) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            mensagens.Enqueue(formatter(state, exception));
     }
 }

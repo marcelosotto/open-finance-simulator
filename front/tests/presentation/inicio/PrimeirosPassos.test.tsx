@@ -21,8 +21,8 @@ describe('Primeiros passos (UI18)', () => {
     abrir('/');
 
     expect(await screen.findByRole('heading', { name: 'Primeiros passos', level: 1 })).toBeInTheDocument();
-    expect(await screen.findByText(/Já vêm 1 bancos prontos/)).toBeInTheDocument();
-    expect(situacaoDoPasso(/^1\. Criar um banco/).getByText('Feito')).toBeInTheDocument();
+    expect(await screen.findByText(/Já há 1 bancos ativos/)).toBeInTheDocument();
+    expect(situacaoDoPasso(/^1. Escolher um banco/).getByText('Já vem pronto')).toBeInTheDocument();
     expect(situacaoDoPasso(/^2\. Gerar clientes/).getByText('A fazer')).toBeInTheDocument();
     expect(situacaoDoPasso(/^3\. Criar um consentimento/).getByText('A fazer')).toBeInTheDocument();
     expect(situacaoDoPasso(/^4\. Ver, aprovar ou revogar/).getByText('Quando quiser')).toBeInTheDocument();
@@ -50,13 +50,7 @@ describe('Primeiros passos (UI18)', () => {
 
     const passos = within(await screen.findByRole('list', { name: 'Primeiros passos' }));
     const destinos = passos.getAllByRole('link', { name: 'Abrir a tela' }).map((link) => link.getAttribute('href'));
-    expect(destinos).toEqual([
-      '/bancos/novo',
-      '/massa/lotes',
-      '/consentimentos/novo',
-      '/consentimentos',
-      '/receptoras',
-    ]);
+    expect(destinos).toEqual(['/bancos', '/massa/lotes', '/consentimentos/novo', '/consentimentos', '/receptoras']);
 
     const tabela = within(screen.getByRole('table', { name: 'Tela → para que serve' }));
     expect(tabela.getByRole('link', { name: 'Novo consentimento' })).toHaveAttribute('href', '/consentimentos/novo');
@@ -82,5 +76,22 @@ describe('Ajuda no topo das telas (UI17)', () => {
     expect(ajuda.getByText(new RegExp(para))).toBeInTheDocument();
     expect(ajuda.getByText(new RegExp(precisa))).toBeInTheDocument();
     expect(ajuda.getByRole('link', { name: 'Primeiros passos' })).toHaveAttribute('href', '/primeiros-passos');
+  });
+});
+
+describe('Primeiros passos: receptora padrão e porta (revisão da 010)', () => {
+  it('usa a receptora padrão entre várias e a porta da configuração', async () => {
+    responder('get', '/admin/ambiente', { marca: 'hml', portaOpenFinance: 9443 });
+    responder('get', '/admin/instituicoes', [resumo('banco-estavel', 'Banco Estável')]);
+    responder('get', '/admin/receptoras', [
+      { organisationId: 'org-1', nome: 'Outra', usuario: 'teste-outra', senha: 'teste-senha-outra' },
+      XP,
+    ]);
+    abrir('/primeiros-passos');
+
+    expect(await screen.findByText('Receptora XP: usuário teste-ab12, senha teste-senha-cd34.')).toBeInTheDocument();
+    const exemplo = screen.getByLabelText('Exemplo de pedido de token');
+    expect(exemplo).toHaveTextContent(':9443/banco-estavel/token');
+    expect(screen.getByText(/na porta 9443, a configurada no simulador/)).toBeInTheDocument();
   });
 });

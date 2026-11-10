@@ -26,4 +26,4 @@ export const capturar = (metodo: Metodo, caminho: string, corpo: JsonBodyType, s
 };
 
 /** A marca de ambiente que todo layout lê. */
-export const comAmbiente = (marca = 'hml') => responder('get', '/admin/ambiente', { marca });
+export const comAmbiente = (marca = 'hml') => responder('get', '/admin/ambiente', { marca, portaOpenFinance: 8080 });

@@ -27,7 +27,7 @@ describe('Clientes da massa (US3, cenário 3)', () => {
       'href',
       `/consentimentos/${encodeURIComponent('urn:hml:p-c0x0')}`,
     );
-    expect(within(consentimentos).getByText('AUTHORISED')).toBeInTheDocument();
+    expect(within(consentimentos).getByText('Autorizado')).toBeInTheDocument();
   });
 
   it('cliente de lote leva ao lote; sem consentimento avisa', async () => {

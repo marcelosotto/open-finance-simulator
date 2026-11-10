@@ -52,7 +52,7 @@ export const textosDosCenarios = {
   vencedora: {
     titulo: 'Qual regra vale para esta chamada?',
     explicacao:
-      'A administração responde qual regra seria sorteada em cada grupo, pela ordem do simulador (RN15). Nada é sorteado nem contado.',
+      'A administração responde qual regra seria sorteada em cada grupo, pela ordem do simulador. Nada é sorteado nem contado.',
     banco: 'Banco',
     endpoint: 'Endpoint (operationId)',
     cliente: 'Cliente (opcional)',

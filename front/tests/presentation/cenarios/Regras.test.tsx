@@ -178,6 +178,36 @@ describe('Qual regra vale para esta chamada? (Q9)', () => {
     expect(parametros?.has('cliente')).toBe(false);
   });
 
+  it('refaz a resposta depois de desligar uma regra, sem mostrar a vencedora velha (revisão da 010)', async () => {
+    comBase({ regras: [doBanco, doEndpoint] });
+    const pedidos = capturar('get', '/admin/cenarios/regras/vencedora', {
+      instante,
+      comportamento: doEndpoint,
+      estado: null,
+      defeito: null,
+    });
+    responder('post', '/admin/cenarios/regras/r-endpoint/desligar', { ...doEndpoint, ligada: false });
+    const { usuario } = abrir('/cenarios');
+    const painel = within(await screen.findByRole('region', { name: 'Qual regra vale para esta chamada?' }));
+    await usuario.selectOptions(await painel.findByRole('combobox', { name: 'Banco' }), 'Banco Estável');
+    await usuario.type(painel.getByRole('combobox', { name: 'Endpoint (operationId)' }), 'accountsGetAccounts');
+    await usuario.click(painel.getByRole('button', { name: 'Consultar' }));
+    expect(await painel.findByRole('link', { name: 'r-endpoint' })).toBeInTheDocument();
+
+    responder('get', '/admin/cenarios/regras', [doBanco, { ...doEndpoint, ligada: false }]);
+    responder('get', '/admin/cenarios/regras/vencedora', {
+      instante,
+      comportamento: doBanco,
+      estado: null,
+      defeito: null,
+    });
+    await usuario.click(screen.getByRole('button', { name: /^Desligar r-endpoint/ }));
+
+    expect(await painel.findByRole('link', { name: 'banco lento' })).toBeInTheDocument();
+    expect(painel.queryByRole('link', { name: 'r-endpoint' })).not.toBeInTheDocument();
+    expect(pedidos).toHaveLength(1);
+  });
+
   it('mostra as três vencedoras quando há estado e defeito', async () => {
     const deEstado = regra({
       id: 'r-estado',

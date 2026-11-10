@@ -104,3 +104,52 @@ public sealed class ClientesDoBancoTests() : ClientesDoBancoTestsBase(new Fabric
 
 /// <summary>Com o MongoDB real (agregação por cliente).</summary>
 public sealed class ClientesDoBancoNoMongoTests() : ClientesDoBancoTestsBase(new FabricaDoSimulador().ComMongo());
+
+/// <summary>Recurso sem cliente (órfão) não ocupa lugar na página nem engana o temMais (revisão da 010).</summary>
+public sealed class ClientesOrfaosNoMongoTests : IDisposable
+{
+    private static readonly string[] Estavel = ["banco-estavel"];
+    private readonly string _base = MongoDeTeste.NovaBase();
+    private readonly FabricaDoSimulador _fabrica;
+    private readonly HttpClient _admin;
+    private readonly CancellationToken _ct = TestContext.Current.CancellationToken;
+
+    public ClientesOrfaosNoMongoTests()
+    {
+        _fabrica = new FabricaDoSimulador().ComMongo().Com("Simulador:Mongo:Base", _base);
+        _admin = _fabrica.ClienteAdministracao();
+    }
+
+    public void Dispose() => _fabrica.Dispose();
+
+    private async Task<string> CriarCliente()
+    {
+        using var resposta = await _admin.PostAsJsonAsync(new Uri("/admin/massa/clientes", UriKind.Relative), new { tipo = "PF", bancos = Estavel }, _ct);
+        using var corpo = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync(_ct));
+        return corpo.RootElement.GetProperty("cliente").GetProperty("documento").GetString()!;
+    }
+
+    private async Task<JsonElement> Pagina(int quantidade) =>
+        JsonDocument.Parse(await _admin.GetStringAsync(new Uri($"/admin/massa/clientes?banco=banco-estavel&quantidade={quantidade}", UriKind.Relative), _ct)).RootElement.Clone();
+
+    [Fact]
+    public async Task Orfao_antes_dos_clientes_nao_entra_na_pagina()
+    {
+        var primeiro = await CriarCliente();
+        var segundo = await CriarCliente();
+        using (var repositorio = new Simulador.Massa.Persistencia.RepositorioMongo(MongoDeTeste.Conexao, _base))
+        {
+            var recurso = (await repositorio.ListarRecursosDoCliente(primeiro, _ct))[0];
+            await repositorio.SalvarRecurso(recurso with { ResourceId = "recurso-orfao", Cliente = "0000-sem-cliente" }, _ct);
+        }
+
+        var duas = await Pagina(2);
+        string[] esperados = [.. new[] { primeiro, segundo }.Order(StringComparer.Ordinal)];
+        Assert.Equal(esperados, duas.GetProperty("clientes").EnumerateArray().Select(c => c.GetProperty("documento").GetString()!).ToArray());
+        Assert.False(duas.GetProperty("temMais").GetBoolean());
+
+        var uma = await Pagina(1);
+        Assert.Equal(esperados[0], uma.GetProperty("clientes")[0].GetProperty("documento").GetString());
+        Assert.True(uma.GetProperty("temMais").GetBoolean());
+    }
+}

@@ -15,11 +15,11 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
     const { usuario } = abrir(TELA);
 
     expect(await screen.findByText('Faltam 2 aprovações')).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: 'PENDING_AUTHORISATION' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'Aguardando aprovação' })).toBeInTheDocument();
 
     responder('get', VISAO, visaoPJ(1));
     await usuario.click(screen.getByRole('button', { name: 'Aprovar' }));
-    expect(await screen.findByText('Faltam 1 aprovações')).toBeInTheDocument();
+    expect(await screen.findByText('Falta 1 aprovação')).toBeInTheDocument();
 
     responder(
       'get',
@@ -27,8 +27,8 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
       visaoPJ(0, { decisoes: [{ autor: 'Bruno', decisao: 'aprovada', em: '2026-11-10T11:00:00Z' }] }),
     );
     await usuario.click(screen.getByRole('button', { name: 'Aprovar' }));
-    expect(await screen.findByText('Faltam 0 aprovações')).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: 'AVAILABLE' })).toBeInTheDocument();
+    expect(await screen.findByText('Nenhuma aprovação pendente')).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'Disponível' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aprovar' })).not.toBeInTheDocument();
     expect(within(screen.getByRole('table', { name: 'Decisões' })).getByText('Bruno')).toBeInTheDocument();
     expect(aprovacoes).toHaveLength(2);
@@ -43,11 +43,11 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
     responder('post', `${VISAO}/recusar`, recusada);
     const { usuario } = abrir(TELA);
 
-    await screen.findByText('Faltam 1 aprovações');
+    await screen.findByText('Falta 1 aprovação');
     responder('get', VISAO, recusada);
     await usuario.click(screen.getByRole('button', { name: 'Recusar' }));
 
-    expect(await screen.findByRole('cell', { name: 'UNAVAILABLE' })).toBeInTheDocument();
+    expect(await screen.findByRole('cell', { name: 'Indisponível' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Recusar' })).not.toBeInTheDocument();
   });
 
@@ -61,8 +61,8 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
       }),
     );
     abrir(TELA);
-    expect(await screen.findByText('Situação: vencida')).toBeInTheDocument();
-    expect(screen.getByRole('cell', { name: 'UNAVAILABLE' })).toBeInTheDocument();
+    expect(await screen.findByText('Situação: Vencida (passaram os 15 dias)')).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'Indisponível' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aprovar' })).not.toBeInTheDocument();
   });
 
@@ -75,7 +75,7 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('escrita concorrente');
     responder('get', VISAO, visaoPJ(0));
     await usuario.click(screen.getByRole('button', { name: 'Tentar de novo' }));
-    expect(await screen.findByText('Faltam 0 aprovações')).toBeInTheDocument();
+    expect(await screen.findByText('Nenhuma aprovação pendente')).toBeInTheDocument();
   });
 
   it('revogar pede confirmação; REJECTED mostra quem rejeitou e não oferece revogar', async () => {
@@ -92,8 +92,9 @@ describe('Visão do consentimento e alçadas (UI14)', () => {
     );
     await usuario.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Confirmar' }));
 
-    expect(await screen.findByText('USER (CUSTOMER_MANUALLY_REVOKED)')).toBeInTheDocument();
-    expect(screen.getByTestId('estado')).toHaveTextContent('REJECTED');
+    expect(await screen.findByText('Pelo cliente')).toHaveAttribute('title', 'USER');
+    expect(screen.getByText(/(CUSTOMER_MANUALLY_REVOKED)/)).toBeInTheDocument();
+    expect(screen.getByTestId('estado')).toHaveTextContent('Rejeitado');
     expect(screen.queryByRole('button', { name: 'Revogar' })).not.toBeInTheDocument();
     await waitFor(() => expect(revogacoes).toHaveLength(1));
   });

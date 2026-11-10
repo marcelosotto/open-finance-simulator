@@ -11,7 +11,6 @@ namespace Simulador.Cenarios.Http;
 /// <summary>API de administração (contracts/admin-cenarios.md).</summary>
 internal static class RotasDeCenarios
 {
-    private const string CabecalhoDoAutor = "x-sim-autor";
     private const string Regras = "/admin/cenarios/regras";
     private const string Pacotes = "/admin/cenarios/pacotes";
     private const string RotaDeDefeitos = "/admin/cenarios/defeitos";
@@ -94,7 +93,7 @@ internal static class RotasDeCenarios
         }
     }
 
-    private static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    private static string? Autor(HttpContext contexto) => Simulador.Comum.Http.AutorDoPedido.Ler(contexto);
 
     private static IResult Json<T>(T valor) => Results.Json(valor, JsonDosCenarios.Opcoes);
 

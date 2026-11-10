@@ -21,6 +21,7 @@ public sealed class AmbienteTests
         Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
         using var json = JsonDocument.Parse(await resposta.Content.ReadAsStringAsync(_ct));
         Assert.Equal(esperada, json.RootElement.GetProperty("marca").GetString());
+        Assert.Equal(FabricaDoSimulador.PortaOpenFinance, json.RootElement.GetProperty("portaOpenFinance").GetInt32());
     }
 
     [Fact]

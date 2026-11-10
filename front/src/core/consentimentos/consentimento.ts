@@ -212,3 +212,12 @@ export interface RepositorioDeConsentimentos {
   receptoras(): Promise<Either<Falha, readonly Receptora[]>>;
   criarReceptora(nome: string): Promise<Either<Falha, ReceptoraCriada>>;
 }
+
+const SUFIXO_DA_RECEPTORA_PADRAO = 'p-receptora-padrao';
+
+/** A receptora padrão do ambiente (RN124), reconhecida pelo sufixo do id; sem ela, a primeira da lista. */
+export const receptoraPadrao = (receptoras: readonly Receptora[]): Receptora | undefined =>
+  receptoras.find(
+    (r) =>
+      r.organisationId === SUFIXO_DA_RECEPTORA_PADRAO || r.organisationId.endsWith(`-${SUFIXO_DA_RECEPTORA_PADRAO}`),
+  ) ?? receptoras[0];

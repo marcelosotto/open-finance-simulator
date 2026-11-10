@@ -37,13 +37,14 @@ export const AbaRelogio = ({ banco }: { readonly banco: Instituicao }) => {
           <Campo
             className="flex-1"
             rotulo={t('instituicoes.relogio.fixarEm')}
-            placeholder="2026-12-31T23:59:50Z"
+            type="datetime-local"
+            step={1}
             value={fixadoEm}
             onChange={(e) => setFixadoEm(e.target.value)}
           />
           <Botao
             disabled={fixadoEm.trim() === '' || acao.ocupado}
-            onClick={() => acao.executar({ fixadoEm: fixadoEm.trim() })}
+            onClick={() => acao.executar({ fixadoEm: new Date(fixadoEm).toISOString() })}
           >
             {t('instituicoes.relogio.fixar')}
           </Botao>

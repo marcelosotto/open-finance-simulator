@@ -58,3 +58,13 @@ describe('Layout (UI01, UI16)', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('Marca do ambiente indisponível (revisão da 010)', () => {
+  it('mostra um aviso discreto e a tela continua', async () => {
+    responder('get', '/admin/ambiente', { erros: ['fora do ar'] }, 500);
+    responder('get', '/admin/instituicoes', [resumo('banco-estavel', 'Banco Estável')]);
+    abrir('/bancos');
+    expect(await screen.findByText('Não foi possível ler a marca do ambiente.')).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Banco Estável' })).toBeInTheDocument();
+  });
+});

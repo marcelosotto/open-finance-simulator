@@ -10,14 +10,17 @@ import { ListaDeErros } from '../comum/estado';
 import { Secao, Tabela, Titulo } from '../comum/titulo';
 import { dataHora } from '../comum/datas';
 import { CHAVES } from './chaves';
+import { Estado, useRotulos } from '../comum/rotulos';
+import { CHAVES as CHAVES_DA_MASSA } from '../massa/chaves';
 
 /** UI14: quantas aprovações faltam, com aprovar e recusar só quando há pendência válida (RN98, RN99). */
 const Alcada = ({ visao, aoMudar }: { readonly visao: VisaoDoConsentimento; readonly aoMudar: () => void }) => {
   const { t } = useTranslation();
+  const rotulos = useRotulos();
   const decidir = useCaso(TOKENS_DOS_CONSENTIMENTOS.Decidir);
   // Em 409 (decisão concorrente, prazo vencido) a tela relê a visão (edge case da spec).
   const acao = useAcao((decisao: 'aprovar' | 'recusar') => decidir.executar({ consentId: visao.consentId, decisao }), {
-    invalidar: [CHAVES.visao(visao.consentId)],
+    invalidar: [CHAVES.visao(visao.consentId), CHAVES_DA_MASSA.cliente(visao.cliente)],
   });
   const alcada = visao.alcada;
   return (
@@ -26,9 +29,9 @@ const Alcada = ({ visao, aoMudar }: { readonly visao: VisaoDoConsentimento; read
         <p>{t('consentimentos.visao.semAlcada')}</p>
       ) : (
         <div className="space-y-2">
-          <p>{t('consentimentos.visao.situacao', { situacao: alcada.situacao })}</p>
+          <p>{t('consentimentos.visao.situacao', { situacao: rotulos.alcada(alcada.situacao) })}</p>
           <p role="status" className="font-semibold">
-            {t('consentimentos.visao.faltam', { n: alcada.aprovacoesPendentes })}
+            {t('consentimentos.visao.faltam', { count: alcada.aprovacoesPendentes })}
           </p>
           {alcada.prazo !== null && <p>{t('consentimentos.visao.prazoDaAlcada', { prazo: dataHora(alcada.prazo) })}</p>}
           {podeDecidir(visao) && (
@@ -55,7 +58,7 @@ const Alcada = ({ visao, aoMudar }: { readonly visao: VisaoDoConsentimento; read
             {visao.decisoes.map((d, i) => (
               <tr key={`${d.em}-${i}`}>
                 <td>{d.autor}</td>
-                <td>{d.decisao}</td>
+                <td>{rotulos.decisao(d.decisao)}</td>
                 <td title={d.em}>{dataHora(d.em)}</td>
               </tr>
             ))}
@@ -66,10 +69,12 @@ const Alcada = ({ visao, aoMudar }: { readonly visao: VisaoDoConsentimento; read
   );
 };
 
-const Revogacao = ({ consentId }: { readonly consentId: string }) => {
+const Revogacao = ({ consentId, cliente }: { readonly consentId: string; readonly cliente: string }) => {
   const { t } = useTranslation();
   const revogar = useCaso(TOKENS_DOS_CONSENTIMENTOS.Revogar);
-  const acao = useAcao((id: string) => revogar.executar(id), { invalidar: [CHAVES.visao(consentId)] });
+  const acao = useAcao((id: string) => revogar.executar(id), {
+    invalidar: [CHAVES.visao(consentId), CHAVES_DA_MASSA.resumo, CHAVES_DA_MASSA.cliente(cliente)],
+  });
   return (
     <div className="flex flex-col items-end gap-2">
       <Confirmacao
@@ -87,6 +92,7 @@ const Revogacao = ({ consentId }: { readonly consentId: string }) => {
 /** A visão admin: estado efetivo e recursos pelo relógio do banco, sem a regra de cenário (RN97). */
 export const Consentimento = () => {
   const { t } = useTranslation();
+  const rotulos = useRotulos();
   const { consentId = '' } = useParams();
   const obter = useCaso(TOKENS_DOS_CONSENTIMENTOS.Obter);
   const consulta = useConsulta(CHAVES.visao(consentId), () => obter.executar(consentId));
@@ -96,7 +102,7 @@ export const Consentimento = () => {
         <>
           <Titulo
             ajuda="consentimento"
-            acoes={podeRevogar(visao) ? <Revogacao consentId={visao.consentId} /> : undefined}
+            acoes={podeRevogar(visao) ? <Revogacao consentId={visao.consentId} cliente={visao.cliente} /> : undefined}
           >
             {t('consentimentos.visao.titulo', { id: visao.consentId })}
           </Titulo>
@@ -104,7 +110,7 @@ export const Consentimento = () => {
             <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-sm">
               <dt>{t('consentimentos.visao.estado')}</dt>
               <dd data-testid="estado" className="font-semibold">
-                {visao.estado}
+                <Estado codigo={visao.estado} />
               </dd>
               <dt>{t('consentimentos.visao.cliente')}</dt>
               <dd>{visao.cliente}</dd>
@@ -120,7 +126,8 @@ export const Consentimento = () => {
                 <>
                   <dt>{t('consentimentos.visao.rejeitadoPor')}</dt>
                   <dd>
-                    {visao.rejeitadoPor} {visao.razao !== null && `(${visao.razao})`}
+                    <span title={visao.rejeitadoPor}>{rotulos.rejeitadoPor(visao.rejeitadoPor)}</span>{' '}
+                    {visao.razao !== null && `(${visao.razao})`}
                   </dd>
                 </>
               )}
@@ -143,7 +150,9 @@ export const Consentimento = () => {
                   <tr key={r.resourceId}>
                     <td className="font-mono text-xs">{r.resourceId}</td>
                     <td>{r.tipo}</td>
-                    <td>{r.estado}</td>
+                    <td>
+                      <Estado codigo={r.estado} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

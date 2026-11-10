@@ -183,22 +183,19 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
             return [.. todos.Select(Ler<ClienteSimulado>)];
         }
 
-        // Um cliente por documento entre os recursos do banco, paginado no próprio MongoDB.
+        // Um cliente por documento entre os recursos do banco. O cliente é juntado antes de paginar: recurso sem
+        // cliente (órfão) não ocupa lugar na página nem engana o temMais (revisão da 010).
+        const string Cliente = "c";
         var grupos = await _recursos.Aggregate()
             .Match(Filtro.Eq(CampoBanco, banco))
             .Group(new BsonDocument(Id, "$" + CampoCliente))
+            .Lookup(_clientes.CollectionNamespace.CollectionName, Id, Id, Cliente)
+            .Match(Filtro.SizeGt(Cliente, 0))
             .Sort(new BsonDocument(Id, 1))
             .Skip(inicio)
             .Limit(quantidade)
             .ToListAsync(cancelamento).ConfigureAwait(false);
-        var documentos = grupos.Select(g => g[Id].AsString).ToList();
-        if (documentos.Count == 0)
-        {
-            return [];
-        }
-
-        var clientes = await _clientes.Find(Filtro.In(Id, documentos)).ToListAsync(cancelamento).ConfigureAwait(false);
-        return [.. clientes.Select(Ler<ClienteSimulado>).OrderBy(c => c.Documento, StringComparer.Ordinal)];
+        return [.. grupos.Select(g => Ler<ClienteSimulado>(g[Cliente][0].AsBsonDocument))];
     }
 
     public async Task<ContagemDaMassa> Contar(CancellationToken cancelamento) => new(

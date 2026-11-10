@@ -123,6 +123,9 @@ public interface IAmbienteDosConsentimentos
     void RegistrarNatureza(HttpContext contexto, string natureza);
 
     Task RegistrarHistorico(string? autor, string acao, string campo, string? antes, string? depois, CancellationToken cancelamento);
+
+    /// <summary>Se o histórico já tem a ação com aquele valor depois, para gravações reexecutáveis.</summary>
+    Task<bool> HistoricoRegistrado(string acao, string depois, CancellationToken cancelamento);
 }
 
 /// <summary>Formato JSON da administração e da gravação.</summary>

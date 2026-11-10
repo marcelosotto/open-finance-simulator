@@ -11,7 +11,7 @@ export const textosDasInstituicoes = {
     titulo: 'Novo banco',
     nome: 'Nome',
     perfil: 'Perfil de comportamento',
-    explicacao: 'Só nome e perfil. O resto vem preenchido e pode ser ajustado em seguida (RN03).',
+    explicacao: 'Só nome e perfil. O resto vem preenchido e pode ser ajustado em seguida.',
   },
   abas: {
     geral: 'Geral',
@@ -74,7 +74,7 @@ export const textosDasInstituicoes = {
     real: 'Relógio real.',
     fixado: 'Fixado em {{hora}}.',
     acelerado: 'Acelerado {{fator}}× desde {{hora}}.',
-    fixarEm: 'Fixar em (UTC, ISO 8601)',
+    fixarEm: 'Fixar em (data e hora do seu navegador)',
     fixar: 'Fixar',
     fator: 'Fator de aceleração',
     acelerar: 'Acelerar',

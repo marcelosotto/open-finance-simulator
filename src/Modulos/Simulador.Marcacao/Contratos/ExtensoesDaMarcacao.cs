@@ -24,11 +24,14 @@ public static class ExtensoesDaMarcacao
         return servicos;
     }
 
-    /// <summary><c>GET /admin/ambiente</c>: a marca da configuração, para a tela mostrar (UI01, RN72). Vazia em produção.</summary>
-    public static IEndpointRouteBuilder MapearAmbiente(this IEndpointRouteBuilder administracao)
+    /// <summary>
+    /// <c>GET /admin/ambiente</c>: a marca da configuração, para a tela mostrar (UI01, RN72), vazia em produção. A
+    /// porta das APIs Open Finance vai junto, para a tela montar o exemplo de token sem supor 8080 (UI18).
+    /// </summary>
+    public static IEndpointRouteBuilder MapearAmbiente(this IEndpointRouteBuilder administracao, int portaOpenFinance)
     {
         ArgumentNullException.ThrowIfNull(administracao);
-        administracao.MapGet("/admin/ambiente", (MarcaDoAmbiente marca) => Results.Json(new { marca = marca.Valor }));
+        administracao.MapGet("/admin/ambiente", (MarcaDoAmbiente marca) => Results.Json(new { marca = marca.Valor, portaOpenFinance }));
         return administracao;
     }
 

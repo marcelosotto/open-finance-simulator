@@ -3,7 +3,7 @@
 Porta de administração, sem autenticação (RN71). Erros: `{ "erros": [...] }`. As demais rotas usadas pela tela estão nos contratos das specs 002, 003, 004, 007, 008 e 009.
 
 ## `GET /admin/ambiente` (Q2)
-- 200: `{ "marca": "hml" }`. Com a marca vazia: `{ "marca": "" }`. O valor é `Simulador:MarcaDoAmbiente`, lido na subida (RN66).
+- 200: `{ "marca": "hml", "portaOpenFinance": 8080 }`. Com a marca vazia: `{ "marca": "", ... }`. A porta é `Simulador:PortaOpenFinance`, para a tela montar o exemplo de token (UI18). O valor é `Simulador:MarcaDoAmbiente`, lido na subida (RN66).
 
 ## `GET /admin/cenarios/regras/vencedora?instituicao=&endpoint=&cliente=&recurso=` (Q9)
 - `instituicao` e `endpoint` (`operationId`) obrigatórios; `cliente` e `recurso` opcionais.
@@ -34,3 +34,11 @@ Porta de administração, sem autenticação (RN71). Erros: `{ "erros": [...] }`
 
 ## Receptora padrão (RN124)
 - Ao subir, o simulador cadastra a receptora de `Simulador:ReceptoraPadrao` (nome padrão `XP`) se o `organisationId` ainda não existe. Ela aparece em `GET /admin/receptoras` como qualquer outra, com usuário e senha de teste.
+
+## Portas (revisão da 010)
+- As APIs Open Finance e a administração se separam pela **porta do socket** (`Connection.LocalPort`), nunca pelo cabeçalho Host. Um Host forjado (`x:8081` enviado à 8080, ou o inverso) cai em 404: a administração, com as senhas de teste das receptoras, e o back-office ficam só na 8081, que o Compose publica em `127.0.0.1`.
+- Na 8081, método diferente de GET ou HEAD em caminho de página responde 404, como um arquivo inexistente. Em `/admin` e `/saude`, o método errado continua 405.
+- `index.html` sai com `Cache-Control: no-cache`; os arquivos do build com hash no nome, com `public, max-age=31536000, immutable`.
+
+## Autor (revisão da 010)
+- O back-office manda `x-sim-autor` em percent-encoding UTF-8 (`Jo%C3%A3o`), porque o cabeçalho só aceita ASCII. A administração decodifica; nome em ASCII puro, sem `%`, chega igual.

@@ -2,14 +2,15 @@
 export const textosDoInicio = {
   titulo: 'Primeiros passos',
   feito: 'Feito',
+  jaPronto: 'Já vem pronto',
   aFazer: 'A fazer',
   opcional: 'Quando quiser',
   abrir: 'Abrir a tela',
   passos: {
     banco: {
-      titulo: 'Criar um banco',
+      titulo: 'Escolher um banco',
       texto:
-        'Os bancos são as instituições de onde o seu app lê os dados. Já vêm {{n}} bancos prontos; crie outro se quiser um comportamento próprio.',
+        'Os bancos são as instituições de onde o seu app lê os dados. Já há {{n}} bancos ativos, e você pode usar qualquer um. Crie outro em Bancos → Novo banco só se quiser um comportamento próprio.',
     },
     clientes: {
       titulo: 'Gerar clientes (massa)',
@@ -28,7 +29,9 @@ export const textosDoInicio = {
     api: {
       titulo: 'Testar o app chamando a API',
       texto:
-        'O app pede um token no banco com o usuário e a senha da receptora e chama as APIs Open Finance na porta 8080.',
+        'O app pede um token no banco com o usuário e a senha da receptora e chama as APIs Open Finance na porta {{porta}}, a configurada no simulador. Se o Compose publicar outra porta, troque no exemplo.',
+      semPorta:
+        'O app pede um token no banco com o usuário e a senha da receptora e chama as APIs Open Finance. Não foi possível ler a porta da configuração.',
       receptora: 'Receptora {{nome}}: usuário {{usuario}}, senha {{senha}}.',
       semReceptora: 'Ainda não há receptora. Crie uma em Receptoras.',
       exemplo: 'Exemplo de pedido de token',

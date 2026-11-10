@@ -10,7 +10,6 @@ namespace Simulador.Massa.Http;
 /// <summary>API de administração (contracts/admin-massa.md).</summary>
 internal static class RotasDaMassa
 {
-    private const string CabecalhoDoAutor = "x-sim-autor";
     private const string Base = "/admin/massa";
 
     public static void Mapear(IEndpointRouteBuilder administracao)
@@ -114,7 +113,7 @@ internal static class RotasDaMassa
         });
     }
 
-    private static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    private static string? Autor(HttpContext contexto) => Simulador.Comum.Http.AutorDoPedido.Ler(contexto);
 
     private static async Task<IResult> Com<T>(HttpContext contexto, Func<T, Task<IResult>> acao)
         where T : class

@@ -25,6 +25,8 @@ import { Secao, Titulo } from '../comum/titulo';
 import { PASSOS, useMenu } from './menu';
 import { CHAVES } from './chaves';
 import { SeletorDeCliente } from '../massa/SeletorDeCliente';
+import { CHAVES as CHAVES_DA_MASSA } from '../massa/chaves';
+import { useRotulos } from '../comum/rotulos';
 
 const Navegacao = ({ podeAvancar, aoAvancar }: { readonly podeAvancar: boolean; readonly aoAvancar?: () => void }) => {
   const { t } = useTranslation();
@@ -157,6 +159,7 @@ const SecaoDeOrigem = ({ opcoes, origem }: { readonly opcoes: OpcoesDoMenu; read
 /** Grupos abríveis, com as permissões marcadas e desmarcáveis (Q6), e a seleção de origem (UI13). */
 const PassoPermissoes = ({ opcoes }: { readonly opcoes: OpcoesDoMenu }) => {
   const { t } = useTranslation();
+  const rotulos = useRotulos();
   const { rascunho, atualizar } = useMenu();
   if (opcoes.semProduto) {
     return (
@@ -179,18 +182,18 @@ const PassoPermissoes = ({ opcoes }: { readonly opcoes: OpcoesDoMenu }) => {
               <summary className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
-                  aria-label={t('consentimentos.menu.grupo', { nome: grupo.nome })}
+                  aria-label={t('consentimentos.menu.grupo', { nome: rotulos.grupo(grupo.nome) })}
                   checked={estado === 'marcado'}
                   ref={(caixa) => {
                     if (caixa) caixa.indeterminate = estado === 'parcial';
                   }}
                   onChange={() => atualizar((r) => alternarGrupo(r, grupo, opcoes.grupos))}
                 />
-                {grupo.nome}
+                {rotulos.grupo(grupo.nome)}
               </summary>
               <div
                 role="group"
-                aria-label={t('consentimentos.menu.verPermissoes', { nome: grupo.nome })}
+                aria-label={t('consentimentos.menu.verPermissoes', { nome: rotulos.grupo(grupo.nome) })}
                 className="py-1 pl-6"
               >
                 {grupo.permissoes.map((permissao) => (
@@ -270,6 +273,8 @@ const PassoConfirmacao = ({ opcoes }: { readonly opcoes: OpcoesDoMenu }) => {
   const { rascunho, voltar, recomecar } = useMenu();
   const criar = useCaso(TOKENS_DOS_CONSENTIMENTOS.Criar);
   const acao = useAcao(() => criar.executar({ rascunho, opcoes }), {
+    // Primeiros passos e a tela do cliente contam consentimentos: precisam ser relidos.
+    invalidar: [CHAVES_DA_MASSA.resumo, CHAVES_DA_MASSA.cliente(rascunho.cliente.trim())],
     aoTerminar: (visao) => {
       recomecar();
       navegar(`/consentimentos/${encodeURIComponent(visao.consentId)}`);
