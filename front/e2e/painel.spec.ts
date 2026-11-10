@@ -84,8 +84,9 @@ test.describe('Funcionalidade: Criar consentimento no painel', () => {
   test('Cenário: Permissões de pessoa física e jurídica', async ({ page, request }) => {
     await abrirPermissoes(page, await prepararMassa(request, 'PF'));
     await expect(page.getByText('Cliente PF')).toBeVisible();
-    await expect(page.getByRole('checkbox', { name: 'CUSTOMERS_PERSONAL_IDENTIFICATIONS_READ' })).toBeAttached();
-    await expect(page.getByRole('checkbox', { name: /CUSTOMERS_BUSINESS_/ })).toHaveCount(0);
+    await page.getByText('cadastro-identificacao', { exact: true }).click();
+    await expect(page.getByRole('checkbox', { name: 'CUSTOMERS_PERSONAL_IDENTIFICATIONS_READ' })).toBeVisible();
+    await expect(page.getByText(/CUSTOMERS_BUSINESS_/)).toHaveCount(0);
   });
 
   // RN98

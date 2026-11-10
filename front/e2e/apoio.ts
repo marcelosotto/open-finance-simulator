@@ -50,7 +50,7 @@ export const abrirPermissoes = async (pagina: Page, massa: Massa) => {
   await pagina.getByRole('combobox', { name: 'Banco' }).selectOption(massa.banco);
   await pagina.getByRole('combobox', { name: 'Receptora' }).selectOption(massa.receptora.organisationId);
   await avancar(pagina);
-  await expect(pagina.getByRole('group', { name: /^Permissões de / }).first()).toBeAttached();
+  await expect(pagina.getByRole('group', { name: 'Grupos de permissões' })).toBeVisible();
 };
 
 export const marcarGrupo = (pagina: Page, nome: string) =>
