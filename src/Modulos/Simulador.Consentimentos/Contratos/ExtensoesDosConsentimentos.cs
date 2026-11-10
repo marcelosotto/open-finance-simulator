@@ -59,10 +59,28 @@ public static class ExtensoesDosConsentimentos
     }
 }
 
-/// <summary>Prepara os índices na subida.</summary>
-internal sealed class InicioDosConsentimentos(IRepositorioDeReceptoras repositorio) : IHostedService
+/// <summary>Prepara os índices e garante a receptora padrão na subida (RN124).</summary>
+internal sealed class InicioDosConsentimentos(IRepositorioDeReceptoras repositorio, IServiceProvider provedor, IConfiguration configuracao, TimeProvider relogio) : IHostedService
 {
-    public Task StartAsync(CancellationToken cancellationToken) => repositorio.Preparar(cancellationToken);
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await repositorio.Preparar(cancellationToken).ConfigureAwait(false);
+        var padrao = ReceptoraPadrao.Ler(configuracao);
+        if (!padrao.Ligada)
+        {
+            return;
+        }
+
+        var ambiente = provedor.GetRequiredService<IAmbienteDosConsentimentos>();
+        var receptora = padrao.Criar(ambiente.Marca, relogio.GetUtcNow());
+
+        // Idempotente: já cadastrada (por esta ou por outra instância), nada muda, nem nome nem credenciais.
+        if (await repositorio.Obter(receptora.OrganisationId, cancellationToken).ConfigureAwait(false) is null
+            && await repositorio.Inserir(receptora, cancellationToken).ConfigureAwait(false))
+        {
+            await ambiente.RegistrarHistorico(ReceptoraPadrao.Autor, "receptora-criada", "receptora", null, receptora.OrganisationId, cancellationToken).ConfigureAwait(false);
+        }
+    }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

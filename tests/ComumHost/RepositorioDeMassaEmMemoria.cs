@@ -153,6 +153,16 @@ public sealed class RepositorioDeMassaEmMemoria : IRepositorioDeMassa
     public Task<bool> TemMassaNoBanco(string banco, CancellationToken cancelamento) =>
         Task.FromResult(Ler(() => _recursos.Values.Any(r => r.Banco == banco) || _consentimentos.Values.Any(c => c.Banco == banco)));
 
+    public Task<IReadOnlyList<ClienteSimulado>> ListarClientes(string? banco, int inicio, int quantidade, CancellationToken cancelamento) =>
+        Lista(() => _clientes.Values
+            .Where(c => banco is null || _recursos.Values.Any(r => r.Banco == banco && r.Cliente == c.Documento))
+            .OrderBy(c => c.Documento, StringComparer.Ordinal)
+            .Skip(inicio)
+            .Take(quantidade));
+
+    public Task<ContagemDaMassa> Contar(CancellationToken cancelamento) =>
+        Task.FromResult(Ler(() => new ContagemDaMassa(_clientes.Count, _consentimentos.Count, _recursos.Count, _lotes.Count)));
+
     public Task<ResumoDeMassa> ContarDoLote(string id, CancellationToken cancelamento) => Task.FromResult(Ler(() => new ResumoDeMassa(
         _clientes.Values.Count(c => c.LoteId == id),
         _consentimentos.Values.Count(c => c.LoteId == id),

@@ -52,6 +52,12 @@ internal static class RotasDaMassa
         administracao.MapPost(Base + "/clientes", (HttpContext c, CadastroDeMassa cadastro) =>
             Com<PedidoDeCliente>(c, async p => Responder(await cadastro.CriarCliente(p, Autor(c), c.RequestAborted).ConfigureAwait(false), StatusCodes.Status201Created)));
 
+        administracao.MapGet(Base + "/clientes", async (string? banco, int? inicio, int? quantidade, CadastroDeMassa cadastro, CancellationToken t) =>
+            Responder(await cadastro.ListarClientes(banco, inicio, quantidade, t).ConfigureAwait(false)));
+
+        administracao.MapGet(Base + "/resumo", async (CadastroDeMassa cadastro, CancellationToken t) =>
+            Json(await cadastro.Resumo(t).ConfigureAwait(false)));
+
         administracao.MapGet(Base + "/clientes/{documento}", async (string documento, CadastroDeMassa cadastro, CancellationToken t) =>
             await cadastro.ObterCliente(documento, t).ConfigureAwait(false) is { } massa ? Json(massa) : NaoEncontrado("cliente não encontrado"));
 

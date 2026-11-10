@@ -35,6 +35,8 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
     public FabricaDoSimulador(string? marcaDoAmbiente = "hml")
     {
         _configuracao["Simulador:MarcaDoAmbiente"] = marcaDoAmbiente ?? string.Empty;
+        // A receptora padrão (RN124) fica desligada nos testes de outras specs; os dela usam ComReceptoraPadrao.
+        _configuracao["Simulador:ReceptoraPadrao:Nome"] = string.Empty;
         _configuracao["Simulador:PastaDasSpecs"] = Repositorio.PastaDasSpecs();
         _configuracao["Simulador:ArquivoDaTrava"] = Repositorio.Caminho("specs.lock.json");
         _configuracao["Simulador:ArquivoDaTabela"] = Repositorio.Caminho("config", "tabela-de-endpoints.json");
@@ -58,6 +60,9 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         _configuracao[chave] = valor;
         return this;
     }
+
+    /// <summary>Sobe com a receptora padrão de RN124; sem nome, usa o padrão XP.</summary>
+    public FabricaDoSimulador ComReceptoraPadrao(string nome = "XP") => Com("Simulador:ReceptoraPadrao:Nome", nome);
 
     /// <summary>Usa o MongoDB em contêiner, em vez do cadastro em memória.</summary>
     public FabricaDoSimulador ComMongo()
