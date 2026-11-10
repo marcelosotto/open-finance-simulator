@@ -88,6 +88,31 @@ internal sealed class ServicoDeCenarios(
     public async Task<string?> EstadoSobreposto(ChamadaAvaliada chamada, DateTimeOffset instante, CancellationToken cancelamento) =>
         SelecaoDeRegras.VencedoraDeEstado((await Ativas(cancelamento).ConfigureAwait(false)).Regras, chamada, instante)?.Efeito.Estado;
 
+    /// <summary>Qual regra venceria numa chamada, pelas regras ativas do mesmo retrato do pipeline e pela hora do banco; não sorteia (UI06).</summary>
+    public async Task<Saida<VencedorasDaChamada>> Vencedoras(string? instituicao, string? endpoint, string? cliente, string? recurso, CancellationToken cancelamento)
+    {
+        if (string.IsNullOrWhiteSpace(instituicao) || string.IsNullOrWhiteSpace(endpoint))
+        {
+            return new Saida<VencedorasDaChamada>(TipoDeSaida.Invalido, Erros: ["instituicao e endpoint são obrigatórios"]);
+        }
+
+        if (ambiente.StatusDeclaradosDe(endpoint) is not { } declarados)
+        {
+            return new Saida<VencedorasDaChamada>(TipoDeSaida.Invalido, Erros: ["endpoint desconhecido"]);
+        }
+
+        if (await ambiente.HoraDoBanco(instituicao, cancelamento).ConfigureAwait(false) is not { } instante)
+        {
+            return new Saida<VencedorasDaChamada>(TipoDeSaida.NaoEncontrado, Erros: ["instituição não encontrada"]);
+        }
+
+        var regras = (await Ativas(cancelamento).ConfigureAwait(false)).Regras;
+        var chamada = new ChamadaAvaliada(instituicao, endpoint, Vazio(cliente), Vazio(recurso));
+        return new Saida<VencedorasDaChamada>(TipoDeSaida.Ok, SelecaoDeRegras.Vencedoras(regras, chamada, instante, declarados));
+    }
+
+    private static string? Vazio(string? valor) => string.IsNullOrWhiteSpace(valor) ? null : valor;
+
     public async Task<IReadOnlySet<string>> AnomaliasLigadas(string instituicao, CancellationToken cancelamento) =>
         (await Ativas(cancelamento).ConfigureAwait(false)).Anomalias.GetValueOrDefault(instituicao) ?? Nenhuma;
 

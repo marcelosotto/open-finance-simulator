@@ -12,7 +12,6 @@ namespace Simulador.Instituicoes.Http;
 /// <summary>API de administração (contracts/admin-instituicoes.md).</summary>
 internal static class RotasDeInstituicoes
 {
-    private const string CabecalhoDoAutor = "x-sim-autor";
     private const string Base = "/admin/instituicoes";
 
     public static void Mapear(IEndpointRouteBuilder administracao)
@@ -112,7 +111,7 @@ internal static class RotasDeInstituicoes
                 : Json(await cadastro.Historico(endereco, cancelamento).ConfigureAwait(false)));
     }
 
-    private static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    private static string? Autor(HttpContext contexto) => Simulador.Comum.Http.AutorDoPedido.Ler(contexto);
 
     private static IResult Json<T>(T valor) => Results.Json(valor, JsonDasInstituicoes.Opcoes);
 

@@ -11,7 +11,6 @@ namespace Simulador.Cenarios.Http;
 /// <summary>API de administração (contracts/admin-cenarios.md).</summary>
 internal static class RotasDeCenarios
 {
-    private const string CabecalhoDoAutor = "x-sim-autor";
     private const string Regras = "/admin/cenarios/regras";
     private const string Pacotes = "/admin/cenarios/pacotes";
     private const string RotaDeDefeitos = "/admin/cenarios/defeitos";
@@ -22,6 +21,13 @@ internal static class RotasDeCenarios
     public static void Mapear(IEndpointRouteBuilder administracao)
     {
         administracao.MapGet(Regras, async (ServicoDeCenarios servico, CancellationToken t) => Json(await servico.Regras(t).ConfigureAwait(false)));
+        administracao.MapGet(Regras + "/vencedora", async (string? instituicao, string? endpoint, string? cliente, string? recurso, ServicoDeCenarios servico, CancellationToken t) =>
+            await servico.Vencedoras(instituicao, endpoint, cliente, recurso, t).ConfigureAwait(false) switch
+            {
+                { Tipo: TipoDeSaida.Ok } saida => Json(saida.Valor),
+                { Tipo: TipoDeSaida.NaoEncontrado } saida => Erro(StatusCodes.Status404NotFound, [.. saida.Erros!]),
+                var saida => Erro(StatusCodes.Status422UnprocessableEntity, [.. saida.Erros!]),
+            });
         administracao.MapGet(Regras + "/{id}", async (string id, ServicoDeCenarios servico, CancellationToken t) =>
             await servico.Regra(id, t).ConfigureAwait(false) is { } regra ? Json(regra) : Erro(StatusCodes.Status404NotFound, RegraInexistente));
 
@@ -87,7 +93,7 @@ internal static class RotasDeCenarios
         }
     }
 
-    private static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    private static string? Autor(HttpContext contexto) => Simulador.Comum.Http.AutorDoPedido.Ler(contexto);
 
     private static IResult Json<T>(T valor) => Results.Json(valor, JsonDosCenarios.Opcoes);
 

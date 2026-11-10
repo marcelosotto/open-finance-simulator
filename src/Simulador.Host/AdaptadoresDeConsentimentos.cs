@@ -67,6 +67,9 @@ internal sealed class AmbienteDosConsentimentos(
     public Task RegistrarHistorico(string? autor, string acao, string campo, string? antes, string? depois, CancellationToken cancelamento) =>
         ambiente.RegistrarHistorico(new EventoDaMassa(relogio.GetUtcNow(), string.IsNullOrWhiteSpace(autor) ? "operador" : autor, acao, [new MudancaDaMassa(campo, antes, depois)]), cancelamento);
 
+    public async Task<bool> HistoricoRegistrado(string acao, string depois, CancellationToken cancelamento) =>
+        (await ambiente.LerHistorico(cancelamento).ConfigureAwait(false)).Any(e => e.Acao == acao && e.Mudancas.Any(m => m.Depois == depois));
+
     private static DadosDoRecurso Mapear(Recurso r) => new(r.ResourceId, r.Cliente, r.Banco, r.Tipo, r.Estado, r.Natureza, r.Versao);
 
     private static DadosDoConsentimento Mapear(Consentimento c) => new(

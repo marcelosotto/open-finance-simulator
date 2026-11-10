@@ -27,6 +27,9 @@ public sealed class ContadoresEmMemoria : IContadores
 
     public void Definir(string chave, long total) => _totais[chave] = total;
 
+    /// <summary>Chaves já somadas.</summary>
+    public IEnumerable<string> Chaves => _totais.Keys;
+
     /// <summary>Define o total de todas as cotas já existentes cuja chave contém o trecho.</summary>
     public void DefinirCota(string trecho, long total)
     {

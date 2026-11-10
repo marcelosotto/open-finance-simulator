@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -35,6 +36,8 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
     public FabricaDoSimulador(string? marcaDoAmbiente = "hml")
     {
         _configuracao["Simulador:MarcaDoAmbiente"] = marcaDoAmbiente ?? string.Empty;
+        // A receptora padrão (RN124) fica desligada nos testes de outras specs; os dela usam ComReceptoraPadrao.
+        _configuracao["Simulador:ReceptoraPadrao:Nome"] = string.Empty;
         _configuracao["Simulador:PastaDasSpecs"] = Repositorio.PastaDasSpecs();
         _configuracao["Simulador:ArquivoDaTrava"] = Repositorio.Caminho("specs.lock.json");
         _configuracao["Simulador:ArquivoDaTabela"] = Repositorio.Caminho("config", "tabela-de-endpoints.json");
@@ -58,6 +61,9 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
         _configuracao[chave] = valor;
         return this;
     }
+
+    /// <summary>Sobe com a receptora padrão de RN124; sem nome, usa o padrão XP.</summary>
+    public FabricaDoSimulador ComReceptoraPadrao(string nome = "XP") => Com("Simulador:ReceptoraPadrao:Nome", nome);
 
     /// <summary>Usa o MongoDB em contêiner, em vez do cadastro em memória.</summary>
     public FabricaDoSimulador ComMongo()
@@ -109,8 +115,9 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
 
     public HttpClient ClienteAdministracao() => Cliente(PortaAdministracao);
 
-    private HttpClient Cliente(int porta) =>
-        CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri($"http://localhost:{porta}"), AllowAutoRedirect = false });
+    /// <summary>Cliente que fala com a porta do socket informada; o cabeçalho Host pode ser trocado à parte.</summary>
+    public HttpClient Cliente(int porta) =>
+        CreateDefaultClient(new Uri($"http://localhost:{porta}"), new PortaLocalDoCliente(porta));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -122,6 +129,7 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(servicos =>
         {
+            servicos.AddSingleton<IStartupFilter, PortaLocalDeTeste>();
             servicos.RemoveAll<HoraReal>();
             servicos.AddSingleton(new HoraReal(Relogio));
             servicos.RemoveAll<IEsperaDaChamada>();
@@ -154,4 +162,33 @@ public class FabricaDoSimulador : WebApplicationFactory<Program>
             }
         });
     }
+}
+
+/// <summary>Marca o pedido com a porta do socket, que o TestServer não preenche.</summary>
+internal sealed class PortaLocalDoCliente(int porta) : DelegatingHandler
+{
+    public const string Cabecalho = "x-teste-porta-local";
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        request.Headers.Remove(Cabecalho);
+        request.Headers.Add(Cabecalho, porta.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        return base.SendAsync(request, cancellationToken);
+    }
+}
+
+/// <summary>Preenche <c>Connection.LocalPort</c> como o Kestrel faria, antes do roteamento por porta (PortaLocal.cs).</summary>
+internal sealed class PortaLocalDeTeste : IStartupFilter
+{
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+    {
+        app.Use((contexto, proximo) =>
+        {
+            contexto.Connection.LocalPort = contexto.Request.Headers.TryGetValue(PortaLocalDoCliente.Cabecalho, out var porta)
+                ? int.Parse(porta.ToString(), System.Globalization.CultureInfo.InvariantCulture)
+                : contexto.Request.Host.Port ?? 80;
+            return proximo(contexto);
+        });
+        next(app);
+    };
 }

@@ -175,6 +175,35 @@ internal sealed class RepositorioMongo : IRepositorioDeMassa, IDisposable
         await _recursos.Find(Filtro.Eq(CampoBanco, banco)).AnyAsync(cancelamento).ConfigureAwait(false)
         || await _consentimentos.Find(Filtro.Eq(CampoBanco, banco)).AnyAsync(cancelamento).ConfigureAwait(false);
 
+    public async Task<IReadOnlyList<ClienteSimulado>> ListarClientes(string? banco, int inicio, int quantidade, CancellationToken cancelamento)
+    {
+        if (banco is null)
+        {
+            var todos = await _clientes.Find(Tudo).Sort(Builders<BsonDocument>.Sort.Ascending(Id)).Skip(inicio).Limit(quantidade).ToListAsync(cancelamento).ConfigureAwait(false);
+            return [.. todos.Select(Ler<ClienteSimulado>)];
+        }
+
+        // Um cliente por documento entre os recursos do banco. O cliente é juntado antes de paginar: recurso sem
+        // cliente (órfão) não ocupa lugar na página nem engana o temMais (revisão da 010).
+        const string Cliente = "c";
+        var grupos = await _recursos.Aggregate()
+            .Match(Filtro.Eq(CampoBanco, banco))
+            .Group(new BsonDocument(Id, "$" + CampoCliente))
+            .Lookup(_clientes.CollectionNamespace.CollectionName, Id, Id, Cliente)
+            .Match(Filtro.SizeGt(Cliente, 0))
+            .Sort(new BsonDocument(Id, 1))
+            .Skip(inicio)
+            .Limit(quantidade)
+            .ToListAsync(cancelamento).ConfigureAwait(false);
+        return [.. grupos.Select(g => Ler<ClienteSimulado>(g[Cliente][0].AsBsonDocument))];
+    }
+
+    public async Task<ContagemDaMassa> Contar(CancellationToken cancelamento) => new(
+        await _clientes.CountDocumentsAsync(Tudo, cancellationToken: cancelamento).ConfigureAwait(false),
+        await _consentimentos.CountDocumentsAsync(Tudo, cancellationToken: cancelamento).ConfigureAwait(false),
+        await _recursos.CountDocumentsAsync(Tudo, cancellationToken: cancelamento).ConfigureAwait(false),
+        await _lotes.CountDocumentsAsync(Tudo, cancellationToken: cancelamento).ConfigureAwait(false));
+
     public async Task<ResumoDeMassa> ContarDoLote(string id, CancellationToken cancelamento)
     {
         var filtro = Filtro.Eq(CampoLote, id);

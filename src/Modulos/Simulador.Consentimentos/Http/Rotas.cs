@@ -525,7 +525,6 @@ internal sealed record PedidoDeProduto(string? Banco, string? Produto, string? E
 /// <summary><c>POST /{banco}/token</c> e administração (contracts/token-e-admin.md).</summary>
 internal static class Rotas
 {
-    private const string CabecalhoDoAutor = "x-sim-autor";
     private const int TentativasDeEscrita = 5;
 
     private static readonly string[] ProdutosValidos = ["contas", "cartoes", "emprestimos", "financiamentos", "adiantamentos", "direitos-creditorios", "investimentos", "cambio", "fundos", "renda-variavel", "renda-fixa-credito", "tesouro-direto"];
@@ -546,7 +545,7 @@ internal static class Rotas
         RotasDoPainel.Mapear(administracao);
     }
 
-    internal static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    internal static string? Autor(HttpContext contexto) => Simulador.Comum.Http.AutorDoPedido.Ler(contexto);
 
     internal static IResult ErroAdmin(int status, string mensagem) => Results.Json(new { erros = new[] { mensagem } }, statusCode: status);
 

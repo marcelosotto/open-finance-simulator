@@ -11,8 +11,8 @@
 | Contrato | Validação contra as specs fixadas | Toda operação com `estavel` valida no schema |
 | Aceitação | Reqnroll com os `.feature` ([ADR-009](../05-adr/ADR-009-gherkin-reqnroll.md)) | Regras em linguagem de negócio |
 | Tabela oficial | Teste que compara classe, TPM, cota e SLA de cada endpoint com a [tabela](../01-requisitos/tabela-de-endpoints.md) | Evita classe ou limite diferente do oficial |
-| Front-end | Jest 30 e Testing Library ([guia](../08-front-end/README.md#testes)) | Entidades, casos de uso e componentes; 100% no `core` |
-| Painel | Playwright | Criação de consentimento e alçadas no navegador |
+| Front-end | Jest 30 e Testing Library, com `msw` ([guia](../08-front-end/README.md#testes)) | Entidades, casos de uso, repositórios HTTP e telas; 100% no `core` e 80% no total. Job `front` do CI |
+| Painel | Playwright, contra o simulador do Compose (`front/e2e/`) | Os cenários de `consentimento-no-painel.feature` e o `@tela` de `marcacao.feature` no navegador. Job `painel` do CI; local com `sh front/scripts/playwright.sh` |
 | Carga | k6 | Capacidade própria do simulador ([RNF02](../01-requisitos/requisitos.md#rnf02)) e mundo virtual |
 
 ## Regras específicas

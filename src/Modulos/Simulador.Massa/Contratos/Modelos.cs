@@ -187,6 +187,9 @@ public sealed record Ajuste(
 /// <summary>Quantidades de massa.</summary>
 public sealed record ResumoDeMassa(long Clientes, long Consentimentos, long Recursos, long Ajustes);
 
+/// <summary>O que já existe na massa persistida, para Primeiros passos (UI18).</summary>
+public sealed record ContagemDaMassa(long Clientes, long Consentimentos, long Recursos, long Lotes);
+
 /// <summary>Um campo alterado em uma operação da massa.</summary>
 public sealed record MudancaDaMassa(string Campo, string? Antes, string? Depois);
 
@@ -256,6 +259,12 @@ public interface IRepositorioDeMassa
     Task<IReadOnlyList<Consentimento>> ListarConsentimentosDoCliente(string documento, CancellationToken cancelamento);
 
     Task<bool> TemMassaNoBanco(string banco, CancellationToken cancelamento);
+
+    /// <summary>Clientes persistidos com produto no banco, ou todos sem banco, em ordem de documento (UI19).</summary>
+    Task<IReadOnlyList<ClienteSimulado>> ListarClientes(string? banco, int inicio, int quantidade, CancellationToken cancelamento);
+
+    /// <summary>Contagem do que está persistido (UI18).</summary>
+    Task<ContagemDaMassa> Contar(CancellationToken cancelamento);
 
     Task<ResumoDeMassa> ContarDoLote(string id, CancellationToken cancelamento);
 

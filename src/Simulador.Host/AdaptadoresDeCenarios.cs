@@ -262,12 +262,12 @@ internal sealed class ComportamentoDaChamada(
     ICenarios cenarios,
     ICatalogo catalogo,
     TimeProvider relogio,
-    IHttpContextAccessor acesso) : IComportamentoDaChamada
+    IHttpContextAccessor acesso,
+    StatusDeclaradosDasOperacoes declarados) : IComportamentoDaChamada
 {
     private const string ParametroDoConsentimento = "consentId";
     private const string ParametroDaNota = "brokerNoteId";
     private const int MuitasChamadas = 429;
-    private readonly ConcurrentDictionary<string, IReadOnlySet<int>> _declarados = new(StringComparer.Ordinal);
 
     public async Task<DesfechoDoComportamento?> Decidir(HttpContext contexto)
     {
@@ -346,8 +346,7 @@ internal sealed class ComportamentoDaChamada(
         return new PerfilDaChamada(latencia?.TipicoMs ?? 0, latencia?.VariacaoMs ?? 0, latencia?.CaudaLentaPct ?? 0m, comportamento.TaxaDeErroPct, comportamento.PesosPorStatus, comportamento.Janela?.DuracaoMin, comportamento.Janela?.IntervaloMin);
     }
 
-    private IReadOnlySet<int> Declarados(OperacaoDoCatalogo operacao) =>
-        _declarados.GetOrAdd(operacao.OperationId, _ => operacao.Respostas.Keys.Select(k => int.TryParse(k, NumberStyles.None, CultureInfo.InvariantCulture, out var s) ? s : 0).Where(s => s > 0).ToHashSet());
+    private IReadOnlySet<int> Declarados(OperacaoDoCatalogo operacao) => declarados.De(operacao);
 
     private IResult Erro(HttpContext contexto, int status, OperacaoDoCatalogo operacao, Instituicoes.Contratos.Limites limites)
     {
@@ -364,14 +363,29 @@ internal sealed class ComportamentoDaChamada(
 }
 
 /// <summary>Liga Cenários a Instituições, Catálogo e Limites, sem referência entre os módulos (ADR-007).</summary>
-internal sealed class AmbienteDosCenarios(IAmbienteDasInstituicoes instituicoes, IRepositorioDeInstituicoes repositorio, ICatalogo catalogo, IContadores contadores, HoraReal hora) : IAmbienteDosCenarios
+internal sealed class AmbienteDosCenarios(
+    IAmbienteDasInstituicoes instituicoes,
+    IRepositorioDeInstituicoes repositorio,
+    IServiceProvider provedor,
+    StatusDeclaradosDasOperacoes declarados,
+    IContadores contadores,
+    HoraReal hora) : IAmbienteDosCenarios
 {
     private static readonly TimeSpan ValidadeDaSequencia = TimeSpan.FromDays(3650);
-    private readonly Lazy<HashSet<string>> _operacoes = new(() => catalogo.Operacoes.Select(o => o.OperationId).ToHashSet(StringComparer.Ordinal));
 
     public IReadOnlySet<int> StatusDeclarados => instituicoes.StatusDeclarados;
 
-    public bool OperacaoExiste(string operationId) => _operacoes.Value.Contains(operationId);
+    public bool OperacaoExiste(string operationId) => declarados.Existe(operationId);
+
+    public IReadOnlySet<int>? StatusDeclaradosDe(string operationId) => declarados.De(operationId);
+
+    public async Task<DateTimeOffset?> HoraDoBanco(string instituicao, CancellationToken cancelamento)
+    {
+        var real = hora.Relogio.GetUtcNow();
+        // A mesma fonte do pipeline (FiltroDaChamada), para a vencedora usar a hora que a chamada usaria.
+        // Resolvida na chamada, e não no construtor: instituições, anomalias e cenários se citam e formariam um ciclo.
+        return await provedor.GetRequiredService<InstituicoesDaChamada>().Obter(instituicao, cancelamento).ConfigureAwait(false) is { } banco ? banco.Relogio?.Agora(real) ?? real : null;
+    }
 
     public Task<long> ProximaPosicao(string chave, CancellationToken cancelamento) => contadores.Somar(chave, ValidadeDaSequencia, cancelamento);
 
@@ -386,6 +400,7 @@ internal static class ExtensoesDosAdaptadoresDeCenarios
 {
     public static IServiceCollection AddAdaptadoresDeCenarios(this IServiceCollection servicos)
     {
+        servicos.AddSingleton<StatusDeclaradosDasOperacoes>();
         servicos.AddSingleton<IAmbienteDosCenarios, AmbienteDosCenarios>();
         servicos.AddSingleton<IComportamentoDaChamada, ComportamentoDaChamada>();
         servicos.AddSingleton<IEsperaDaChamada, EsperaReal>();
@@ -397,4 +412,29 @@ internal static class ExtensoesDosAdaptadoresDeCenarios
         servicos.AddSingleton<ILimpezaDeAnomalias>(p => p.GetRequiredService<ConsultaDeAnomalias>());
         return servicos;
     }
+}
+
+/// <summary>
+/// Os status que cada operação declara, calculados uma vez e compartilhados pela etapa de comportamento e pela
+/// vencedora da administração (UI06), para as duas nunca discordarem.
+/// </summary>
+internal sealed class StatusDeclaradosDasOperacoes(ICatalogo catalogo)
+{
+    private readonly ConcurrentDictionary<string, IReadOnlySet<int>> _declarados = new(StringComparer.Ordinal);
+    private readonly Lazy<Dictionary<string, OperacaoDoCatalogo>> _porId = new(() => catalogo.Operacoes
+        .GroupBy(o => o.OperationId, StringComparer.Ordinal)
+        .ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal));
+
+    public bool Existe(string operationId) => _porId.Value.ContainsKey(operationId);
+
+    public IReadOnlySet<int> De(OperacaoDoCatalogo operacao)
+    {
+        ArgumentNullException.ThrowIfNull(operacao);
+        return _declarados.GetOrAdd(operacao.OperationId, _ => Calcular(operacao));
+    }
+
+    public IReadOnlySet<int>? De(string operationId) => _porId.Value.GetValueOrDefault(operationId) is { } operacao ? De(operacao) : null;
+
+    private static HashSet<int> Calcular(OperacaoDoCatalogo operacao) =>
+        operacao.Respostas.Keys.Select(k => int.TryParse(k, NumberStyles.None, CultureInfo.InvariantCulture, out var s) ? s : 0).Where(s => s > 0).ToHashSet();
 }

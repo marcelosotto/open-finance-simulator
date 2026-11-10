@@ -1,6 +1,6 @@
 # Guia de front-end
 
-Relacionados: [ADR-010](../05-adr/ADR-010-front-end-react.md) · [comportamento de tela](../01-requisitos/interface.md) · [estratégia de testes](../06-testes/estrategia-de-testes.md)
+Relacionados: [ADR-010](../05-adr/ADR-010-front-end-react.md) · [comportamento de tela](../01-requisitos/interface.md) · [estratégia de testes](../06-testes/estrategia-de-testes.md) · [guia de uso](guia-de-uso.md)
 
 Regras do back-office do simulador. Valem para todo código em `front/`. As telas e o que elas fazem estão em [comportamento de tela](../01-requisitos/interface.md); aqui fica só **como** construir.
 
@@ -13,7 +13,7 @@ Regras do back-office do simulador. Valem para todo código em `front/`. As tela
 ## Regras absolutas
 1. Usar **apenas** as bibliotecas open source da [stack](#stack). Biblioteca nova exige ADR.
 2. **Webpack 5** como bundler, com configurações separadas: `webpack.common.ts`, `webpack.dev.ts` e `webpack.prod.ts`, unidas por `webpack-merge`.
-3. **Jest 30** como test runner, com `ts-jest` 30.
+3. **Jest 30** como test runner, com `ts-jest` ^29.4, a linha que suporta o Jest 30 (não existe `ts-jest` 30).
 4. **Clean Architecture** rigorosa, com dependência só para dentro: `core` → `application` → `infrastructure` → `presentation`. Detalhes em [camadas](#camadas).
 5. **Either Pattern** no retorno de todo caso de uso. Detalhes em [Either](#either).
 6. **Injeção de dependência** com `tsyringe` para desacoplar as camadas. O Babel MUST ter suporte a decorators, e `reflect-metadata` é importado uma vez, no ponto de entrada.
@@ -31,7 +31,7 @@ Todas open source. As versões são o mínimo aceito.
 | Webpack | webpack-cli, webpack-dev-server, webpack-merge, html-webpack-plugin, mini-css-extract-plugin, css-loader, style-loader, sass-loader e sass, postcss-loader e autoprefixer, babel-loader com @babel/preset-env, @babel/preset-react e @babel/preset-typescript, asset modules, dotenv-webpack, copy-webpack-plugin, fork-ts-checker-webpack-plugin, @pmmmwh/react-refresh-webpack-plugin |
 | Estado | Zustand com Immer (estado da tela), TanStack Query (dados da API, cache e fetching) |
 | Estilo | Tailwind CSS ^3.4, clsx e tailwind-merge, Radix UI ^1.x, lucide-react |
-| Testes | Jest ^30, ts-jest ^30, jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, jest-watch-typeahead, @types/jest, msw, jest-html-reporter, jest-sonar-reporter |
+| Testes | Jest ^30, ts-jest ^29.4, jest-environment-jsdom, @testing-library/react, @testing-library/jest-dom, @testing-library/user-event, jest-watch-typeahead, @types/jest, msw, jest-html-reporter, jest-sonar-reporter |
 | Qualidade | ESLint ^9 com typescript-eslint, eslint-plugin-react, eslint-plugin-react-hooks, eslint-plugin-jest, eslint-plugin-testing-library, Prettier, Husky, lint-staged, commitlint |
 | DI e utilitários | tsyringe e reflect-metadata, zod, date-fns, axios ^1.7, react-hook-form, i18next e react-i18next |
 
@@ -110,14 +110,15 @@ export class CriarInstituicao {
 - Relatórios: `jest-html-reporter` e `jest-sonar-reporter`.
 
 ## Qualidade e commits
-- **Husky** roda `lint-staged` no pre-commit (ESLint e Prettier nos arquivos alterados de `front/`) e `commitlint` no commit-msg.
+- **Husky** roda `lint-staged` no pre-commit (ESLint e Prettier nos arquivos alterados de `front/`) e `commitlint` no commit-msg. Os ganchos não são ativados sozinhos pelo `npm install`, porque `core.hooksPath` vale para todas as worktrees e para os commits só de .NET: quem quiser roda `npm run ganchos` uma vez em `front/`.
 - **Commits** que alteram `front/` seguem Conventional Commits, por exemplo: `feat(front): cria tela de bancos`. Commits só de documentação ou de back-end não passam pelo commitlint.
-- O CI roda lint, checagem de tipos, testes com threshold de cobertura e build de produção.
+- O CI roda, no job `front`, lint, checagem de tipos, testes com threshold de cobertura e build de produção; o job `painel` roda o Playwright contra o simulador do Compose. Sem Node na máquina, os mesmos comandos rodam pela imagem `node:22` no Docker.
 
 ## Variáveis de ambiente
 Lidas pelo `dotenv-webpack` e validadas com zod ao subir:
 
 | Variável | Uso |
 |---|---|
-| `SIM_ADMIN_API_URL` | Endereço da API de administração |
-| `SIM_AMBIENTE` | `dev` ou `hml`, para a faixa de ambiente |
+| `SIM_ADMIN_API_URL` | Endereço da API de administração. Vazio por padrão: o front é servido pelo próprio simulador na porta de administração e chama `/admin/...` na mesma origem. |
+
+A marca do ambiente **não** é variável do front: a tela lê `GET /admin/ambiente`, que devolve a mesma `Simulador:MarcaDoAmbiente` do simulador (RN66, RN72). Valor livre; vazio, a tela não mostra marca. A cor vem de uma lista fixa para `dev`, `hml` e `stage`, com uma cor neutra para qualquer outro valor ([UI01](../01-requisitos/interface.md#ui01)).

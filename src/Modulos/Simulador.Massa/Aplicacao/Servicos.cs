@@ -31,6 +31,8 @@ internal static class Resultados
 
 internal sealed record PedidoDePerfil(int TransacoesMin, int TransacoesMax, decimal ValorMin, decimal ValorMax, decimal SaldoInicial, IReadOnlyList<string> TiposDeLancamento, IReadOnlyList<string> Produtos);
 
+internal sealed record PaginaDeClientes(IReadOnlyList<ClienteSimulado> Clientes, int Inicio, int Quantidade, bool TemMais);
+
 internal sealed record PedidoDeCliente(string Tipo, IReadOnlyList<string> Bancos, string? Perfil = null, string? Nome = null, long? Semente = null);
 
 internal sealed record PedidoDeLote(
@@ -200,6 +202,30 @@ internal sealed class CadastroDeMassa(
         await baseDaMassa.Registrar(autor, "distribuicao-apagada", [new MudancaDaMassa("distribuicao", nome, null)], cancelamento).ConfigureAwait(false);
         return Resultados.Ok(true);
     }
+
+    private const int MaximoDaPagina = 1000;
+
+    /// <summary>Clientes persistidos de um banco, para a tela escolher sem digitar documento (UI19). Busca um a mais para saber se há outra página.</summary>
+    public async Task<Resultado<PaginaDeClientes>> ListarClientes(string? banco, int? inicio, int? quantidade, CancellationToken cancelamento)
+    {
+        var de = inicio ?? 0;
+        var ate = quantidade ?? 100;
+        if (de < 0 || ate is < 1 or > MaximoDaPagina)
+        {
+            return Resultados.Invalido<PaginaDeClientes>("inicio deve ser >= 0 e quantidade de 1 a 1000");
+        }
+
+        var filtro = string.IsNullOrWhiteSpace(banco) ? null : banco;
+        if (filtro is not null && !(await ambiente.ProdutosDosBancos(cancelamento).ConfigureAwait(false)).ContainsKey(filtro))
+        {
+            return Resultados.NaoEncontrado<PaginaDeClientes>($"banco não encontrado: {filtro}");
+        }
+
+        var lidos = await repositorio.ListarClientes(filtro, de, ate + 1, cancelamento).ConfigureAwait(false);
+        return Resultados.Ok(new PaginaDeClientes([.. lidos.Take(ate)], de, ate, lidos.Count > ate));
+    }
+
+    public Task<ContagemDaMassa> Resumo(CancellationToken cancelamento) => repositorio.Contar(cancelamento);
 
     public async Task<Resultado<MassaGerada>> CriarCliente(PedidoDeCliente pedido, string? autor, CancellationToken cancelamento)
     {

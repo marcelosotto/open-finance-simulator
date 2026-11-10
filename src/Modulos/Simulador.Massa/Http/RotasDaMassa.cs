@@ -10,7 +10,6 @@ namespace Simulador.Massa.Http;
 /// <summary>API de administração (contracts/admin-massa.md).</summary>
 internal static class RotasDaMassa
 {
-    private const string CabecalhoDoAutor = "x-sim-autor";
     private const string Base = "/admin/massa";
 
     public static void Mapear(IEndpointRouteBuilder administracao)
@@ -51,6 +50,12 @@ internal static class RotasDaMassa
     {
         administracao.MapPost(Base + "/clientes", (HttpContext c, CadastroDeMassa cadastro) =>
             Com<PedidoDeCliente>(c, async p => Responder(await cadastro.CriarCliente(p, Autor(c), c.RequestAborted).ConfigureAwait(false), StatusCodes.Status201Created)));
+
+        administracao.MapGet(Base + "/clientes", async (string? banco, int? inicio, int? quantidade, CadastroDeMassa cadastro, CancellationToken t) =>
+            Responder(await cadastro.ListarClientes(banco, inicio, quantidade, t).ConfigureAwait(false)));
+
+        administracao.MapGet(Base + "/resumo", async (CadastroDeMassa cadastro, CancellationToken t) =>
+            Json(await cadastro.Resumo(t).ConfigureAwait(false)));
 
         administracao.MapGet(Base + "/clientes/{documento}", async (string documento, CadastroDeMassa cadastro, CancellationToken t) =>
             await cadastro.ObterCliente(documento, t).ConfigureAwait(false) is { } massa ? Json(massa) : NaoEncontrado("cliente não encontrado"));
@@ -108,7 +113,7 @@ internal static class RotasDaMassa
         });
     }
 
-    private static string? Autor(HttpContext contexto) => contexto.Request.Headers[CabecalhoDoAutor].FirstOrDefault();
+    private static string? Autor(HttpContext contexto) => Simulador.Comum.Http.AutorDoPedido.Ler(contexto);
 
     private static async Task<IResult> Com<T>(HttpContext contexto, Func<T, Task<IResult>> acao)
         where T : class
